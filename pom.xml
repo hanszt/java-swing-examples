@@ -13,4 +13,17 @@
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.dyn4j</groupId>
+            <artifactId>dyn4j</artifactId>
+            <version>4.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>es.usc.citius.hipster</groupId>
+            <artifactId>hipster-core</artifactId>
+            <version>1.0.1</version>
+        </dependency>
+    </dependencies>
+
 </project>
