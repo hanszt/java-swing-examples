@@ -27,7 +27,7 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.spinnersample;
 
@@ -38,40 +38,35 @@ package hzt.spinnersample;
  */
 
 import javax.swing.*;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import java.awt.*;
 
 public class SpinnerDemo4 extends JPanel {
+
     public SpinnerDemo4() {
         super(new SpringLayout());
 
         String[] labels = {"Shade of Gray: "};
         int numPairs = labels.length;
 
-        JSpinner spinner = addLabeledSpinner(this,
-                                             labels[0],
-                                             new GrayModel(170));
+        JSpinner spinner = addLabeledSpinner(this, labels[0], new GrayModel(170));
         spinner.setEditor(new GrayEditor(spinner));
 
         //Lay out the panel.
         SpringUtilities.makeCompactGrid(this,
-                                        numPairs, 2, //rows, cols
-                                        10, 10,        //initX, initY
-                                        6, 10);       //xPad, yPad
+                numPairs, 2, //rows, cols
+                10, 10,        //initX, initY
+                6, 10);       //xPad, yPad
     }
 
-    static protected JSpinner addLabeledSpinner(Container c,
-                                                String label,
-                                                SpinnerModel model) {
-        JLabel l = new JLabel(label);
-        c.add(l);
+    protected static JSpinner addLabeledSpinner(Container container, String text, SpinnerModel model) {
+        JLabel label = new JLabel(text);
+        container.add(label);
 
         JSpinner spinner = new JSpinner(model);
-        l.setLabelFor(spinner);
-        c.add(spinner);
+        label.setLabelFor(spinner);
+        container.add(spinner);
 
         return spinner;
     }
@@ -84,7 +79,7 @@ public class SpinnerDemo4 extends JPanel {
     private static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("SpinnerDemo4");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         JComponent newContentPane = new SpinnerDemo4();
@@ -99,23 +94,22 @@ public class SpinnerDemo4 extends JPanel {
     public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                //Turn off metal's use of bold fonts
-	        UIManager.put("swing.boldMetal", Boolean.FALSE);
-		createAndShowGUI();
-            }
-        });
+        SwingUtilities.invokeLater(SpinnerDemo4::run);
     }
 
-    class GrayModel extends SpinnerNumberModel {
+    private static void run() {
+        //Turn off metal's use of bold fonts
+        UIManager.put("swing.boldMetal", Boolean.FALSE);
+        createAndShowGUI();
+    }
+
+    private static class GrayModel extends SpinnerNumberModel {
         public GrayModel(int value) {
             super(value, 0, 255, 5);
         }
 
         public int getIntValue() {
-            Integer myValue = (Integer)getValue();
-            return myValue.intValue();
+            return (Integer) getValue();
         }
 
         public Color getColor() {
@@ -124,13 +118,12 @@ public class SpinnerDemo4 extends JPanel {
         }
     }
 
-    class GrayEditor extends JLabel
-                     implements ChangeListener {
+    private static class GrayEditor extends JLabel implements ChangeListener {
         public GrayEditor(JSpinner spinner) {
             setOpaque(true);
 
             //Get info from the model.
-            GrayModel myModel = (GrayModel)(spinner.getModel());
+            GrayModel myModel = (GrayModel) (spinner.getModel());
             setBackground(myModel.getColor());
             spinner.addChangeListener(this);
 
@@ -152,15 +145,15 @@ public class SpinnerDemo4 extends JPanel {
                 }
             } else {
                 //Define our own tool tip text.
-                GrayModel myModel = (GrayModel)(spinner.getModel());
+                GrayModel myModel = (GrayModel) (spinner.getModel());
                 int rgb = myModel.getIntValue();
                 setToolTipText("(" + rgb + "," + rgb + "," + rgb + ")");
             }
         }
 
         public void stateChanged(ChangeEvent e) {
-            JSpinner mySpinner = (JSpinner)(e.getSource());
-            GrayModel myModel = (GrayModel)(mySpinner.getModel());
+            JSpinner mySpinner = (JSpinner) (e.getSource());
+            GrayModel myModel = (GrayModel) (mySpinner.getModel());
             setBackground(myModel.getColor());
             updateToolTipText(mySpinner);
         }

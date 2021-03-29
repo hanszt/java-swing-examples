@@ -27,178 +27,169 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.textareasample;
 
-/*
- * TextAreaDemo.java requires no other files.
- */
-
 import javax.swing.*;
-import java.util.*;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.GroupLayout.ParallelGroup;
+import javax.swing.GroupLayout.SequentialGroup;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import java.awt.event.ActionEvent;
 import javax.swing.text.BadLocationException;
-import javax.swing.GroupLayout.*;
+import java.awt.event.ActionEvent;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
-import static java.lang.System.*;
+import static java.lang.System.out;
 
 public class TextAreaDemo extends JFrame implements DocumentListener {
 
-    private JTextArea textArea;
-    
+    public static final int MINIMUM_NR_OF_CHARS = 2;
     private static final String COMMIT_ACTION = "commit";
 
-    private static void run() {
-        //Turn off metal's use of bold fonts
-        UIManager.put("swing.boldMetal", Boolean.FALSE);
-        new TextAreaDemo().setVisible(true);
-    }
+    private enum Mode {INSERT, COMPLETION;}
 
-    private enum Mode { INSERT, COMPLETION };
-    private final List<String> words;
+    private final JTextArea textArea;
+    private final List<String> dictionaryWords;
     private Mode mode = Mode.INSERT;
 
     public TextAreaDemo() {
         super("TextAreaDemo");
+        this.textArea = new JTextArea();
         initComponents();
-        
-        textArea.getDocument().addDocumentListener(this);
-        
-        InputMap im = textArea.getInputMap();
-        ActionMap am = textArea.getActionMap();
-        im.put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
-        am.put(COMMIT_ACTION, new CommitAction());
-        
-        words = List.of("spark", "special", "spectacles", "spectacular", "swing");
+        InputMap inputMap = textArea.getInputMap();
+        ActionMap actionMap = textArea.getActionMap();
+        inputMap.put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
+        actionMap.put(COMMIT_ACTION, new CommitAction());
+        dictionaryWords = List.of("spark", "special", "spectacles", "spectacular", "swing");
     }
-    
-    
+
     private void initComponents() {
-        JLabel jLabel1 = new JLabel("Try typing 'spectacular' or 'Swing'...");
-        
-        textArea = new JTextArea();
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         textArea.setColumns(20);
         textArea.setLineWrap(true);
         textArea.setRows(5);
         textArea.setWrapStyleWord(true);
+        textArea.getDocument().addDocumentListener(this);
 
-        JScrollPane jScrollPane1 = new JScrollPane(textArea);
-        
+        JLabel label = new JLabel("Try typing 'spectacular' or 'Swing'...");
+        JScrollPane jScrollPane = new JScrollPane(textArea);
+
         GroupLayout layout = new GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
-        
-        //Create a parallel group for the horizontal axis
-        ParallelGroup hGroup = layout.createParallelGroup(Alignment.LEADING);
-        //Create a sequential and a parallel groups
-	SequentialGroup h1 = layout.createSequentialGroup();
-        ParallelGroup h2 = layout.createParallelGroup(Alignment.TRAILING);
-        //Add a scroll panel and a label to the parallel group h2
-	h2.addComponent(jScrollPane1, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
-        h2.addComponent(jLabel1, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
-        
-	//Add a container gap to the sequential group h1
-	h1.addContainerGap();
-        // Add the group h2 to the group h1
-	h1.addGroup(h2);
-        h1.addContainerGap();
-        //Add the group h1 to hGroup
-	hGroup.addGroup(Alignment.TRAILING,h1);
-        //Create the horizontal group
-	layout.setHorizontalGroup(hGroup);
-        
-	//Create a parallel group for the vertical axis
-        ParallelGroup vGroup = layout.createParallelGroup(Alignment.LEADING);
-        //Create a sequential group
-	SequentialGroup v1 = layout.createSequentialGroup();
-        //Add a container gap to the sequential group v1
-	v1.addContainerGap();
-        //Add a label to the sequential group v1
-	v1.addComponent(jLabel1);
-        v1.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
-        //Add scroll panel to the sequential group v1
-	v1.addComponent(jScrollPane1, GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE);
-        v1.addContainerGap();
-        //Add the group v1 to vGroup
-	vGroup.addGroup(v1);
-        //Create the vertical group
-	layout.setVerticalGroup(vGroup);
+
+        configureHorizontalLayout(label, jScrollPane, layout);
+        configureVerticalLayout(jScrollPane, layout, label);
         pack();
-        
     }
+
+    private void configureHorizontalLayout(JLabel label, JScrollPane jScrollPane, GroupLayout layout) {
+        ParallelGroup scrollPaneGroup = layout.createParallelGroup(Alignment.TRAILING);
+        scrollPaneGroup.addComponent(jScrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
+        scrollPaneGroup.addComponent(label, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
+
+        SequentialGroup sequentialGroup = layout.createSequentialGroup();
+        sequentialGroup.addContainerGap();
+        sequentialGroup.addGroup(scrollPaneGroup);
+        sequentialGroup.addContainerGap();
+
+        ParallelGroup horizontalGroup = layout.createParallelGroup(Alignment.LEADING);
+        horizontalGroup.addGroup(Alignment.TRAILING, sequentialGroup);
+        layout.setHorizontalGroup(horizontalGroup);
+    }
+
+    private void configureVerticalLayout(JScrollPane jScrollPane, GroupLayout layout, JLabel label) {
+        SequentialGroup group = layout.createSequentialGroup();
+        group.addContainerGap();
+        group.addComponent(label);
+        group.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
+        group.addComponent(jScrollPane, GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE);
+        group.addContainerGap();
+
+        ParallelGroup verticalGroup = layout.createParallelGroup(Alignment.LEADING);
+        verticalGroup.addGroup(group);
+
+        layout.setVerticalGroup(verticalGroup);
+    }
+
     // Listener methods
+
+    @Override
     public void changedUpdate(DocumentEvent ev) {
-        out.println(ev);
+        out.println("Changed update: " + ev);
     }
-    
+    @Override
     public void removeUpdate(DocumentEvent ev) {
-        out.println(ev);
+        out.println("Remove update: " + ev);
     }
-    
+
+    @Override
     public void insertUpdate(DocumentEvent ev) {
-        if (ev.getLength() != 1) {
-            return;
+        if (ev.getLength() == 1) {
+            int textCursorPosition = ev.getOffset();
+            lookForMatchingWordInDictionary(textCursorPosition);
         }
-        
-        int pos = ev.getOffset();
-        String content = null;
+    }
+
+    private void lookForMatchingWordInDictionary(int textCursorPosition) {
         try {
-            content = textArea.getText(0, pos + 1);
+            String content = textArea.getText(0, textCursorPosition + 1);
+            int wordStartPosition = startOfWord(textCursorPosition, content);
+            if (textCursorPosition - wordStartPosition >= MINIMUM_NR_OF_CHARS) {
+                String prefix = content.substring(wordStartPosition + 1).toLowerCase();
+                tryToFindMatch(textCursorPosition, wordStartPosition, prefix);
+            }
         } catch (BadLocationException e) {
             e.printStackTrace();
         }
-        
-        // Find where the word starts
-        int w;
-        for (w = pos; w >= 0; w--) {
-            if (! Character.isLetter(Objects.requireNonNull(content).charAt(w))) {
-                break;
-            }
-        }
-        if (pos - w < 2) {
-            // Too few chars
-            return;
-        }
-        
-        String prefix = content.substring(w + 1).toLowerCase();
-        int n = Collections.binarySearch(words, prefix);
-        if (n < 0 && -n <= words.size()) {
-            String match = words.get(-n - 1);
+    }
+
+    private void tryToFindMatch(int textCursorPosition, int wordStartPosition, String prefix) {
+        int negativeIndex = Collections.binarySearch(dictionaryWords, prefix);
+        if (negativeIndex < 0 && -negativeIndex <= dictionaryWords.size()) {
+            String match = dictionaryWords.get(-negativeIndex - 1);
             if (match.startsWith(prefix)) {
                 // A completion is found
-                String completion = match.substring(pos - w);
+                String completion = match.substring(textCursorPosition - wordStartPosition);
                 // We cannot modify Document from within notification,
                 // so we submit a task that does the change later
-                SwingUtilities.invokeLater(
-                        new CompletionTask(completion, pos + 1));
+                SwingUtilities.invokeLater(new CompletionTask(completion, textCursorPosition + 1));
             }
-        } else {
-            // Nothing found
-            mode = Mode.INSERT;
-        }
+        } else mode = Mode.INSERT;
     }
-    
+
+    private int startOfWord(int textCursorPosition, String content) {
+        int result = textCursorPosition;
+        while (result >= 0) {
+            if (!Character.isLetter(Objects.requireNonNull(content).charAt(result))) break;
+            result--;
+        }
+        return result;
+    }
+
     private class CompletionTask implements Runnable {
+
         String completion;
+
         int position;
-        
         CompletionTask(String completion, int position) {
             this.completion = completion;
             this.position = position;
         }
-        
+
         public void run() {
             textArea.insert(completion, position);
             textArea.setCaretPosition(position + completion.length());
             textArea.moveCaretPosition(position);
             mode = Mode.COMPLETION;
         }
+
     }
-    
     private class CommitAction extends AbstractAction {
+
         public void actionPerformed(ActionEvent ev) {
             if (mode == Mode.COMPLETION) {
                 int pos = textArea.getSelectionEnd();
@@ -206,14 +197,19 @@ public class TextAreaDemo extends JFrame implements DocumentListener {
                 textArea.setCaretPosition(pos + 1);
                 mode = Mode.INSERT;
             } else {
-                textArea.replaceSelection("\n");
+                textArea.replaceSelection(String.format("%n"));
             }
         }
     }
-   
+
+    private static void run() {
+        //Turn off metal's use of bold fonts
+        UIManager.put("swing.boldMetal", Boolean.FALSE);
+        new TextAreaDemo().setVisible(true);
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(TextAreaDemo::run);
     }
-    
-    
+
 }

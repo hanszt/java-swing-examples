@@ -27,78 +27,61 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.treedemoproject;
 
 import javax.swing.*;
-
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeSelectionModel;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-
-import java.net.URL;
+import javax.swing.tree.TreeSelectionModel;
+import java.awt.*;
 import java.io.IOException;
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import java.net.URL;
 
-import static java.lang.System.*;
+import static java.lang.System.err;
+
 /**
  * A 1.4 application that requires the following additional files:
- *   TreeDemoHelp.html
- *    arnold.html
- *    bloch.html
- *    chan.html
- *    jls.html
- *    swingtutorial.html
- *    tutorial.html
- *    tutorialcont.html
- *    vm.html
+ * TreeDemoHelp.html
+ * arnold.html
+ * bloch.html
+ * chan.html
+ * jls.html
+ * swingtutorial.html
+ * tutorial.html
+ * tutorialcont.html
+ * vm.html
  */
 public class TreeIconDemo extends JPanel implements TreeSelectionListener {
 
     private final JEditorPane htmlPane;
     private final JTree tree;
-    private URL helpURL;
+    private final URL helpURL;
 
     public TreeIconDemo() {
-        super(new GridLayout(1,0));
-
-        //Create the nodes.
-        DefaultMutableTreeNode top =
-            new DefaultMutableTreeNode("The Java Series");
+        super(new GridLayout(1, 0));
+        DefaultMutableTreeNode top = new DefaultMutableTreeNode("The Java Series");
         createNodes(top);
 
-        //Create a tree that allows one selection at a time.
-        tree = new JTree(top);
-        tree.getSelectionModel().setSelectionMode
-                (TreeSelectionModel.SINGLE_TREE_SELECTION);
-
-        //Set the icon for leaf nodes.
-        ImageIcon leafIcon = createImageIcon();
-        if (leafIcon != null) {
-            DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-            renderer.setLeafIcon(leafIcon);
-            tree.setCellRenderer(renderer);
-        } else {
-            err.println("Leaf icon missing; using default.");
-        }
-
-        //Listen for when the selection changes.
-        tree.addTreeSelectionListener(this);
-
-        //Create the scroll pane and add the tree to it. 
-        JScrollPane treeView = new JScrollPane(tree);
-
-        //Create the HTML viewing pane.
         htmlPane = new JEditorPane();
         htmlPane.setEditable(false);
-        initHelp();
-        JScrollPane htmlView = new JScrollPane(htmlPane);
 
-        //Add the scroll panes to a split pane.
+        tree = new JTree(top);
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.addTreeSelectionListener(this);
+        setIconForLeaveNodes();
+
+        helpURL = initHelp();
+        JScrollPane htmlView = new JScrollPane(htmlPane);
+        JSplitPane splitPane = buildSplitPane(htmlView);
+        this.add(splitPane);
+    }
+
+    private JSplitPane buildSplitPane(JScrollPane htmlView) {
+        JScrollPane treeView = new JScrollPane(tree);
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setTopComponent(treeView);
         splitPane.setBottomComponent(htmlView);
@@ -109,24 +92,33 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
         splitPane.setDividerLocation(100);
 
         splitPane.setPreferredSize(new Dimension(500, 300));
-
-        //Add the split pane to this panel.
-        add(splitPane);
+        return splitPane;
     }
 
-    /** Required by TreeSelectionListener interface. */
-    public void valueChanged(TreeSelectionEvent e) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode)
-                           tree.getLastSelectedPathComponent();
-
-        if (node == null) return;
-
-        Object nodeInfo = node.getUserObject();
-        if (node.isLeaf()) {
-            BookInfo book = (BookInfo)nodeInfo;
-            displayURL(book.getBookURL());
+    private void setIconForLeaveNodes() {
+        ImageIcon leafIcon = createImageIcon();
+        if (leafIcon != null) {
+            DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+            renderer.setLeafIcon(leafIcon);
+            tree.setCellRenderer(renderer);
         } else {
-            displayURL(helpURL); 
+            err.println("Leaf icon missing; using default.");
+        }
+    }
+
+    /**
+     * Required by TreeSelectionListener interface.
+     */
+    public void valueChanged(TreeSelectionEvent e) {
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (node != null) {
+            Object nodeInfo = node.getUserObject();
+            if (node.isLeaf()) {
+                BookInfo book = (BookInfo) nodeInfo;
+                displayURL(book.getBookURL());
+            } else {
+                displayURL(helpURL);
+            }
         }
     }
 
@@ -164,78 +156,57 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
         }
     }
 
-    private void initHelp() {
-        String s = "TreeDemoHelp.html";
-        helpURL = TreeIconDemo.class.getResource(s);
-        if (helpURL == null) {
-            err.println("Couldn't open help file: " + s);
-        }
-        displayURL(helpURL);
+    private URL initHelp() {
+        String fileName = "TreeDemoHelp.html";
+        URL url = TreeIconDemo.class.getResource(fileName);
+        if (url == null) err.println("Couldn't open help file: " + fileName);
+        displayURL(url);
+        return url;
     }
 
     private void displayURL(URL url) {
         try {
-            if (url != null) {
-                htmlPane.setPage(url);
-            } else { //null url
-		htmlPane.setText("File Not Found");
-            }
+            if (url != null) htmlPane.setPage(url);
+            else htmlPane.setText("File Not Found");
         } catch (IOException e) {
             err.println("Attempted to read a bad URL: " + url);
         }
     }
 
     private void createNodes(DefaultMutableTreeNode top) {
-        DefaultMutableTreeNode category;
-        DefaultMutableTreeNode book;
-
-        category = new DefaultMutableTreeNode("Books for Java Programmers");
-        top.add(category);
-
-        //original Tutorial
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Tutorial: A Short Course on the Basics",
-                "tutorial.html"));
-        category.add(book);
-
-        //Tutorial Continued
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Tutorial Continued: The Rest of the JDK",
-                "tutorialcont.html"));
-        category.add(book);
-
-        //JFC Swing Tutorial
-        book = new DefaultMutableTreeNode(new BookInfo("The JFC Swing Tutorial: A Guide to Constructing GUIs",
-                "swingtutorial.html"));
-        category.add(book);
-
-        //Bloch
-        book = new DefaultMutableTreeNode(new BookInfo("Effective Java Programming Language Guide",
-                "bloch.html"));
-        category.add(book);
-
-        //Arnold/Gosling
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Programming Language", "arnold.html"));
-        category.add(book);
-
-        //Chan
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Developers Almanac",
-                "chan.html"));
-        category.add(book);
-
-        category = new DefaultMutableTreeNode("Books for Java Implementers");
-        top.add(category);
-
-        //VM
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Virtual Machine Specification",
-                "vm.html"));
-        category.add(book);
-
-        //Language Spec
-        book = new DefaultMutableTreeNode(new BookInfo("The Java Language Specification",
-                "jls.html"));
-        category.add(book);
+        addJavaProgrammerBooks(top);
+        addJavaImplementerBooks(top);
     }
 
-    /** Returns an ImageIcon, or null if the path was invalid. */
+    private void addJavaProgrammerBooks(DefaultMutableTreeNode top) {
+        DefaultMutableTreeNode category = new DefaultMutableTreeNode("Books for Java Programmers");
+        top.add(category);
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Tutorial: A Short Course on the Basics", "tutorial.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Tutorial Continued: The Rest of the JDK", "tutorialcont.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The JFC Swing Tutorial: A Guide to Constructing GUIs", "swingtutorial.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("Effective Java Programming Language Guide", "bloch.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Programming Language", "arnold.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Developers Almanac", "chan.html")));
+    }
+
+    private void addJavaImplementerBooks(DefaultMutableTreeNode top) {
+        DefaultMutableTreeNode category = new DefaultMutableTreeNode("Books for Java Implementers");
+        top.add(category);
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Virtual Machine Specification", "vm.html")));
+        category.add(new DefaultMutableTreeNode(
+                new BookInfo("The Java Language Specification", "jls.html")));
+    }
+
+    /**
+     * Returns an ImageIcon, or null if the path was invalid.
+     */
     protected static ImageIcon createImageIcon() {
         URL imgURL = TreeIconDemo.class.getResource("images/middle.gif");
         if (imgURL != null) {

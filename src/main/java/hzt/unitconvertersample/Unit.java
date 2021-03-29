@@ -31,7 +31,7 @@
 
 package hzt.unitconvertersample;
 
-/*
+/**
  * Works in 1.1+Swing, 1.4, and all releases in between.
  * Used by the Converter example.
 */
@@ -46,7 +46,6 @@ public class Unit {
     }
 
     public String toString() {
-        String s = "Meters/" + description + " = " + multiplier;
-        return s;
+        return "Meters/" + description + " = " + multiplier;
     }
 }

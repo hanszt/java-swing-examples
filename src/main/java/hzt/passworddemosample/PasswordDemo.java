@@ -27,24 +27,27 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.passworddemosample;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Arrays;
 
 /* PasswordDemo.java requires no other files. */
 
 public class PasswordDemo extends JPanel
-                          implements ActionListener {
-    private static String OK = "ok";
-    private static String HELP = "help";
+        implements ActionListener {
+    private static final String OK = "ok";
+    private static final String HELP = "help";
 
-    private JFrame controllingFrame; //needed for dialogs
-    private JPasswordField passwordField;
+    private final JFrame controllingFrame;
+    private final JPasswordField passwordField;
 
     public PasswordDemo(JFrame f) {
         //Use the default FlowLayout.
@@ -69,8 +72,14 @@ public class PasswordDemo extends JPanel
         add(buttonPane);
     }
 
+    private static void run() {
+        //Turn off metal's use of bold fonts
+        UIManager.put("swing.boldMetal", Boolean.FALSE);
+        createAndShowGUI();
+    }
+
     protected JComponent createButtonPanel() {
-        JPanel p = new JPanel(new GridLayout(0,1));
+        JPanel p = new JPanel(new GridLayout(0, 1));
         JButton okButton = new JButton("OK");
         JButton helpButton = new JButton("Help");
 
@@ -92,12 +101,12 @@ public class PasswordDemo extends JPanel
             char[] input = passwordField.getPassword();
             if (isPasswordCorrect(input)) {
                 JOptionPane.showMessageDialog(controllingFrame,
-                    "Success! You typed the right password.");
+                        "Success! You typed the right password.");
             } else {
                 JOptionPane.showMessageDialog(controllingFrame,
-                    "Invalid password. Try again.",
-                    "Error Message",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Invalid password. Try again.",
+                        "Error Message",
+                        JOptionPane.ERROR_MESSAGE);
             }
 
             //Zero out the possible password, for security.
@@ -107,10 +116,10 @@ public class PasswordDemo extends JPanel
             resetFocus();
         } else { //The user has asked for help.
             JOptionPane.showMessageDialog(controllingFrame,
-                "You can get the password by searching this example's\n"
-              + "source code for the string \"correctPassword\".\n"
-              + "Or look at the section How to Use Password Fields in\n"
-              + "the components section of The Java Tutorial.");
+                    "You can get the password by searching this example's\n"
+                            + "source code for the string \"correctPassword\".\n"
+                            + "Or look at the section How to Use Password Fields in\n"
+                            + "the components section of The Java Tutorial.");
         }
     }
 
@@ -120,19 +129,8 @@ public class PasswordDemo extends JPanel
      * on the passed-in array.
      */
     private static boolean isPasswordCorrect(char[] input) {
-        boolean isCorrect = true;
-        char[] correctPassword = { 'b', 'u', 'g', 'a', 'b', 'o', 'o' };
-
-        if (input.length != correctPassword.length) {
-            isCorrect = false;
-        } else {
-            isCorrect = Arrays.equals (input, correctPassword);
-        }
-
-        //Zero out the password.
-        Arrays.fill(correctPassword,'0');
-
-        return isCorrect;
+        char[] correctPassword = {'b', 'u', 'g', 'a', 'b', 'o', 'o'};
+        return Arrays.equals(input, correctPassword);
     }
 
     //Must be called from the event dispatch thread.
@@ -148,7 +146,7 @@ public class PasswordDemo extends JPanel
     private static void createAndShowGUI() {
         //Create and set up the window.
         JFrame frame = new JFrame("PasswordDemo");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         final PasswordDemo newContentPane = new PasswordDemo(frame);
@@ -158,6 +156,8 @@ public class PasswordDemo extends JPanel
         //Make sure the focus goes to the right component
         //whenever the frame is initially given the focus.
         frame.addWindowListener(new WindowAdapter() {
+
+            @Override
             public void windowActivated(WindowEvent e) {
                 newContentPane.resetFocus();
             }
@@ -171,12 +171,6 @@ public class PasswordDemo extends JPanel
     public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                //Turn off metal's use of bold fonts
-		UIManager.put("swing.boldMetal", Boolean.FALSE);
-		createAndShowGUI();
-            }
-        });
+        SwingUtilities.invokeLater(PasswordDemo::run);
     }
 }

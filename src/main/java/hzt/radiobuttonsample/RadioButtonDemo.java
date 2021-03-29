@@ -39,7 +39,7 @@ import java.awt.event.KeyEvent;
 
 import static java.lang.System.*;
 
-/*
+/**
  * RadioButtonDemo.java requires these files:
  *   images/Bird.gif
  *   images/Cat.gif

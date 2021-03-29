@@ -44,8 +44,7 @@ import static java.lang.System.err;
  *   images/Cat.gif
  *   images/Dog.gif
  */
-public class SplitPaneDividerDemo extends JPanel
-                                  implements ActionListener {
+public class SplitPaneDividerDemo extends JPanel implements ActionListener {
 
     private final JSplitPane splitPane;
     

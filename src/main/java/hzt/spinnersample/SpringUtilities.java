@@ -53,10 +53,10 @@ public class SpringUtilities {
      * A debugging utility that prints to stdout the component's
      * minimum, preferred, and maximum sizes.
      */
-    public static void printSizes(Component c) {
-        out.println("minimumSize = " + c.getMinimumSize());
-        out.println("preferredSize = " + c.getPreferredSize());
-        out.println("maximumSize = " + c.getMaximumSize());
+    public static void printSizes(Component component) {
+        out.println("minimumSize = " + component.getMinimumSize());
+        out.println("preferredSize = " + component.getPreferredSize());
+        out.println("maximumSize = " + component.getMaximumSize());
     }
 
     /**
