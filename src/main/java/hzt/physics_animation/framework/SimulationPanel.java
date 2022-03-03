@@ -26,17 +26,23 @@ package hzt.physics_animation.framework;
 
 import org.dyn4j.world.World;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JPanel;
+import java.awt.Canvas;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferStrategy;
 
 /**
- * A very VERY simple framework for building samples.
+ * A simple framework for building samples.
  *
  * @version 3.2.0
  * @since 3.2.0
  */
+@SuppressWarnings("unused")
 public abstract class SimulationPanel extends JPanel {
 
     public static final double NANO_TO_BASE = 1.0e9;
@@ -50,25 +56,10 @@ public abstract class SimulationPanel extends JPanel {
     private long last;
 
     protected SimulationPanel(double scale) {
-
-        // set the scale
         this.scale = scale;
-
-        // create the world
         this.world = new World<>();
-
-        // create the size of the window
-        Dimension size = new Dimension(800, 600);
-
-        // create a canvas to paint to
         this.canvas = new Canvas();
-        this.canvas.setPreferredSize(size);
-
-        // add the canvas to the JFrame
-        this.add(this.canvas);
-
-        // setup the world
-        this.initializeWorld();
+        this.canvas.setPreferredSize(new Dimension(800, 600));
     }
 
     /**
@@ -81,8 +72,7 @@ public abstract class SimulationPanel extends JPanel {
      * <p>
      * This should be called after the JFrame has been shown.
      */
-    @SuppressWarnings("BusyWait")
-    private void start() {
+    public void start() {
         // initialize the last update time
         this.last = System.nanoTime();
         // don't allow AWT to paint the canvas since we are
@@ -92,27 +82,30 @@ public abstract class SimulationPanel extends JPanel {
         this.canvas.createBufferStrategy(2);
         // run a separate thread to do active rendering
         // because we don't want to do it on the EDT
-        Thread thread = new Thread(() -> {
-            // perform an infinite loop stopped
-            // render as fast as possible
-            while (!isStopped()) {
-                gameLoop();
-                // you could add a Thread.yield(); or
-                // Thread.sleep(long) here to give the
-                // CPU some breathing room
-                try {
-                    Thread.sleep(5);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Thread.currentThread().interrupt();
-                }
-            }
-        });
+        Thread thread = new Thread(this::startGameLoop);
         // set the game loop thread to a daemon thread so that
         // it cannot stop the JVM from exiting
         thread.setDaemon(true);
         // start the game loop
         thread.start();
+    }
+
+    private void startGameLoop() {
+        // perform an infinite loop stopped
+        // render as fast as possible
+        while (!isStopped()) {
+            gameLoop();
+            // you could add a Thread.yield(); or
+            // Thread.sleep(long) here to give the
+            // CPU some breathing room
+            try {
+                //noinspection BusyWait
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /**
@@ -123,8 +116,8 @@ public abstract class SimulationPanel extends JPanel {
         // get the graphics object to render to
         Graphics2D graphics2D = (Graphics2D) this.canvas.getBufferStrategy().getDrawGraphics();
 
-        // by default, set (0, 0) to be the center of the screen with the positive x axis
-        // pointing right and the positive y axis pointing up
+        // by default, set (0, 0) to be the center of the screen with the positive x-axis
+        // pointing right and the positive y-axis pointing up
         this.transform(graphics2D);
 
         // reset the view
@@ -137,10 +130,10 @@ public abstract class SimulationPanel extends JPanel {
         // set the last time
         this.last = time;
         // convert from nanoseconds to seconds
-        double elapsedTime = (double) diff / NANO_TO_BASE;
+        double elapsedTime = diff / NANO_TO_BASE;
 
         // render anything about the simulation (will render the World objects)
-        this.render(graphics2D, elapsedTime);
+        this.render(graphics2D);
 
         if (!paused) {
             // update the World
@@ -176,7 +169,7 @@ public abstract class SimulationPanel extends JPanel {
         // before we render everything im going to flip the y axis and move the
         // origin to the center (instead of it being in the top left corner)
         AffineTransform yFlip = AffineTransform.getScaleInstance(1, -1);
-        AffineTransform move = AffineTransform.getTranslateInstance(w / 2d, -h / 2d);
+        AffineTransform move = AffineTransform.getTranslateInstance(w / 2D, -h / 2D);
         g.transform(yFlip);
         g.transform(move);
     }
@@ -184,45 +177,31 @@ public abstract class SimulationPanel extends JPanel {
     /**
      * Clears the previous frame.
      *
-     * @param g the graphics object to render to
+     * @param graphics the graphics object to render to
      */
-    protected void clear(Graphics2D g) {
+    protected void clear(Graphics2D graphics) {
         final int w = this.canvas.getWidth();
         final int h = this.canvas.getHeight();
 
-        // lets draw over everything with a white background
-        g.setColor(Color.WHITE);
-        g.fillRect(-w / 2, -h / 2, w, h);
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(-w / 2, -h / 2, w, h);
     }
 
     /**
      * Renders the example.
      *
-     * @param g           the graphics object to render to
-     * @param elapsedTime the elapsed time from the last update
+     * @param graphics the graphics object to render to
      */
-    protected void render(Graphics2D g, double elapsedTime) {
-        g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+    protected void render(Graphics2D graphics) {
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // draw all the objects in the world
         for (int i = 0; i < this.world.getBodyCount(); i++) {
             // get the object
             SimulationBody body = this.world.getBody(i);
-            this.render(g, elapsedTime, body);
+            body.render(graphics, this.scale);
         }
-    }
-
-    /**
-     * Renders the body.
-     *
-     * @param g           the graphics object to render to
-     * @param elapsedTime the elapsed time from the last update
-     * @param body        the body to render
-     */
-    protected void render(Graphics2D g, double elapsedTime, SimulationBody body) {
-        // draw the object
-        body.render(g, this.scale);
     }
 
     /**
@@ -232,7 +211,6 @@ public abstract class SimulationPanel extends JPanel {
      * @param elapsedTime the elapsed time from the last update
      */
     protected void update(Graphics2D g, double elapsedTime) {
-        // update the world with the elapsed time
         this.world.update(elapsedTime);
     }
 
@@ -273,20 +251,5 @@ public abstract class SimulationPanel extends JPanel {
      */
     public boolean isPaused() {
         return this.paused;
-    }
-
-    /**
-     * Starts the simulation.
-     */
-    public void run() {
-        // set the look and feel to the system look and feel
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
-        }
-
-        // start it
-        this.start();
     }
 }

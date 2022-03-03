@@ -31,13 +31,25 @@
 
 package hzt.radiobuttonsample;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static java.lang.System.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.util.Optional;
 
 /**
  * RadioButtonDemo.java requires these files:
@@ -47,40 +59,43 @@ import static java.lang.System.*;
  *   images/Rabbit.gif
  *   images/Pig.gif
  */
-public class RadioButtonDemo extends JPanel implements ActionListener {
+public class RadioButtonDemo {
 
-    static String birdString = "Bird";
-    static String catString = "Cat";
-    static String dogString = "Dog";
-    static String rabbitString = "Rabbit";
-    static String pigString = "Pig";
+    private static final Logger LOGGER = LoggerFactory.getLogger(RadioButtonDemo.class);
 
-    JLabel picture;
+    private static final String BIRD_STRING = "Bird";
+    private static final String CAT_STRING = "Cat";
+    private static final String DOG_STRING = "Dog";
+    private static final String RABBIT_STRING = "Rabbit";
+    private static final String PIG_STRING = "Pig";
+
+    private final JPanel mainPanel;
+    private final JLabel picture;
 
     public RadioButtonDemo() {
-        super(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout());
 
         //Create the radio buttons.
-        JRadioButton birdButton = new JRadioButton(birdString);
+        JRadioButton birdButton = new JRadioButton(BIRD_STRING);
         birdButton.setMnemonic(KeyEvent.VK_B);
-        birdButton.setActionCommand(birdString);
+        birdButton.setActionCommand(BIRD_STRING);
         birdButton.setSelected(true);
 
-        JRadioButton catButton = new JRadioButton(catString);
+        JRadioButton catButton = new JRadioButton(CAT_STRING);
         catButton.setMnemonic(KeyEvent.VK_C);
-        catButton.setActionCommand(catString);
+        catButton.setActionCommand(CAT_STRING);
 
-        JRadioButton dogButton = new JRadioButton(dogString);
+        JRadioButton dogButton = new JRadioButton(DOG_STRING);
         dogButton.setMnemonic(KeyEvent.VK_D);
-        dogButton.setActionCommand(dogString);
+        dogButton.setActionCommand(DOG_STRING);
 
-        JRadioButton rabbitButton = new JRadioButton(rabbitString);
+        JRadioButton rabbitButton = new JRadioButton(RABBIT_STRING);
         rabbitButton.setMnemonic(KeyEvent.VK_R);
-        rabbitButton.setActionCommand(rabbitString);
+        rabbitButton.setActionCommand(RABBIT_STRING);
 
-        JRadioButton pigButton = new JRadioButton(pigString);
+        JRadioButton pigButton = new JRadioButton(PIG_STRING);
         pigButton.setMnemonic(KeyEvent.VK_P);
-        pigButton.setActionCommand(pigString);
+        pigButton.setActionCommand(PIG_STRING);
 
         //Group the radio buttons.
         ButtonGroup group = new ButtonGroup();
@@ -91,16 +106,16 @@ public class RadioButtonDemo extends JPanel implements ActionListener {
         group.add(pigButton);
 
         //Register a listener for the radio buttons.
-        birdButton.addActionListener(this);
-        catButton.addActionListener(this);
-        dogButton.addActionListener(this);
-        rabbitButton.addActionListener(this);
-        pigButton.addActionListener(this);
+        birdButton.addActionListener(this::actionPerformed);
+        catButton.addActionListener(this::actionPerformed);
+        dogButton.addActionListener(this::actionPerformed);
+        rabbitButton.addActionListener(this::actionPerformed);
+        pigButton.addActionListener(this::actionPerformed);
 
         //Set up the picture label.
-        picture = new JLabel(createImageIcon("images/"
-                + birdString
-                + ".gif"));
+        picture = createImageIcon("images/" + BIRD_STRING + ".gif")
+                .map(JLabel::new)
+                .orElseThrow();
 
         //The preferred size is hard-coded to be the width of the
         //widest image and the height of the tallest image.
@@ -116,31 +131,26 @@ public class RadioButtonDemo extends JPanel implements ActionListener {
         radioPanel.add(rabbitButton);
         radioPanel.add(pigButton);
 
-        add(radioPanel, BorderLayout.LINE_START);
-        add(picture, BorderLayout.CENTER);
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.add(radioPanel, BorderLayout.LINE_START);
+        mainPanel.add(picture, BorderLayout.CENTER);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
     }
 
     /**
      * Listens to the radio buttons.
      */
     public void actionPerformed(ActionEvent e) {
-        picture.setIcon(createImageIcon("images/"
-                + e.getActionCommand()
-                + ".gif"));
+        final var actionCommand = e.getActionCommand();
+        createImageIcon("images/" + actionCommand + ".gif")
+                .ifPresentOrElse(picture::setIcon, () -> LOGGER.error("Couldn't find file: {}", actionCommand));
     }
 
     /**
      * Returns an ImageIcon, or null if the path was invalid.
      */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = RadioButtonDemo.class.getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            err.println("Couldn't find file: " + path);
-            return null;
-        }
+    protected static Optional<ImageIcon> createImageIcon(String path) {
+        return Optional.ofNullable(RadioButtonDemo.class.getResource(path))
+                .map(ImageIcon::new);
     }
 
     /**
@@ -154,7 +164,8 @@ public class RadioButtonDemo extends JPanel implements ActionListener {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        JComponent newContentPane = new RadioButtonDemo();
+        final var radioButtonDemo = new RadioButtonDemo();
+        JComponent newContentPane = radioButtonDemo.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 

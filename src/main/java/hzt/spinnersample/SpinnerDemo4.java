@@ -37,25 +37,37 @@ package hzt.spinnersample;
  *   SpringUtilities.java
  */
 
-import javax.swing.*;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.SpringLayout;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Container;
+import java.awt.Dimension;
 
-public class SpinnerDemo4 extends JPanel {
+public class SpinnerDemo4 {
+
+    private final JPanel mainPanel;
 
     public SpinnerDemo4() {
-        super(new SpringLayout());
+        mainPanel = new JPanel(new SpringLayout());
 
         String[] labels = {"Shade of Gray: "};
         int numPairs = labels.length;
 
-        JSpinner spinner = addLabeledSpinner(this, labels[0], new GrayModel(170));
-        spinner.setEditor(new GrayEditor(spinner));
+        JSpinner spinner = addLabeledSpinner(mainPanel, labels[0], new GrayModel(170));
+        spinner.setEditor(new GrayEditor().withConfigurationFor(spinner));
 
-        //Lay out the panel.
-        SpringUtilities.makeCompactGrid(this,
-                numPairs, 2, //rows, cols
+        //Lay out the
+        SpringUtilities.makeCompactGrid(mainPanel, numPairs, 2, //rows, cols
                 10, 10,        //initX, initY
                 6, 10);       //xPad, yPad
     }
@@ -82,7 +94,8 @@ public class SpinnerDemo4 extends JPanel {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        JComponent newContentPane = new SpinnerDemo4();
+        final var spinnerDemo4 = new SpinnerDemo4();
+        JComponent newContentPane = spinnerDemo4.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
@@ -109,7 +122,7 @@ public class SpinnerDemo4 extends JPanel {
         }
 
         public int getIntValue() {
-            return (Integer) getValue();
+            return (int) getValue();
         }
 
         public Color getColor() {
@@ -118,14 +131,15 @@ public class SpinnerDemo4 extends JPanel {
         }
     }
 
-    private static class GrayEditor extends JLabel implements ChangeListener {
-        public GrayEditor(JSpinner spinner) {
+    private static class GrayEditor extends JLabel {
+
+        private GrayEditor withConfigurationFor(JSpinner spinner) {
             setOpaque(true);
 
             //Get info from the model.
             GrayModel myModel = (GrayModel) (spinner.getModel());
             setBackground(myModel.getColor());
-            spinner.addChangeListener(this);
+            spinner.addChangeListener(this::stateChanged);
 
             //Set tool tip text.
             updateToolTipText(spinner);
@@ -134,9 +148,10 @@ public class SpinnerDemo4 extends JPanel {
             Dimension size = new Dimension(60, 15);
             setMinimumSize(size);
             setPreferredSize(size);
+            return this;
         }
 
-        protected void updateToolTipText(JSpinner spinner) {
+        protected final void updateToolTipText(JSpinner spinner) {
             String toolTipText = spinner.getToolTipText();
             if (toolTipText != null) {
                 //JSpinner has tool tip text.  Use it.
@@ -154,7 +169,8 @@ public class SpinnerDemo4 extends JPanel {
         public void stateChanged(ChangeEvent e) {
             JSpinner mySpinner = (JSpinner) (e.getSource());
             GrayModel myModel = (GrayModel) (mySpinner.getModel());
-            setBackground(myModel.getColor());
+            final var color = myModel.getColor();
+            setBackground(color);
             updateToolTipText(mySpinner);
         }
     }

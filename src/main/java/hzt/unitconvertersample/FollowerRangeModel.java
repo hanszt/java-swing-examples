@@ -27,7 +27,7 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.unitconvertersample;
 
@@ -36,79 +36,67 @@ package hzt.unitconvertersample;
  * Used by the Converter example.
  */
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 /**
  * Implements a model whose data is actually in another model (the
  * "source model").  The follower model adjusts the values obtained
  * from the source model (or set in the follower model) to be in
  * a different unit of measure.
- *
  */
-public class FollowerRangeModel extends ConverterRangeModel
-                                implements ChangeListener {
-    ConverterRangeModel sourceModel; //the real model
+public class FollowerRangeModel extends ConverterRangeModel {
 
-    /** Creates a FollowerRangeModel that gets its state from sourceModel. */
+    private final ConverterRangeModel sourceModel; //the real model
+
+    /**
+     * Creates a FollowerRangeModel that gets its state from sourceModel.
+     */
     public FollowerRangeModel(ConverterRangeModel sourceModel) {
         this.sourceModel = sourceModel;
-        sourceModel.addChangeListener(this);
+        sourceModel.addChangeListener(e -> fireStateChanged());
     }
 
     //The only method in the ChangeListener interface.
-    public void stateChanged(ChangeEvent e) {
-        fireStateChanged();
-    }
 
+    @Override
     public int getMaximum() {
         int modelMax = sourceModel.getMaximum();
-        double multiplyBy = sourceModel.getMultiplier()/this.getMultiplier();
-        return (int)(modelMax * multiplyBy);
+        double multiplyBy = sourceModel.getMultiplier() / this.getMultiplier();
+        return (int) (modelMax * multiplyBy);
     }
 
+    @Override
     public void setMaximum(int newMaximum) {
-        sourceModel.setMaximum((int)(newMaximum *
-                     (this.getMultiplier()/sourceModel.getMultiplier())));
+        sourceModel.setMaximum((int) (newMaximum * (this.getMultiplier() / sourceModel.getMultiplier())));
     }
 
+    @Override
     public int getValue() {
-        return (int)getDoubleValue();
+        return (int) getDoubleValue();
     }
 
+    @Override
     public void setValue(int newValue) {
-        setDoubleValue((double)newValue);
+        setDoubleValue(newValue);
     }
 
+    @Override
     public double getDoubleValue() {
         return sourceModel.getDoubleValue()
-               * sourceModel.getMultiplier()
-               / this.getMultiplier();
+                * sourceModel.getMultiplier()
+                / this.getMultiplier();
     }
 
+    @Override
     public void setDoubleValue(double newValue) {
-        sourceModel.setDoubleValue(
-                     newValue * this.getMultiplier()
-                     / sourceModel.getMultiplier());
+        sourceModel.setDoubleValue(newValue * this.getMultiplier() / sourceModel.getMultiplier());
     }
 
-    public int getExtent() {
-        return super.getExtent();
-    }
-
-    public void setExtent(int newExtent) {
-        super.setExtent(newExtent);
-    }
-
+    @Override
     public void setRangeProperties(int value,
                                    int extent,
                                    int min,
                                    int max,
                                    boolean adjusting) {
-        double multiplyBy = this.getMultiplier()/sourceModel.getMultiplier();
-        sourceModel.setRangeProperties(value*multiplyBy,
-                                     extent, min,
-                                     (int)(max*multiplyBy),
-                                     adjusting);
+        double multiplyBy = this.getMultiplier() / sourceModel.getMultiplier();
+        sourceModel.setRangeProperties(value * multiplyBy, (int) (max * multiplyBy), adjusting);
     }
 }

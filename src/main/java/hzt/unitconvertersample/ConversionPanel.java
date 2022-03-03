@@ -27,7 +27,7 @@
  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */ 
+ */
 
 package hzt.unitconvertersample;
 
@@ -35,128 +35,135 @@ package hzt.unitconvertersample;
  * A 1.4 class used by the Converter example.
  */
 
-import javax.swing.*;
+import org.jetbrains.annotations.NotNull;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComboBox;
+import javax.swing.JFormattedTextField;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Color;
+import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.text.NumberFormat;
 
-public class ConversionPanel extends JPanel
-                             implements ActionListener,
-                                        ChangeListener,
-                                        PropertyChangeListener {
-    JFormattedTextField textField;
-    JComboBox unitChooser;
-    JSlider slider;
-    ConverterRangeModel sliderModel;
-    Converter controller;
-    Unit[] units;
-    String title;
-    NumberFormat numberFormat;
+public class ConversionPanel extends JPanel {
 
-    final static boolean MULTICOLORED = false;
-    final static int MAX = 10000;
+    static final int MAX = 10_000;
 
-    ConversionPanel(Converter myController, String myTitle,
-                    Unit[] myUnits,
-                    ConverterRangeModel myModel) {
-        if (MULTICOLORED) {
-            setOpaque(true);
-            setBackground(new Color(0, 255, 255));
-        }
-        setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createTitledBorder(myTitle),
-                        BorderFactory.createEmptyBorder(5,5,5,5)));
+    private final transient ConverterRangeModel converterRangeModel;
+    private transient ChangeListener onUnitChanged;
 
-        //Save arguments in instance variables.
-        controller = myController;
-        units = myUnits;
-        title = myTitle;
-        sliderModel = myModel;
+    ConversionPanel(ConverterRangeModel rangeModel) {
+        converterRangeModel = rangeModel;
+    }
 
-        //Create the text field format, and then the text field.
-        numberFormat = NumberFormat.getNumberInstance();
+    public ConversionPanel buildContent(Unit[] units) {
+        //Put everything together.
+        setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
+        add(buildUnitGroup());
+        add(createChooserPanel(units));
+        return this;
+    }
+
+    @NotNull
+    private JPanel buildUnitGroup() {
+        JPanel unitGroup = getUnitGroup();
+        unitGroup.setLayout(new BoxLayout(unitGroup, BoxLayout.PAGE_AXIS));
+        unitGroup.setOpaque(true);
+        unitGroup.setBackground(new Color(0, 0, 255));
+        unitGroup.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+        JFormattedTextField textField = buildTextField();
+        converterRangeModel.addChangeListener(e -> updateTextField(textField));
+        unitGroup.add(textField);
+        unitGroup.add(new JSlider(converterRangeModel));
+        unitGroup.setAlignmentY(TOP_ALIGNMENT);
+        return unitGroup;
+    }
+
+    @NotNull
+    private JFormattedTextField buildTextField() {
+        NumberFormat numberFormat = NumberFormat.getNumberInstance();
         numberFormat.setMaximumFractionDigits(2);
+        return formattedTextField(numberFormat);
+    }
+
+    @NotNull
+    private static JPanel getUnitGroup() {
+        return new JPanel() {
+            @Override
+            public Dimension getMinimumSize() {
+                return getPreferredSize();
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(150, super.getPreferredSize().height);
+            }
+
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize();
+            }
+        };
+    }
+
+    @NotNull
+    private JPanel createChooserPanel(Unit[] units) {
+        //Create a sub-panel so the combo box isn't too tall and is sufficiently wide.
+        JPanel chooserPanel = new JPanel();
+        chooserPanel.setLayout(new BoxLayout(chooserPanel, BoxLayout.PAGE_AXIS));
+        chooserPanel.setOpaque(true);
+        chooserPanel.setBackground(new Color(255, 0, 255));
+        JComboBox<String> unitChooser = buildUnitChooser(units);
+        chooserPanel.add(unitChooser);
+        chooserPanel.add(Box.createHorizontalStrut(100));
+        chooserPanel.setAlignmentY(TOP_ALIGNMENT);
+        return chooserPanel;
+    }
+
+    private JComboBox<String> buildUnitChooser(Unit[] units) {
+        JComboBox<String> unitChooser = new JComboBox<>();
+        for (Unit unit : units) { //Populate it.
+            unitChooser.addItem(unit.description());
+        }
+        final var selectedIndex = 0;
+        unitChooser.setSelectedIndex(selectedIndex);
+        converterRangeModel.setMultiplier(units[selectedIndex].multiplier());
+        unitChooser.addActionListener(e -> updateSliderModel(units[unitChooser.getSelectedIndex()]));
+        return unitChooser;
+    }
+
+    private void updateSliderModel(Unit unit) {
+        converterRangeModel.setMultiplier(unit.multiplier());
+        onUnitChanged.stateChanged(new ChangeEvent(this));
+    }
+
+    private JFormattedTextField formattedTextField(NumberFormat numberFormat) {
         NumberFormatter formatter = new NumberFormatter(numberFormat);
         formatter.setAllowsInvalid(false);
         formatter.setCommitsOnValidEdit(true);//seems to be a no-op --
         //aha -- it changes the value property but doesn't cause the result to
         //be parsed (that happens on focus loss/return, I think).
         //
-        textField = new JFormattedTextField(formatter);
+        JFormattedTextField textField = new JFormattedTextField(formatter);
         textField.setColumns(10);
-        textField.setValue(new Double(sliderModel.getDoubleValue()));
-        textField.addPropertyChangeListener(this);
-
-        //Add the combo box.
-        unitChooser = new JComboBox();
-        for (int i = 0; i < units.length; i++) { //Populate it.
-            unitChooser.addItem(units[i].description);
-        }
-        unitChooser.setSelectedIndex(0);
-        sliderModel.setMultiplier(units[0].multiplier);
-        unitChooser.addActionListener(this);
-
-        //Add the slider.
-        slider = new JSlider(sliderModel);
-        sliderModel.addChangeListener(this);
-
-        //Make the text field/slider group a fixed size
-        //to make stacked ConversionPanels nicely aligned.
-        JPanel unitGroup = new JPanel() {
-            public Dimension getMinimumSize() {
-                return getPreferredSize();
-            }
-            public Dimension getPreferredSize() {
-                return new Dimension(150,
-                                     super.getPreferredSize().height);
-            }
-            public Dimension getMaximumSize() {
-                return getPreferredSize();
-            }
-        };
-        unitGroup.setLayout(new BoxLayout(unitGroup,
-                                          BoxLayout.PAGE_AXIS));
-        if (MULTICOLORED) {
-            unitGroup.setOpaque(true);
-            unitGroup.setBackground(new Color(0, 0, 255));
-        }
-        unitGroup.setBorder(BorderFactory.createEmptyBorder(
-                                                0,0,0,5));
-        unitGroup.add(textField);
-        unitGroup.add(slider);
-
-        //Create a subpanel so the combo box isn't too tall
-        //and is sufficiently wide.
-        JPanel chooserPanel = new JPanel();
-        chooserPanel.setLayout(new BoxLayout(chooserPanel,
-                                             BoxLayout.PAGE_AXIS));
-        if (MULTICOLORED) {
-            chooserPanel.setOpaque(true);
-            chooserPanel.setBackground(new Color(255, 0, 255));
-        }
-        chooserPanel.add(unitChooser);
-        chooserPanel.add(Box.createHorizontalStrut(100));
-
-        //Put everything together.
-        setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
-        add(unitGroup);
-        add(chooserPanel);
-        unitGroup.setAlignmentY(TOP_ALIGNMENT);
-        chooserPanel.setAlignmentY(TOP_ALIGNMENT);
+        textField.setValue(converterRangeModel.getDoubleValue());
+        textField.addPropertyChangeListener(this::propertyChange);
+        return textField;
     }
 
     //Don't allow this panel to get taller than its preferred size.
     //BoxLayout pays attention to maximum size, though most layout
     //managers don't.
+    @Override
     public Dimension getMaximumSize() {
-        return new Dimension(Integer.MAX_VALUE,
-                             getPreferredSize().height);
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
     }
 
     /**
@@ -164,33 +171,21 @@ public class ConversionPanel extends JPanel
      * selected unit of measurement.
      */
     public double getMultiplier() {
-        return sliderModel.getMultiplier();
-    }
-
-    public double getValue() {
-        return sliderModel.getDoubleValue();
-    }
-
-    /** Updates the text field when the main data model is updated. */
-    public void stateChanged(ChangeEvent e) {
-        int min = sliderModel.getMinimum();
-        int max = sliderModel.getMaximum();
-        double value = sliderModel.getDoubleValue();
-        NumberFormatter formatter = (NumberFormatter)textField.getFormatter();
-
-        formatter.setMinimum(new Double(min));
-        formatter.setMaximum(new Double(max));
-        textField.setValue(new Double(value));
+        return converterRangeModel.getMultiplier();
     }
 
     /**
-     * Responds to the user choosing a new unit from the combo box.
+     * Updates the text field when the main data model is updated.
      */
-    public void actionPerformed(ActionEvent e) {
-        //Combo box event. Set new maximums for the sliders.
-        int i = unitChooser.getSelectedIndex();
-        sliderModel.setMultiplier(units[i].multiplier);
-        controller.resetMaxValues(false);
+    public void updateTextField(JFormattedTextField textField) {
+        int min = converterRangeModel.getMinimum();
+        int max = converterRangeModel.getMaximum();
+        double value = converterRangeModel.getDoubleValue();
+        NumberFormatter formatter = (NumberFormatter) textField.getFormatter();
+
+        formatter.setMinimum((double) min);
+        formatter.setMaximum((double) max);
+        textField.setValue(value);
     }
 
     /**
@@ -199,8 +194,18 @@ public class ConversionPanel extends JPanel
      */
     public void propertyChange(PropertyChangeEvent e) {
         if ("value".equals(e.getPropertyName())) {
-            Number value = (Number)e.getNewValue();
-            sliderModel.setDoubleValue(value.doubleValue());
+            Number value = (Number) e.getNewValue();
+            converterRangeModel.setDoubleValue(value.doubleValue());
         }
+    }
+
+    public void setTittle(String myTitle) {
+        setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder(myTitle),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+    }
+
+    public void setOnUnitChanged(ChangeListener changedListener) {
+        onUnitChanged = changedListener;
     }
 }

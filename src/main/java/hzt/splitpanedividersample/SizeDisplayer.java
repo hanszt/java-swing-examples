@@ -31,19 +31,28 @@
 
 package hzt.splitpanedividersample;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.Icon;
+import javax.swing.JComponent;
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Composite;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.awt.font.FontRenderContext;
 import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
-public class SizeDisplayer extends JComponent {
+public final class SizeDisplayer extends JComponent {
 
-    private final transient Icon icon;
-    private final String text;
     private static final int X_TEXT_PAD = 5;
     private static final int Y_TEXT_PAD = 5;
 
+    private final transient Icon icon;
+    private final String text;
     private final Rectangle textSizeR = new Rectangle();
     private final Dimension textSizeD = new Dimension();
 
@@ -51,10 +60,15 @@ public class SizeDisplayer extends JComponent {
     private Dimension userMinimumSize;
     private Dimension userMaximumSize;
 
-    public SizeDisplayer(String text, Icon icon) {
+    private SizeDisplayer(String text, Icon icon) {
         this.text = text;
         this.icon = icon;
-        setOpaque(true);
+    }
+
+    public static SizeDisplayer with(String text, Icon icon) {
+        SizeDisplayer sizeDisplayer = new SizeDisplayer(text, icon);
+        sizeDisplayer.setOpaque(true);
+        return sizeDisplayer;
     }
 
     @Override
@@ -78,18 +92,16 @@ public class SizeDisplayer extends JComponent {
         graphics2D.dispose();
     }
 
-    private void drawRectangle(Graphics2D graphics2D, Dimension prefSize, Dimension size, Color red) {
+    private static void drawRectangle(Graphics2D graphics2D, Dimension prefSize, Dimension size, Color red) {
         int prefX = (size.width - prefSize.width) / 2;
         int prefY = (size.height - prefSize.height) / 2;
         graphics2D.setColor(red);
         graphics2D.drawRect(prefX, prefY, prefSize.width - 1, prefSize.height - 1);
     }
 
-    private void setRenderingHints(Graphics2D graphics2D) {
-        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING,
-                RenderingHints.VALUE_RENDER_QUALITY);
+    private static void setRenderingHints(Graphics2D graphics2D) {
+        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
     }
 
     private void drawMaxSizeRectangleIfOpaque(Graphics2D graphics2D, Dimension size) {
@@ -102,9 +114,7 @@ public class SizeDisplayer extends JComponent {
     private void drawIcon(Graphics2D graphics2D, Dimension size) {
         if (icon != null) {
             Composite oldComposite = graphics2D.getComposite();
-            graphics2D.setComposite(AlphaComposite.getInstance(
-                    AlphaComposite.SRC_OVER,
-                    0.1f));
+            graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1F));
             icon.paintIcon(this, graphics2D,
                     (size.width - icon.getIconWidth()) / 2,
                     (size.height - icon.getIconHeight()) / 2);
@@ -127,15 +137,9 @@ public class SizeDisplayer extends JComponent {
         if (text == null) {
             textSizeD.setSize(0, 0);
         } else {
-            FontRenderContext frc;
-            if (g2d != null) {
-                frc = g2d.getFontRenderContext();
-            } else {
-                frc = new FontRenderContext(null, false, false);
-            }
-            Rectangle2D textRect = getFont().getStringBounds(
-                    text,
-                    frc);
+            FontRenderContext frc = g2d != null ? g2d.getFontRenderContext() :
+                    new FontRenderContext(null, false, false);
+            Rectangle2D textRect = getFont().getStringBounds(text, frc);
             textSizeR.setRect(textRect);
             textSizeD.setSize(textSizeR.width, textSizeR.height);
         }

@@ -31,32 +31,43 @@
 
 package hzt.passworddemosample;
 
-import javax.swing.*;
-import java.awt.*;
+import org.hzt.swing_utils.function.window_listeners.WindowActivatedListener;
+
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Arrays;
+import java.util.Base64;
 
 /* PasswordDemo.java requires no other files. */
 
-public class PasswordDemo extends JPanel
-        implements ActionListener {
+public class PasswordDemo {
+
     private static final String OK = "ok";
     private static final String HELP = "help";
 
     private final JFrame controllingFrame;
     private final JPasswordField passwordField;
 
-    public PasswordDemo(JFrame f) {
+    public PasswordDemo(JFrame frame) {
         //Use the default FlowLayout.
-        controllingFrame = f;
-
-        //Create everything.
+        this.controllingFrame = frame;
         passwordField = new JPasswordField(10);
+    }
+
+    private JPanel buildContentPane() {
         passwordField.setActionCommand(OK);
-        passwordField.addActionListener(this);
+        passwordField.addActionListener(this::checkEnteredPassword);
 
         JLabel label = new JLabel("Enter the password: ");
         label.setLabelFor(passwordField);
@@ -67,9 +78,10 @@ public class PasswordDemo extends JPanel
         JPanel textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
         textPane.add(label);
         textPane.add(passwordField);
-
-        add(textPane);
-        add(buttonPane);
+        JPanel passwordPanel = new JPanel();
+        passwordPanel.add(textPane);
+        passwordPanel.add(buttonPane);
+        return passwordPanel;
     }
 
     private static void run() {
@@ -78,15 +90,15 @@ public class PasswordDemo extends JPanel
         createAndShowGUI();
     }
 
-    protected JComponent createButtonPanel() {
+    protected final JComponent createButtonPanel() {
         JPanel p = new JPanel(new GridLayout(0, 1));
         JButton okButton = new JButton("OK");
         JButton helpButton = new JButton("Help");
 
         okButton.setActionCommand(OK);
         helpButton.setActionCommand(HELP);
-        okButton.addActionListener(this);
-        helpButton.addActionListener(this);
+        okButton.addActionListener(this::checkEnteredPassword);
+        helpButton.addActionListener(this::checkEnteredPassword);
 
         p.add(okButton);
         p.add(helpButton);
@@ -94,7 +106,7 @@ public class PasswordDemo extends JPanel
         return p;
     }
 
-    public void actionPerformed(ActionEvent e) {
+    public void checkEnteredPassword(ActionEvent e) {
         String cmd = e.getActionCommand();
 
         if (OK.equals(cmd)) { //Process the password.
@@ -115,11 +127,12 @@ public class PasswordDemo extends JPanel
             passwordField.selectAll();
             resetFocus();
         } else { //The user has asked for help.
-            JOptionPane.showMessageDialog(controllingFrame,
-                    "You can get the password by searching this example's\n"
-                            + "source code for the string \"correctPassword\".\n"
-                            + "Or look at the section How to Use Password Fields in\n"
-                            + "the components section of The Java Tutorial.");
+            JOptionPane.showMessageDialog(controllingFrame, """
+                            You can get the password by searching this example's
+                            source code for the string "correctPassword".
+                            Or look at the section How to Use Password Fields in
+                            the components section of The Java Tutorial.
+                            """);
         }
     }
 
@@ -129,8 +142,9 @@ public class PasswordDemo extends JPanel
      * on the passed-in array.
      */
     private static boolean isPasswordCorrect(char[] input) {
-        char[] correctPassword = {'b', 'u', 'g', 'a', 'b', 'o', 'o'};
-        return Arrays.equals(input, correctPassword);
+        byte[] correctPasswordEncoded = {89, 110, 86, 110, 89, 87, 74, 118, 98, 119, 61, 61};
+        final var decoded = new String(Base64.getDecoder().decode(correctPasswordEncoded));
+        return Arrays.equals(input, decoded.toCharArray());
     }
 
     //Must be called from the event dispatch thread.
@@ -149,26 +163,20 @@ public class PasswordDemo extends JPanel
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        final PasswordDemo newContentPane = new PasswordDemo(frame);
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
+        final PasswordDemo passwordDemo = new PasswordDemo(frame);
+        final var contentPane = passwordDemo.buildContentPane();
+        contentPane.setOpaque(true); //content panes must be opaque
+        frame.setContentPane(contentPane);
 
         //Make sure the focus goes to the right component
         //whenever the frame is initially given the focus.
-        frame.addWindowListener(new WindowAdapter() {
-
-            @Override
-            public void windowActivated(WindowEvent e) {
-                newContentPane.resetFocus();
-            }
-        });
-
         //Display the window.
+        frame.addWindowListener((WindowActivatedListener) e -> passwordDemo.resetFocus());
         frame.pack();
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+        public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(PasswordDemo::run);

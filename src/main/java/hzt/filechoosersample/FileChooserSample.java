@@ -1,7 +1,16 @@
 package hzt.filechoosersample;
 
-import javax.swing.*;
-import java.awt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
@@ -9,15 +18,15 @@ import java.util.Scanner;
 
 public class FileChooserSample {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileChooserSample.class);
+
     public static void main(String[] args) {
-        FileChooserSample fileChooserSample = new FileChooserSample();
-        SwingUtilities.invokeLater(fileChooserSample::createAndShowGUI);
+        SwingUtilities.invokeLater(FileChooserSample::createAndShowGUI);
     }
 
-    private void createAndShowGUI() {
+    private static void createAndShowGUI() {
         JFrame frame = new JFrame("FileChooserSample");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         JPanel contentPane = createContentPane();
         contentPane.setOpaque(true);
         frame.setContentPane(contentPane);
@@ -25,7 +34,7 @@ public class FileChooserSample {
         frame.setVisible(true);
     }
 
-    private JPanel createContentPane() {
+    private static JPanel createContentPane() {
         JPanel contentPane = new JPanel(new GridLayout(1, 0));
         JFileChooser fileChooser = configuredFileChooser();
         JTextArea textArea = new JTextArea();
@@ -36,24 +45,25 @@ public class FileChooserSample {
         return contentPane;
     }
 
-    private JFileChooser configuredFileChooser() {
+    private static JFileChooser configuredFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.addActionListener(this::printContent);
+        fileChooser.addActionListener(FileChooserSample::printContent);
         return fileChooser;
     }
 
-    private void printContent(ActionEvent e) {
-        System.out.println("Print content");
+    private static void printContent(ActionEvent e) {
+        LOGGER.info("Start printing content");
         JFileChooser fileChooser = (JFileChooser) e.getSource();
         File file = fileChooser.getSelectedFile();
         try (Scanner input = new Scanner(file)) {
             while (input.hasNextLine()) {
-                System.out.println(input.nextLine());
+                final var nextLine = input.nextLine();
+                LOGGER.info(nextLine);
             }
         } catch (IOException io) {
-            io.printStackTrace();
+            LOGGER.error("Something went wrong while printing content", io);
         }
-
+        LOGGER.info("Content printed");
     }
 }

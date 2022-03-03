@@ -1,10 +1,24 @@
 package hzt.form_example;
 
-import javax.swing.*;
-import java.awt.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+import java.awt.Color;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 
 public class JAVASwingFormExample {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(JAVASwingFormExample.class);
 
 	public static final int TEXT_FIELD_WIDTH = 86;
 	public static final int TEXT_FIELD_HEIGHT = 20;
@@ -33,16 +47,12 @@ public class JAVASwingFormExample {
 	}
 
 	private static void run() {
-		try {
 			JAVASwingFormExample application = new JAVASwingFormExample();
 			application.frame.setVisible(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 	private static void occupationComboBoxAction(ActionEvent actionEvent) {
-		System.out.println("Occupation combobox action");
+		LOGGER.info("Occupation combobox action");
 	}
 
 	private void initialize() {
@@ -119,13 +129,20 @@ public class JAVASwingFormExample {
 	}
 
 	private void submit(ActionEvent e) {
-		if (nameTextField.getText().isEmpty() || (phoneNumberField.getText().isEmpty())
-				|| (emailIdField.getText().isEmpty()) || (addressField.getText().isEmpty())
-				|| ((femaleRadioButton.isSelected()) && (maleRadioButton.isSelected()))
-				|| (occupationComboBox.getSelectedItem() != null &&
-				occupationComboBox.getSelectedItem().equals(DEFAULT_COMBOBOX_ITEM)))
+		final var textFieldsEmpty = nameTextField.getText().isEmpty() || (phoneNumberField.getText().isEmpty())
+				|| (emailIdField.getText().isEmpty()) || (addressField.getText().isEmpty());
+
+		final var maleAndFemaleRadioButtonSelected = (femaleRadioButton.isSelected()) && (maleRadioButton.isSelected());
+
+		final var comboBoxInDefaultState = occupationComboBox.getSelectedItem() != null &&
+				occupationComboBox.getSelectedItem().equals(DEFAULT_COMBOBOX_ITEM);
+
+		final var isDataMissing = textFieldsEmpty || maleAndFemaleRadioButtonSelected || comboBoxInDefaultState;
+		if (isDataMissing) {
 			JOptionPane.showMessageDialog(null, "Data Missing");
-		else displaySubmittedData();
+		} else {
+			displaySubmittedData();
+		}
 	}
 
 	private void displaySubmittedData() {
@@ -142,9 +159,13 @@ public class JAVASwingFormExample {
 	}
 
 	private String getSex() {
-		if (femaleRadioButton.isSelected()) return "Female";
-		else if (maleRadioButton.isSelected()) return "Male";
-		else return "Not defined";
+		if (femaleRadioButton.isSelected()) {
+			return "Female";
+		} else if (maleRadioButton.isSelected()) {
+			return "Male";
+		} else {
+			return "Not defined";
+		}
 	}
 
 	private void clear(ActionEvent e) {

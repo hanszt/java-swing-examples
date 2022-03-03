@@ -31,11 +31,14 @@ import org.dyn4j.geometry.Geometry;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
 
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static javax.swing.SwingUtilities.*;
+import static javax.swing.SwingUtilities.isLeftMouseButton;
+import static javax.swing.SwingUtilities.isMiddleMouseButton;
+import static javax.swing.SwingUtilities.isRightMouseButton;
 
 public class PhysicsPanel extends SimulationPanel {
 
@@ -71,11 +74,11 @@ public class PhysicsPanel extends SimulationPanel {
 		this.canvas.addMouseMotionListener(mouseAdapter);
 		this.canvas.addMouseWheelListener(mouseAdapter);
 		this.canvas.addMouseListener(mouseAdapter);
+		initializeWorld();
 	}
 
-
-
-	protected void initializeWorld() {
+	protected final void initializeWorld() {
+		add(canvas);
 		SimulationBody anchor = new SimulationBody();
 		anchor.addFixture(Geometry.createCircle(.5));
 		anchor.setMass(MassType.INFINITE);
@@ -95,7 +98,6 @@ public class PhysicsPanel extends SimulationPanel {
 	protected void update(Graphics2D g, double elapsedTime) {
 
 		if (this.point != null) {
-			// convert from screen space to world space coordinates
 			Vector2 vector2 = convertFromScreenSpaceToWorldSpaceCoordinates();
 			SimulationBody body = new SimulationBody();
 			body.addFixture(Geometry.createRectangle(Math.random(), Math.random()));

@@ -1,37 +1,44 @@
 package hzt.lookandfeel;
 
-import javax.swing.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
 import javax.swing.plaf.metal.DefaultMetalTheme;
-import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.plaf.metal.MetalTheme;
 import javax.swing.plaf.metal.OceanTheme;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.Map;
 
-public class LookAndFeelSample implements ActionListener {
+public class LookAndFeelSample{
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LookAndFeelSample.class);
     private static final String LABEL_PREFIX = "Number of button clicks: ";
+    // Specify the look and feel to use by defining the LOOKANDFEEL constant
+    // Valid values are: null (use the default), "Metal", "System", "Motif" and "GTK"
+    private static final String METAL = "Default Metal";
 
     private int numClicks = 0;
     private final JComboBox<String> lookAndFeelComboBox = new JComboBox<>();
     private final JLabel label = new JLabel(LABEL_PREFIX + "0    ");
 
-    // Specify the look and feel to use by defining the LOOKANDFEEL constant
-    // Valid values are: null (use the default), "Metal", "System", "Motif",
-    // and "GTK"
-    private static final String METAL = "Default Metal";
-
-    // If you choose the Metal L&F, you can also choose a theme.
-    // Specify the theme to use by defining the THEME constant
-    // Valid values are: "DefaultMetal", "Ocean",  and "Test"
-
     public Component createComponents() {
         JButton button = new JButton("I'm a Swing button!");
         button.setMnemonic(KeyEvent.VK_I);
-        button.addActionListener(this);
+        button.addActionListener(this::updateLabelText);
         label.setLabelFor(button);
 
         Map<String, LookAndFeel> lookAndFeelMap = getLookAndFeelMap();
@@ -56,27 +63,18 @@ public class LookAndFeelSample implements ActionListener {
         setLookAndFeel(lookAndFeelMap.get(selected));
     }
 
-    public void actionPerformed(ActionEvent e) {
+    public void updateLabelText(ActionEvent e) {
         numClicks++;
         label.setText(LABEL_PREFIX + numClicks);
     }
 
     private static void setLookAndFeel(LookAndFeel lookAndFeel) {
         try {
-            System.out.println("setting look and feel to " + lookAndFeel);
+            LOGGER.info("setting look and feel to {}", lookAndFeel);
             UIManager.setLookAndFeel(lookAndFeel.theme);
-//            MetalLookAndFeel.setCurrentTheme(lookAndFeel.metalTheme);
-        } catch (ClassNotFoundException e) {
-            System.err.println("Couldn't find class for specified look and feel:" + lookAndFeel);
-            System.err.println("Did you include the L&F library in the class path?");
-            System.err.println("Using the default look and feel.");
-        } catch (UnsupportedLookAndFeelException e) {
-            System.err.println("Can't use the specified look and feel (" + lookAndFeel + ") on this platform.");
-            System.err.println("Using the default look and feel.");
-        } catch (Exception e) {
-            System.err.println("Couldn't get specified look and feel (" + lookAndFeel + "), for some reason.");
-            System.err.println("Using the default look and feel.");
-            e.printStackTrace();
+        } catch (UnsupportedLookAndFeelException | ClassNotFoundException |
+                InstantiationException | IllegalAccessException e) {
+            LOGGER.error("Could not set look and feel", e);
         }
     }
 
@@ -117,15 +115,7 @@ public class LookAndFeelSample implements ActionListener {
         SwingUtilities.invokeLater(LookAndFeelSample::createAndShowGUI);
     }
 
-    private static class LookAndFeel {
-
-        private final String theme;
-        private final MetalTheme metalTheme;
-
-        public LookAndFeel(String theme, MetalTheme metalTheme) {
-            this.theme = theme;
-            this.metalTheme = metalTheme;
-        }
+    private record LookAndFeel(String theme, MetalTheme metalTheme) {
 
         @Override
         public String toString() {

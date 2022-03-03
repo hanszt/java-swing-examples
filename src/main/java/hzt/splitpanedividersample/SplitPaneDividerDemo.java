@@ -31,12 +31,18 @@
 
 package hzt.splitpanedividersample;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import static java.lang.System.err;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.util.Optional;
 
 /*
  * SplitPaneDividerDemo.java requires the following files:
@@ -44,57 +50,46 @@ import static java.lang.System.err;
  *   images/Cat.gif
  *   images/Dog.gif
  */
-public class SplitPaneDividerDemo extends JPanel implements ActionListener {
+public class SplitPaneDividerDemo {
 
+    private final JPanel mainPanel;
     private final JSplitPane splitPane;
     
     public SplitPaneDividerDemo() {
-        super(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout());
 
         Font font = new Font("Serif", Font.ITALIC, 24);
 
-        ImageIcon icon = createImageIcon("images/Cat.gif");
-        SizeDisplayer sd1 = new SizeDisplayer("left", icon);
+        ImageIcon icon = createImageIcon("images/Cat.gif").orElseThrow();
+        SizeDisplayer sd1 = SizeDisplayer.with("left", icon);
         sd1.setMinimumSize(new Dimension(30,30));
         sd1.setFont(font);
         
-        icon = createImageIcon("images/Dog.gif");
-        SizeDisplayer sd2 = new SizeDisplayer("right", icon);
+        icon = createImageIcon("images/Dog.gif").orElseThrow();
+        SizeDisplayer sd2 = SizeDisplayer.with("right", icon);
         sd2.setMinimumSize(new Dimension(60,60));
         sd2.setFont(font);
         
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                   sd1, sd2);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sd1, sd2);
         splitPane.setResizeWeight(0.5);
         splitPane.setOneTouchExpandable(true);
         splitPane.setContinuousLayout(true);
         
-        add(splitPane, BorderLayout.CENTER);
-        add(createControlPanel(), BorderLayout.PAGE_END);
+        mainPanel.add(splitPane, BorderLayout.CENTER);
+        mainPanel.add(createControlPanel(), BorderLayout.PAGE_END);
     }
 
     private JComponent createControlPanel() {
         JPanel panel = new JPanel();
         JButton reset = new JButton("Reset");
-        reset.addActionListener(this);
+        reset.addActionListener(e -> splitPane.resetToPreferredSizes());
         panel.add(reset);
         return panel;
     }
-    
-    //Required by ActionListener interface. Respond to reset button.
-    public void actionPerformed(ActionEvent e) {
-        splitPane.resetToPreferredSizes();
-    }
-    
+
     /** Returns an ImageIcon, or null if the path was invalid. */
-    private static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = SplitPaneDividerDemo.class.getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            err.println("Couldn't find file: " + path);
-            return null;
-        }
+    private static Optional<ImageIcon> createImageIcon(String path) {
+        return Optional.ofNullable(SplitPaneDividerDemo.class.getResource(path)).map(ImageIcon::new);
     }
 
     /**
@@ -108,9 +103,10 @@ public class SplitPaneDividerDemo extends JPanel implements ActionListener {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        SplitPaneDividerDemo newContentPane = new SplitPaneDividerDemo();
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
+        final var splitPaneDividerDemo = new SplitPaneDividerDemo();
+        JPanel contentPane = splitPaneDividerDemo.mainPanel;
+        contentPane.setOpaque(true); //content panes must be opaque
+        frame.setContentPane(contentPane);
 
         //Display the window.
         frame.pack();

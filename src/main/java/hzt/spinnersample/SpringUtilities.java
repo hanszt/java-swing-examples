@@ -31,12 +31,14 @@
 
 package hzt.spinnersample;
 
-import javax.swing.*;
-import javax.swing.SpringLayout;
-import java.awt.*;
-import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static java.lang.System.*;
+import javax.swing.Spring;
+import javax.swing.SpringLayout;
+import java.awt.Component;
+import java.awt.Container;
+import java.util.Objects;
 
 /**
  * A 1.4 file that provides utility methods for
@@ -44,8 +46,10 @@ import static java.lang.System.*;
  * These utilities are used by several programs, such as
  * SpringBox and SpringCompactGrid.
  */
-public class SpringUtilities {
+public final class SpringUtilities {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SpringUtilities.class);
+    
     private SpringUtilities() {
 
     }
@@ -54,9 +58,9 @@ public class SpringUtilities {
      * minimum, preferred, and maximum sizes.
      */
     public static void printSizes(Component component) {
-        out.println("minimumSize = " + component.getMinimumSize());
-        out.println("preferredSize = " + component.getPreferredSize());
-        out.println("maximumSize = " + component.getMaximumSize());
+        LOGGER.info("minimumSize = {}", component.getMinimumSize());
+        LOGGER.info("preferredSize = {}", component.getPreferredSize());
+        LOGGER.info("maximumSize = {}", component.getMaximumSize());
     }
 
     /**
@@ -81,7 +85,7 @@ public class SpringUtilities {
         try {
             layout = (SpringLayout)parent.getLayout();
         } catch (ClassCastException exc) {
-            err.println("The first argument to makeGrid must use SpringLayout.");
+            LOGGER.error("The first argument to makeGrid must use SpringLayout.", exc);
             return;
         }
 
@@ -184,7 +188,7 @@ public class SpringUtilities {
         try {
             layout = (SpringLayout)parent.getLayout();
         } catch (ClassCastException exc) {
-            err.println("The first argument to makeCompactGrid must use SpringLayout.");
+            LOGGER.error("The first argument to makeCompactGrid must use SpringLayout.", exc);
             return;
         }
 

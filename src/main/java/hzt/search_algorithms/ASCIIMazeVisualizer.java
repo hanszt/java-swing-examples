@@ -10,22 +10,45 @@ import es.usc.citius.hipster.model.problem.ProblemBuilder;
 import es.usc.citius.hipster.model.problem.SearchProblem;
 import es.usc.citius.hipster.util.examples.maze.Maze2D;
 import es.usc.citius.hipster.util.examples.maze.Mazes;
+import org.hzt.utils.It;
+import org.hzt.utils.collections.ListX;
+import org.hzt.utils.collections.MutableSetX;
+import org.hzt.utils.collections.SetX;
+import org.hzt.utils.sequences.Sequence;
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSpinner;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.WindowConstants;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 /**
  * @author Pablo Rodríguez Mier <<a href="mailto:pablo.rodriguez.mier@usc.es">pablo.rodriguez.mier@usc.es</a>>
  * Refactored by Hans Zuidervaart
  */
 public class ASCIIMazeVisualizer {
+
+    private static final String DELIMITER = String.format("%n");
+    private static final Logger LOGGER = LoggerFactory.getLogger(ASCIIMazeVisualizer.class);
+    private static final Pattern SPLITTER = Pattern.compile("\\r?\\n");
 
     private JPanel mainPanel;
     private JComboBox<String> comboMazes;
@@ -38,63 +61,21 @@ public class ASCIIMazeVisualizer {
     private JLabel labelSteps;
     private JLabel labelCost;
 
-    private final JFrame mainFrame;
-
-    private Double evaluate(Transition<Void, Point> transition) {
-        Point source = transition.getFromState();
-        Point destination = transition.getState();
-        double distance = source.distance(destination);
-        return rounded(distance);
-    }
-
-    private void startAnimation(ActionEvent e) {
-        switch (appState) {
-            case STARTED:
-                pause();
-                break;
-            case STOPPED:
-                start();
-                break;
-            case PAUSED:
-                continueExecution();
-                break;
-        }
-    }
-
-    private void stopAnimation(ActionEvent e) {
-        stop();
-        mazeTextArea.setText(asciiMaze());
-    }
-
-    private enum State {STOPPED, STARTED, PAUSED}
-
     // Global execution state
     private State appState = State.STOPPED;
     // Current algorithm used
     private Iterator<? extends Node<?, Point, ?>> algorithmIterator;
     // Move all to the algorithm executor
-    private Set<Point> explored = new HashSet<>();
+    private final MutableSetX<Point> explored = MutableSetX.empty();
     private int steps = 0;
     private final Timer timer;
     private Maze2D maze;
 
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {
-            ex.printStackTrace();
-        }
-
-        JFrame frame = new JFrame("Hipster Maze Shortest Path Visualizer V2");
-        frame.setContentPane(new ASCIIMazeVisualizer(frame).mainPanel);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setVisible(true);
-    }
+    private final JFrame mainFrame;
 
     public ASCIIMazeVisualizer(final JFrame frame) {
         this.mainFrame = frame;
+        timer = new Timer((Integer) refreshSpinner.getValue(), this::actionPerformed);
         // Use double buffer for smooth updates
         mazeTextArea.setDoubleBuffered(true);
         refreshSpinner.setValue(50);
@@ -117,13 +98,52 @@ public class ASCIIMazeVisualizer {
         runButton.addActionListener(this::startAnimation);
         resetButton.addActionListener(this::stopAnimation);
         comboMazes.addActionListener(e -> loadSelectedMaze(frame));
+    }
 
+    private static Double evaluate(Transition<Void, Point> transition) {
+        Point source = transition.getFromState();
+        Point destination = transition.getState();
+        double distance = source.distance(destination);
+        return rounded(distance);
+    }
+
+    private void startAnimation(ActionEvent e) {
+        switch (appState) {
+            case STARTED -> pause();
+            case STOPPED -> start();
+            case PAUSED -> continueExecution();
+        }
+    }
+
+    private void stopAnimation(ActionEvent e) {
+        stop();
+        mazeTextArea.setText(asciiMaze());
+    }
+
+    private enum State {STOPPED, STARTED, PAUSED}
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
+        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {
+            LOGGER.error("Error on startup: ", ex);
+        }
+
+        JFrame frame = new JFrame("Hipster Maze Shortest Path Visualizer V2");
+        final var asciiMazeVisualizer = new ASCIIMazeVisualizer(frame);
+        asciiMazeVisualizer.begin();
+        frame.setContentPane(asciiMazeVisualizer.mainPanel);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+
+    private void begin() {
         // Initialize the thread / listener for the execution
         // Listener to update the text area
-        ExecutionHandler executionHandler = new ExecutionHandler();
-        timer = new Timer((Integer) refreshSpinner.getValue(), executionHandler);
-        refreshSpinner.addChangeListener(e -> timer.setDelay((Integer) refreshSpinner.getValue()));
-        new Thread(executionHandler).start();
+        refreshSpinner.addChangeListener(e -> timer.setDelay((int) refreshSpinner.getValue()));
+        new Thread(this::run).start();
         timer.start();
     }
 
@@ -134,7 +154,7 @@ public class ASCIIMazeVisualizer {
     }
 
     private void continueExecution() {
-        if (appState.equals(State.PAUSED)) {
+        if (appState == State.PAUSED) {
             runButton.setText("Pause");
             appState = State.STARTED;
         }
@@ -144,8 +164,8 @@ public class ASCIIMazeVisualizer {
         // Create a new maze and run the selected algorithm
         steps = 0;
         try {
-            maze = new Maze2D(mazeTextArea.getText().split("\\r?\\n"));
-        } catch (Exception ex) {
+            maze = new Maze2D(SPLITTER.split(mazeTextArea.getText()));
+        } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(mainFrame, ex.getMessage() + ". Try to reset the map.",
                     "Maze parse exception", JOptionPane.ERROR_MESSAGE);
             return;
@@ -153,7 +173,7 @@ public class ASCIIMazeVisualizer {
         // Create a new algorithm
         algorithmIterator = createAlgorithm(maze);
         // Reset explored tiles
-        this.explored = new HashSet<>();
+        this.explored.clear();
         runButton.setText("Pause");
         appState = State.STARTED;
     }
@@ -168,137 +188,108 @@ public class ASCIIMazeVisualizer {
         appState = State.PAUSED;
     }
 
-    private class ExecutionHandler implements ActionListener, Runnable {
-
-        private ExecutionHandler() {
+    public void actionPerformed(ActionEvent e) {
+        if (realtimePrintingCheckBox.isSelected() && appState == State.STARTED) {
+            executeSearchStep();
         }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (realtimePrintingCheckBox.isSelected() && appState.equals(State.STARTED)) {
-                executeSearchStep();
-            }
-        }
-
-        @Override
-        public void run() {
-            while (!Thread.currentThread().isInterrupted()) {
-                try {
-                    if (!realtimePrintingCheckBox.isSelected() && appState.equals(State.STARTED)) {
-                        executeSearchStep();
-                    } else {
-                        //noinspection BusyWait
-                        Thread.sleep(100);
-                        Thread.yield();
-                    }
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        }
-
-        private synchronized void executeSearchStep() {
-            if (algorithmIterator.hasNext()) {
-                Node<?, Point, ?> node = algorithmIterator.next();
-                steps++;
-                explored.add(node.state());
-                if (realtimePrintingCheckBox.isSelected()) updateVisualizer(node, maze, explored);
-                if (node.state().equals(maze.getGoalLoc())) {
-                    updateVisualizer(node, maze, explored);
-                    stop();
-                }
-            } else stop();
-        }
-
-
-        private synchronized void updateVisualizer(final Node<?, Point, ?> node, Maze2D maze, Collection<Point> explored) {
-            if (node != null && maze != null) {
-                List<Point> statePath = node.path().stream().map(Node::state).collect(Collectors.toList());
-
-                String mazeStr = getMazeStringSolution(maze, explored, statePath);
-                mazeTextArea.setText(mazeStr);
-                // Update the status bar
-                SwingUtilities.invokeLater(() -> printCost(node));
-            }
-        }
-
-        private String getMazeStringSolution(Maze2D maze, Collection<Point> explored, Collection<Point> path) {
-            List<Map<Point, Character>> replacements = new ArrayList<>();
-            Map<Point, Character> replacement = new HashMap<>();
-            for (Point p : explored) {
-                replacement.put(p, '.');
-            }
-            replacements.add(replacement);
-            replacement = new HashMap<>();
-            for (Point p : path) {
-                replacement.put(p, '*');
-            }
-            replacements.add(replacement);
-            return maze.getReplacedMazeString(replacements);
-        }
-
-        @SuppressWarnings("rawtypes")
-        private void printCost(Node<?, Point, ?> node) {
-            labelSteps.setText(Integer.toString(steps));
-            if (node instanceof CostNode) {
-                CostNode n = (CostNode) node;
-                labelCost.setText(new DecimalFormat("#.00").format(n.getCost()));
-            }
-        }
-
     }
 
-    @SuppressWarnings("unchecked")
+    public void run() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                if (!realtimePrintingCheckBox.isSelected() && appState == State.STARTED) {
+                    executeSearchStep();
+                } else {
+                    //noinspection BusyWait
+                    Thread.sleep(100);
+                    Thread.yield();
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    private synchronized void executeSearchStep() {
+        if (algorithmIterator.hasNext()) {
+            Node<?, Point, ?> node = algorithmIterator.next();
+            steps++;
+            explored.add(node.state());
+            if (realtimePrintingCheckBox.isSelected()) {
+                updateVisualizer(node, maze, explored);
+            }
+            if (node.state().equals(maze.getGoalLoc())) {
+                updateVisualizer(node, maze, explored);
+                stop();
+            }
+        } else {
+            stop();
+        }
+    }
+
+
+    private synchronized void updateVisualizer(@NotNull final Node<?, Point, ?> node,
+                                               @NotNull Maze2D maze,
+                                               @NotNull SetX<Point> explored) {
+        ListX<Point> statePath = Sequence.of(node.path())
+                .map(Node::state)
+                .toListX();
+
+        String mazeStr = getMazeStringSolution(maze, explored, statePath);
+        mazeTextArea.setText(mazeStr);
+        // Update the status bar
+        SwingUtilities.invokeLater(() -> printCost(node));
+    }
+
+    private static String getMazeStringSolution(Maze2D maze, SetX<Point> explored, ListX<Point> path) {
+        return maze.getReplacedMazeString(List.of(
+                explored.toMutableMap(It::self, point -> '.'),
+                path.toMutableMap(It::self, point -> '*')));
+    }
+
+    private void printCost(Node<?, Point, ?> node) {
+        labelSteps.setText(Integer.toString(steps));
+        if (node instanceof CostNode<?, ?, ?, ?> costNode) {
+            labelCost.setText(new DecimalFormat("#.00").format(costNode.getCost()));
+        }
+    }
+
+
     private Iterator<? extends Node<?, Point, ?>> createAlgorithm(Maze2D maze) {
-        switch (comboAlgorithm.getSelectedIndex()) {
-            case 0:
-                return Hipster.createDepthFirstSearch(buildProblem(maze, false)).iterator();
-            case 1:
-                return Hipster.createBreadthFirstSearch(buildProblem(maze, false)).iterator();
-            case 2:
-                return Hipster.createBellmanFord(buildProblem(maze, false)).iterator();
-            case 3:
-                return Hipster.createDijkstra(buildProblem(maze, false)).iterator();
-            case 4:
-                return Hipster.createAStar(buildProblem(maze, true)).iterator();
-            case 5:
-                return Hipster.createIDAStar(buildProblem(maze, true)).iterator();
-            default:
-                throw new IllegalStateException("Invalid algorithm");
-        }
+        return switch (comboAlgorithm.getSelectedIndex()) {
+            case 0 -> Hipster.createDepthFirstSearch(buildProblem(maze, false)).iterator();
+            case 1 -> Hipster.createBreadthFirstSearch(buildProblem(maze, false)).iterator();
+            case 2 -> Hipster.createBellmanFord(buildProblem(maze, false)).iterator();
+            case 3 -> Hipster.createDijkstra(buildProblem(maze, false)).iterator();
+            case 4 -> Hipster.createAStar(buildProblem(maze, true)).iterator();
+            case 5 -> Hipster.createIDAStar(buildProblem(maze, true)).iterator();
+            default -> throw new IllegalStateException("Invalid algorithm");
+        };
     }
-
-    private static final String DELIMITER = String.format("%n");
 
     private String asciiMaze() {
-        switch (comboMazes.getSelectedIndex()) {
-            case 0:
-                return String.join(DELIMITER, Mazes.exampleMaze1);
-            case 1:
-                return String.join(DELIMITER, Mazes.testMaze4);
-            case 2:
-                return String.join(DELIMITER, Mazes.testMaze3);
-            case 3:
-                return String.join(DELIMITER, Mazes.testMaze2);
-            case 4:
-                return String.join(DELIMITER, Mazes.testMaze5);
-            default:
-                throw new IllegalStateException("Unexpected value: " + comboMazes.getSelectedIndex());
-        }
+        return switch (comboMazes.getSelectedIndex()) {
+            case 0 -> String.join(DELIMITER, Mazes.exampleMaze1);
+            case 1 -> String.join(DELIMITER, Mazes.testMaze4);
+            case 2 -> String.join(DELIMITER, Mazes.testMaze3);
+            case 3 -> String.join(DELIMITER, Mazes.testMaze2);
+            case 4 -> String.join(DELIMITER, Mazes.testMaze5);
+            default -> throw new IllegalStateException("Unexpected value: " + comboMazes.getSelectedIndex());
+        };
     }
 
-    private SearchProblem<Void, Point, WeightedNode<Void, Point, Double>> buildProblem(
+    private static SearchProblem<Void, Point, WeightedNode<Void, Point, Double>> buildProblem(
             final Maze2D maze, final boolean heuristic) {
         return ProblemBuilder.create()
                 .initialState(maze.getInitialLoc())
                 .defineProblemWithoutActions()
                 .useTransitionFunction(getTransitionFunction(maze))
-                .useCostFunction(this::evaluate)
+                .useCostFunction(ASCIIMazeVisualizer::evaluate)
                 .useHeuristicFunction(state -> getHeuristic(maze, heuristic, state))
                 .build();
     }
 
-    private StateTransitionFunction<Point> getTransitionFunction(Maze2D maze) {
+    private static StateTransitionFunction<Point> getTransitionFunction(Maze2D maze) {
         return new StateTransitionFunction<>() {
             @Override
             public Iterable<Point> successorsOf(Point state) {
@@ -307,14 +298,11 @@ public class ASCIIMazeVisualizer {
         };
     }
 
-    private double getHeuristic(Maze2D maze, boolean heuristic, Point curLocation) {
-        if (heuristic) {
-            double distance = curLocation.distance(maze.getGoalLoc());
-            return rounded(distance);
-        } else return 0;
+    private static double getHeuristic(Maze2D maze, boolean heuristic, Point curLocation) {
+        return heuristic ? rounded(curLocation.distance(maze.getGoalLoc())) : 0;
     }
 
-    private double rounded(double distance) {
-        return (double) Math.round(distance * 1e5) / 1e5;
+    private static double rounded(double distance) {
+        return Math.round(distance * 1e5) / 1e5;
     }
 }

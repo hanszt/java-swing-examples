@@ -4,7 +4,8 @@ import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Convex;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 
@@ -23,14 +24,6 @@ public class SimulationBody extends Body {
 	 */
 	public SimulationBody() {
 		this.color = Graphics2DRenderer.getRandomColor();
-	}
-	
-	/**
-	 * Constructor.
-	 * @param color a set color
-	 */
-	public SimulationBody(Color color) {
-		this.color = color;
 	}
 
 	/**
@@ -68,7 +61,7 @@ public class SimulationBody extends Body {
 		g.transform(lt);
 		
 		// loop over all the body fixtures for this body
-		for (BodyFixture fixture : this.fixtures) {
+		for (BodyFixture fixture : fixtures) {
 			this.renderFixture(g, scale, fixture, color);
 		}
 		
@@ -105,21 +98,5 @@ public class SimulationBody extends Body {
 		
 		// render the fixture
 		Graphics2DRenderer.render(g, convex, scale, color);
-	}
-	
-	/**
-	 * Returns this body's color.
-	 * @return Color
-	 */
-	public Color getColor() {
-		return this.color;
-	}
-	
-	/**
-	 * Sets the body's color
-	 * @param color the color
-	 */
-	public void setColor(Color color) {
-		this.color = color;
 	}
 }

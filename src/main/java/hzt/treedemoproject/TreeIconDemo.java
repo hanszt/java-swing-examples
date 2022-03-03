@@ -31,17 +31,26 @@
 
 package hzt.treedemoproject;
 
-import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.ImageIcon;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeSelectionModel;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GridLayout;
 import java.io.IOException;
 import java.net.URL;
-
-import static java.lang.System.err;
+import java.util.Optional;
 
 /**
  * A 1.4 application that requires the following additional files:
@@ -55,29 +64,30 @@ import static java.lang.System.err;
  * tutorialcont.html
  * vm.html
  */
-public class TreeIconDemo extends JPanel implements TreeSelectionListener {
+public class TreeIconDemo {
 
-    private final JEditorPane htmlPane;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TreeIconDemo.class);
+
     private final JTree tree;
     private final URL helpURL;
 
-    public TreeIconDemo() {
-        super(new GridLayout(1, 0));
+    public TreeIconDemo(JPanel mainPanel) {
         DefaultMutableTreeNode top = new DefaultMutableTreeNode("The Java Series");
-        createNodes(top);
+        addJavaProgrammerBooks(top);
+        addJavaImplementerBooks(top);
 
-        htmlPane = new JEditorPane();
+        JEditorPane htmlPane = new JEditorPane();
         htmlPane.setEditable(false);
 
         tree = new JTree(top);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.addTreeSelectionListener(this);
+        tree.addTreeSelectionListener(e -> updateTree(htmlPane));
         setIconForLeaveNodes();
 
-        helpURL = initHelp();
+        helpURL = initHelp(htmlPane);
         JScrollPane htmlView = new JScrollPane(htmlPane);
         JSplitPane splitPane = buildSplitPane(htmlView);
-        this.add(splitPane);
+        mainPanel.add(splitPane);
     }
 
     private JSplitPane buildSplitPane(JScrollPane htmlView) {
@@ -96,42 +106,39 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
     }
 
     private void setIconForLeaveNodes() {
-        ImageIcon leafIcon = createImageIcon();
-        if (leafIcon != null) {
-            DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
-            renderer.setLeafIcon(leafIcon);
-            tree.setCellRenderer(renderer);
-        } else {
-            err.println("Leaf icon missing; using default.");
-        }
+        createImageIcon().ifPresentOrElse(this::setIcon,
+                () -> LOGGER.error("Leaf icon missing; using default."));
     }
 
-    /**
-     * Required by TreeSelectionListener interface.
-     */
-    public void valueChanged(TreeSelectionEvent e) {
+    private void setIcon(ImageIcon leafIcon) {
+        DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer();
+        renderer.setLeafIcon(leafIcon);
+        tree.setCellRenderer(renderer);
+    }
+
+    public void updateTree(JEditorPane htmlPane) {
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
         if (node != null) {
             Object nodeInfo = node.getUserObject();
             if (node.isLeaf()) {
                 BookInfo book = (BookInfo) nodeInfo;
-                displayURL(book.getBookURL());
+                displayURL(book.getBookURL(), htmlPane);
             } else {
-                displayURL(helpURL);
+                displayURL(helpURL, htmlPane);
             }
         }
     }
 
     private static class BookInfo {
 
-        private String bookName;
-        private URL bookURL;
+        private final String bookName;
+        private final URL bookURL;
 
         public BookInfo(String book, String filename) {
-            setBookName(book);
-            setBookURL(TreeIconDemo.class.getResource(filename));
-            if (getBookURL() == null) {
-                err.println("Couldn't find file: " + filename);
+            bookName = book;
+            bookURL = TreeIconDemo.class.getResource(filename);
+            if (bookURL == null) {
+                LOGGER.error("Couldn't find file: {}", filename);
             }
         }
 
@@ -143,42 +150,34 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
             return bookName;
         }
 
-        public void setBookName(String bookName) {
-            this.bookName = bookName;
-        }
-
         public URL getBookURL() {
             return bookURL;
         }
-
-        public void setBookURL(URL bookURL) {
-            this.bookURL = bookURL;
-        }
     }
 
-    private URL initHelp() {
+    private static URL initHelp(JEditorPane htmlPane) {
         String fileName = "TreeDemoHelp.html";
         URL url = TreeIconDemo.class.getResource(fileName);
-        if (url == null) err.println("Couldn't open help file: " + fileName);
-        displayURL(url);
+        if (url == null) {
+            LOGGER.error("Couldn't open help file: {}", fileName);
+        }
+        displayURL(url, htmlPane);
         return url;
     }
 
-    private void displayURL(URL url) {
+    private static void displayURL(URL url, JEditorPane htmlPane) {
         try {
-            if (url != null) htmlPane.setPage(url);
-            else htmlPane.setText("File Not Found");
+            if (url != null) {
+                htmlPane.setPage(url);
+            } else {
+                htmlPane.setText("File Not Found");
+            }
         } catch (IOException e) {
-            err.println("Attempted to read a bad URL: " + url);
+            LOGGER.error("Attempted to read a bad URL: {}", url, e);
         }
     }
 
-    private void createNodes(DefaultMutableTreeNode top) {
-        addJavaProgrammerBooks(top);
-        addJavaImplementerBooks(top);
-    }
-
-    private void addJavaProgrammerBooks(DefaultMutableTreeNode top) {
+    private static void addJavaProgrammerBooks(DefaultMutableTreeNode top) {
         DefaultMutableTreeNode category = new DefaultMutableTreeNode("Books for Java Programmers");
         top.add(category);
         category.add(new DefaultMutableTreeNode(
@@ -195,7 +194,7 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
                 new BookInfo("The Java Developers Almanac", "chan.html")));
     }
 
-    private void addJavaImplementerBooks(DefaultMutableTreeNode top) {
+    private static void addJavaImplementerBooks(DefaultMutableTreeNode top) {
         DefaultMutableTreeNode category = new DefaultMutableTreeNode("Books for Java Implementers");
         top.add(category);
         category.add(new DefaultMutableTreeNode(
@@ -207,14 +206,8 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
     /**
      * Returns an ImageIcon, or null if the path was invalid.
      */
-    protected static ImageIcon createImageIcon() {
-        URL imgURL = TreeIconDemo.class.getResource("images/middle.gif");
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            err.println("Couldn't find file: " + "images/middle.gif");
-            return null;
-        }
+    protected static Optional<ImageIcon> createImageIcon() {
+        return Optional.ofNullable(TreeIconDemo.class.getResource("images/middle.gif")).map(ImageIcon::new);
     }
 
     /**
@@ -227,10 +220,11 @@ public class TreeIconDemo extends JPanel implements TreeSelectionListener {
         JFrame frame = new JFrame("TreeIconDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
+        JPanel mainPanel = new JPanel(new GridLayout(1, 0));
         //Create and set up the content pane.
-        TreeIconDemo newContentPane = new TreeIconDemo();
-        newContentPane.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(newContentPane);
+        new TreeIconDemo(mainPanel);
+        mainPanel.setOpaque(true); //content panes must be opaque
+        frame.setContentPane(mainPanel);
 
         //Display the window.
         frame.pack();

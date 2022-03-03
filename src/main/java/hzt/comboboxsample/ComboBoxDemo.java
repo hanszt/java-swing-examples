@@ -31,13 +31,23 @@
 
 package hzt.comboboxsample;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Objects;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static java.lang.System.*;
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.util.Objects;
 
 /*
  * ComboBoxDemo.java uses these additional files:
@@ -47,20 +57,23 @@ import static java.lang.System.*;
  *   images/Rabbit.gif
  *   images/Pig.gif
  */
-public class ComboBoxDemo extends JPanel implements ActionListener {
+public class ComboBoxDemo {
 
-    JLabel picture;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ComboBoxDemo.class);
+
+    private final JPanel mainPanel;
+    private final JLabel picture;
 
     public ComboBoxDemo() {
-        super(new BorderLayout());
+        mainPanel = new JPanel(new BorderLayout());
 
         String[] petStrings = {"Bird", "Cat", "Dog", "Rabbit", "Pig"};
 
         //Create the combo box, select the item at index 4.
         //Indices start at 0, so 4 specifies the pig.
         JComboBox<String> petList = new JComboBox<>(petStrings);
-        petList.setSelectedIndex(4);
-        petList.addActionListener(this);
+        petList.setSelectedItem("Pig");
+        petList.addActionListener(e -> updateLabel(Objects.requireNonNull((String) petList.getSelectedItem())));
 
         //Set up the picture.
         picture = new JLabel();
@@ -75,22 +88,13 @@ public class ComboBoxDemo extends JPanel implements ActionListener {
         picture.setPreferredSize(new Dimension(177, 122 + 10));
 
         //Lay out the demo.
-        add(petList, BorderLayout.PAGE_START);
-        add(picture, BorderLayout.PAGE_END);
-        setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        mainPanel.add(petList, BorderLayout.PAGE_START);
+        mainPanel.add(picture, BorderLayout.PAGE_END);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
     }
 
-    /**
-     * Listens to the combo box.
-     */
-    @SuppressWarnings("unchecked")
-    public void actionPerformed(ActionEvent e) {
-        JComboBox<String> cb = (JComboBox<String>) e.getSource();
-        String petName = (String) cb.getSelectedItem();
-        updateLabel(Objects.requireNonNull(petName));
-    }
 
-    protected void updateLabel(String name) {
+    protected final void updateLabel(String name) {
         ImageIcon icon = createImageIcon("images/" + name + ".gif");
         picture.setIcon(icon);
         picture.setToolTipText("A drawing of a " + name.toLowerCase());
@@ -109,7 +113,7 @@ public class ComboBoxDemo extends JPanel implements ActionListener {
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
-            err.println("Couldn't find file: " + path);
+            LOGGER.error("Couldn't find file: {}", path);
             return null;
         }
     }
@@ -125,7 +129,8 @@ public class ComboBoxDemo extends JPanel implements ActionListener {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        JComponent newContentPane = new ComboBoxDemo();
+        final var comboBoxDemo = new ComboBoxDemo();
+        JComponent newContentPane = comboBoxDemo.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 

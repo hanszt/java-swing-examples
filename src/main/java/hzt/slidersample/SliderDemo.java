@@ -31,27 +31,37 @@
 
 package hzt.slidersample;
 
-import javax.swing.*;
+import hzt.Loggers;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-
-import static java.lang.System.err;
-import static java.lang.System.out;
 
 /*
  * SliderDemo.java requires all the files in the images/doggy
  * directory.
  */
-public class SliderDemo extends JPanel
-        implements ActionListener,
-        WindowListener,
-        ChangeListener {
+public class SliderDemo {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(SliderDemo.class);
     //Set up animation parameters.
     static final int FPS_MIN = 0;
     static final int FPS_MAX = 30;
@@ -59,6 +69,7 @@ public class SliderDemo extends JPanel
     private static final int NUM_FRAMES = 14;
 
     int frameNumber = 0;
+    private final JPanel mainPanel;
     ImageIcon[] images = new ImageIcon[NUM_FRAMES];
     int delay;
     Timer timer;
@@ -68,7 +79,8 @@ public class SliderDemo extends JPanel
     JLabel picture;
 
     public SliderDemo() {
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 
         delay = 1000 / FPS_INIT;
 
@@ -77,11 +89,10 @@ public class SliderDemo extends JPanel
         sliderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         //Create the slider.
-        JSlider framesPerSecond = new JSlider(SwingConstants.HORIZONTAL,
-                FPS_MIN, FPS_MAX, FPS_INIT);
+        JSlider framesPerSecond = new JSlider(SwingConstants.HORIZONTAL, FPS_MIN, FPS_MAX, FPS_INIT);
 
 
-        framesPerSecond.addChangeListener(this);
+        framesPerSecond.addChangeListener(this::stateChanged);
 
         //Turn on labels at major tick marks.
 
@@ -89,10 +100,8 @@ public class SliderDemo extends JPanel
         framesPerSecond.setMinorTickSpacing(1);
         framesPerSecond.setPaintTicks(true);
         framesPerSecond.setPaintLabels(true);
-        framesPerSecond.setBorder(
-                BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        Font font = new Font("Serif", Font.ITALIC, 15);
-        framesPerSecond.setFont(font);
+        framesPerSecond.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        framesPerSecond.setFont(new Font("Serif", Font.ITALIC, 15));
 
         //Create the label that displays the animation.
         picture = new JLabel();
@@ -104,48 +113,16 @@ public class SliderDemo extends JPanel
         updatePicture(); //display first frame
 
         //Put everything together.
-        add(sliderLabel);
-        add(framesPerSecond);
-        add(picture);
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        mainPanel.add(sliderLabel);
+        mainPanel.add(framesPerSecond);
+        mainPanel.add(picture);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         //Set up a timer that calls this object's action handler.
-        timer = new Timer(delay, this);
+        timer = new Timer(delay, this::actionPerformed);
         timer.setInitialDelay(delay * 7); //We pause animation twice per cycle
         //by restarting the timer
         timer.setCoalesce(true);
-    }
-
-    /**
-     * Add a listener for window events.
-     */
-    //React to window events.
-    public void windowIconified(WindowEvent e) {
-        stopAnimation();
-    }
-
-    public void windowDeiconified(WindowEvent e) {
-        startAnimation();
-    }
-
-    public void windowOpened(WindowEvent e) {
-        out.println(e.toString());
-    }
-
-    public void windowClosing(WindowEvent e) {
-        out.println(e.toString());
-    }
-
-    public void windowClosed(WindowEvent e) {
-        out.println(e.toString());
-    }
-
-    public void windowActivated(WindowEvent e) {
-        out.println(e.toString());
-    }
-
-    public void windowDeactivated(WindowEvent e) {
-        out.println(e.toString());
     }
 
     /**
@@ -156,12 +133,16 @@ public class SliderDemo extends JPanel
         if (!source.getValueIsAdjusting()) {
             int fps = source.getValue();
             if (fps == 0) {
-                if (!frozen) stopAnimation();
+                if (!frozen) {
+                    stopAnimation();
+                }
             } else {
                 delay = 1000 / fps;
                 timer.setDelay(delay);
                 timer.setInitialDelay(delay * 10);
-                if (frozen) startAnimation();
+                if (frozen) {
+                    startAnimation();
+                }
             }
         }
     }
@@ -198,7 +179,7 @@ public class SliderDemo extends JPanel
     /**
      * Update the label to display the image for the current frame.
      */
-    protected void updatePicture() {
+    protected final void updatePicture() {
         //Get the image if we haven't already.
         if (images[frameNumber] == null) {
             images[frameNumber] = createImageIcon("images/doggy/T"
@@ -222,7 +203,7 @@ public class SliderDemo extends JPanel
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
-            err.println("Couldn't find file: " + path);
+            LOGGER.error("Couldn't find file: {}", path);
             return null;
         }
     }
@@ -236,15 +217,16 @@ public class SliderDemo extends JPanel
         //Create and set up the window.
         JFrame frame = new JFrame("SliderDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        SliderDemo animator = new SliderDemo();
-
+        SliderDemo demo = new SliderDemo();
         //Add content to the window.
-        frame.add(animator, BorderLayout.CENTER);
+        final var mainPanel = demo.mainPanel;
+        frame.add(mainPanel, BorderLayout.CENTER);
 
+        frame.addWindowListener(demo.new AnimationWindowListener());
         //Display the window.
         frame.pack();
         frame.setVisible(true);
-        animator.startAnimation();
+        demo.startAnimation();
     }
 
     public static void main(String[] args) {
@@ -255,5 +237,37 @@ public class SliderDemo extends JPanel
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(SliderDemo::createAndShowGUI);
     }
+
+    private class AnimationWindowListener implements WindowListener {
+
+        public void windowIconified(WindowEvent e) {
+            stopAnimation();
+        }
+
+        public void windowDeiconified(WindowEvent e) {
+            startAnimation();
+        }
+
+        public void windowOpened(WindowEvent e) {
+            Loggers.logIfInfoEnabled(LOGGER, e::toString);
+        }
+
+        public void windowClosing(WindowEvent e) {
+            Loggers.logIfInfoEnabled(LOGGER, e::toString);
+        }
+
+        public void windowClosed(WindowEvent e) {
+            Loggers.logIfInfoEnabled(LOGGER, e::toString);
+        }
+
+        public void windowActivated(WindowEvent e) {
+            Loggers.logIfInfoEnabled(LOGGER, e::toString);
+        }
+
+        public void windowDeactivated(WindowEvent e) {
+            Loggers.logIfInfoEnabled(LOGGER, e::toString);
+        }
+    }
+
 }
 

@@ -2,28 +2,82 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>SwingExamples</artifactId>
+    <artifactId>swing-examples</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!--dependencies-->
+        <junit.jupiter.version>5.8.2</junit.jupiter.version>
+        <dyn4j.version>4.2.0</dyn4j.version>
+        <hipster-core.version>1.0.1</hipster-core.version>
+        <logback-classic.version>1.2.10</logback-classic.version>
+        <!--plugins-->
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <hzt.utils.version>0.7.5.17</hzt.utils.version>
     </properties>
 
     <dependencies>
+        <!-- TEST SCOPE DEPENDENCIES -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!--logging-->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
+        </dependency>
+        <!--other-->
         <dependency>
             <groupId>org.dyn4j</groupId>
             <artifactId>dyn4j</artifactId>
-            <version>4.0.1</version>
+            <version>${dyn4j.version}</version>
         </dependency>
         <dependency>
             <groupId>es.usc.citius.hipster</groupId>
             <artifactId>hipster-core</artifactId>
-            <version>1.0.1</version>
+            <version>${hipster-core.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hzt.utils</groupId>
+            <artifactId>core</artifactId>
+            <version>${hzt.utils.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hzt.utils</groupId>
+            <artifactId>swing-utils</artifactId>
+            <version>${hzt.utils.version}</version>
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+        </plugins>
+    </build>
 </project>
