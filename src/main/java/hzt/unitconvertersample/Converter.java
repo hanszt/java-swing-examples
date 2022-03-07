@@ -57,6 +57,7 @@ import java.awt.Dimension;
 
 public final class Converter extends JPanel {
 
+    private static final int MAX = 10_000;
     private static final boolean MULTICOLORED = false;
     private static final Logger LOGGER = LoggerFactory.getLogger(Converter.class);
     //Specify the look and feel to use.  Valid values:
@@ -134,10 +135,10 @@ public final class Converter extends JPanel {
     private int calculateMaximum() {
         double metricMultiplier = metricPanel.getMultiplier();
         double usaMultiplier = usaPanel.getMultiplier();
-        int maximum = ConversionPanel.MAX;
+        int maximum = MAX;
 
         if (metricMultiplier > usaMultiplier) {
-            maximum = (int) (ConversionPanel.MAX * (usaMultiplier / metricMultiplier));
+            maximum = (int) (MAX * (usaMultiplier / metricMultiplier));
         }
         return maximum;
     }

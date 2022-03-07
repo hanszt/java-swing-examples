@@ -51,10 +51,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.beans.PropertyChangeEvent;
 import java.text.NumberFormat;
+import java.util.stream.Stream;
 
 public class ConversionPanel extends JPanel {
-
-    static final int MAX = 10_000;
 
     private final transient ConverterRangeModel converterRangeModel;
     private transient ChangeListener onUnitChanged;
@@ -79,9 +78,10 @@ public class ConversionPanel extends JPanel {
         unitGroup.setBackground(new Color(0, 0, 255));
         unitGroup.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
         JFormattedTextField textField = buildTextField();
-        converterRangeModel.addChangeListener(e -> updateTextField(textField));
+        final JSlider slider = new JSlider(converterRangeModel);
+        converterRangeModel.addChangeListener(e -> updateTextAndSlider(textField, slider));
         unitGroup.add(textField);
-        unitGroup.add(new JSlider(converterRangeModel));
+        unitGroup.add(slider);
         unitGroup.setAlignmentY(TOP_ALIGNMENT);
         return unitGroup;
     }
@@ -120,21 +120,17 @@ public class ConversionPanel extends JPanel {
         chooserPanel.setLayout(new BoxLayout(chooserPanel, BoxLayout.PAGE_AXIS));
         chooserPanel.setOpaque(true);
         chooserPanel.setBackground(new Color(255, 0, 255));
-        JComboBox<String> unitChooser = buildUnitChooser(units);
-        chooserPanel.add(unitChooser);
+        chooserPanel.add(buildUnitChooser(units));
         chooserPanel.add(Box.createHorizontalStrut(100));
         chooserPanel.setAlignmentY(TOP_ALIGNMENT);
         return chooserPanel;
     }
 
     private JComboBox<String> buildUnitChooser(Unit[] units) {
-        JComboBox<String> unitChooser = new JComboBox<>();
-        for (Unit unit : units) { //Populate it.
-            unitChooser.addItem(unit.description());
-        }
-        final var selectedIndex = 0;
-        unitChooser.setSelectedIndex(selectedIndex);
-        converterRangeModel.setMultiplier(units[selectedIndex].multiplier());
+        JComboBox<String> unitChooser = new JComboBox<>(Stream.of(units)
+                .map(Unit::description)
+                .toArray(String[]::new));
+        converterRangeModel.setMultiplier(units[unitChooser.getSelectedIndex()].multiplier());
         unitChooser.addActionListener(e -> updateSliderModel(units[unitChooser.getSelectedIndex()]));
         return unitChooser;
     }
@@ -147,10 +143,7 @@ public class ConversionPanel extends JPanel {
     private JFormattedTextField formattedTextField(NumberFormat numberFormat) {
         NumberFormatter formatter = new NumberFormatter(numberFormat);
         formatter.setAllowsInvalid(false);
-        formatter.setCommitsOnValidEdit(true);//seems to be a no-op --
-        //aha -- it changes the value property but doesn't cause the result to
-        //be parsed (that happens on focus loss/return, I think).
-        //
+        formatter.setCommitsOnValidEdit(true);
         JFormattedTextField textField = new JFormattedTextField(formatter);
         textField.setColumns(10);
         textField.setValue(converterRangeModel.getDoubleValue());
@@ -158,9 +151,6 @@ public class ConversionPanel extends JPanel {
         return textField;
     }
 
-    //Don't allow this panel to get taller than its preferred size.
-    //BoxLayout pays attention to maximum size, though most layout
-    //managers don't.
     @Override
     public Dimension getMaximumSize() {
         return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
@@ -177,7 +167,7 @@ public class ConversionPanel extends JPanel {
     /**
      * Updates the text field when the main data model is updated.
      */
-    public void updateTextField(JFormattedTextField textField) {
+    public void updateTextAndSlider(JFormattedTextField textField, JSlider slider) {
         int min = converterRangeModel.getMinimum();
         int max = converterRangeModel.getMaximum();
         double value = converterRangeModel.getDoubleValue();
@@ -186,6 +176,7 @@ public class ConversionPanel extends JPanel {
         formatter.setMinimum((double) min);
         formatter.setMaximum((double) max);
         textField.setValue(value);
+        slider.repaint();
     }
 
     /**

@@ -5,91 +5,149 @@ package hzt.sound;
  */
 
 
-import java.awt.*;
-import java.awt.font.*;
-import java.awt.geom.*;
-import java.awt.event.*;
-import java.text.AttributedString;
-import java.text.AttributedCharacterIterator;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.table.*;
-import javax.swing.event.*;
-import javax.sound.midi.*;
-import javax.sound.sampled.*;
-import java.io.File;
-import java.io.InputStream;
-import java.io.FileInputStream;
-import java.io.BufferedInputStream;
-import java.util.Vector;
-import java.net.URL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiChannel;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.Sequencer;
+import javax.sound.midi.Synthesizer;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.DataLine;
+import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.LineBreakMeasurer;
+import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
+import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.text.AttributedCharacterIterator;
+import java.text.AttributedString;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Vector;
 
 
 /**
- * A JukeBox for sampled and midi sound files.  Features duration progress, 
+ * A JukeBox for sampled and midi sound files.  Features duration progress,
  * seek slider, pan and volume controls.
  *
+ * @author Brian Lichtenwalter
  * @version @(#)Juke.java	1.21 02/02/06
- * @author Brian Lichtenwalter  
  */
-public class Juke extends JPanel implements Runnable, LineListener, MetaEventListener, ControlContext {
+public final class Juke extends JPanel implements ControlContext {
 
-    final int bufSize = 16384;
-    PlaybackMonitor playbackMonitor = new PlaybackMonitor();
+    private static final Logger LOGGER = LoggerFactory.getLogger(Juke.class);
+    public static final String START = "Start";
+    public static final String PAUSE = "Pause";
+    public static final String SOUTH = "South";
+    private final PlaybackMonitor playbackMonitor = new PlaybackMonitor();
 
-    Vector sounds = new Vector();
-    Thread thread;
-    Sequencer sequencer;
-    boolean midiEOM, audioEOM;
-    Synthesizer synthesizer;
-    MidiChannel channels[]; 
-    Object currentSound;
-    String currentName;
-    double duration;
-    int num;
-    boolean bump;
-    boolean paused = false;
-    JButton startB, pauseB, loopB, prevB, nextB;
-    JTable table;
-    JSlider panSlider, gainSlider;
-    JSlider seekSlider;
-    JukeTable jukeTable;
-    Loading loading;
-    Credits credits;
-    String errStr;
-    JukeControls controls;
-
+    private final transient List<File> sounds = new ArrayList<>();
+    private transient Thread thread;
+    private transient Sequencer sequencer;
+    private boolean midiEOM;
+    private boolean audioEOM;
+    private transient MidiChannel[] channels;
+    private transient Object currentSound;
+    private String currentName;
+    private double duration;
+    private int num;
+    private boolean bump;
+    private boolean paused = false;
+    private JButton startB;
+    private JButton pauseB;
+    private JButton loopB;
+    private JTable table;
+    private JSlider panSlider;
+    private JSlider gainSlider;
+    private JSlider seekSlider;
+    private final JukeTable jukeTable;
+    private transient Loading loading;
+    private transient Credits credits;
+    private String errStr;
 
     public Juke(String dirName) {
         setLayout(new BorderLayout());
-        setBorder(new EmptyBorder(5,5,5,5));
+        setBorder(new EmptyBorder(5, 5, 5, 5));
 
         if (dirName != null) {
-            loadJuke(dirName); 
+            loadJuke(dirName);
         }
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, 
-            jukeTable = new JukeTable(), controls = new JukeControls());
+        jukeTable = new JukeTable();
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, jukeTable, new JukeControls());
         splitPane.setContinuousLayout(true);
         add(splitPane);
     }
 
-
     public void open() {
-
         try {
-
             sequencer = MidiSystem.getSequencer();
-
-			if (sequencer instanceof Synthesizer) {
-				synthesizer = (Synthesizer)sequencer;
-				channels = synthesizer.getChannels();
-			} 
-
-        } catch (Exception ex) { ex.printStackTrace(); return; }
-        sequencer.addMetaEventListener(this);
-        (credits = new Credits()).start();
+            if (sequencer instanceof Synthesizer synthesizer) {
+                channels = synthesizer.getChannels();
+            }
+        } catch (MidiUnavailableException ex) {
+            LOGGER.error("Midi unavailable", ex);
+            return;
+        }
+        sequencer.addMetaEventListener(this::meta);
+        credits = new Credits();
+        credits.start();
     }
 
 
@@ -109,187 +167,163 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         }
     }
 
-
     public void loadJuke(String name) {
         try {
             File file = new File(name);
-            if (file != null && file.isDirectory()) {
-                String files[] = file.list();
-                for (int i = 0; i < files.length; i++) {
-                    File leafFile = new File(file.getAbsolutePath(), files[i]);
+            if (file.isDirectory()) {
+                String[] files = file.list();
+                for (String s : Objects.requireNonNull(files)) {
+                    File leafFile = new File(file.getAbsolutePath(), s);
                     if (leafFile.isDirectory()) {
                         loadJuke(leafFile.getAbsolutePath());
                     } else {
                         addSound(leafFile);
                     }
                 }
-            } else if (file != null && file.exists()) {
+            } else if (file.exists()) {
                 addSound(file);
+            } else {
+                LOGGER.error("file with name {} not processed", name);
             }
         } catch (SecurityException ex) {
+            LOGGER.debug("Security exception", ex);
             reportStatus(ex.toString());
             JavaSound.showInfoDialog();
-        } catch (Exception ex) {
-            reportStatus(ex.toString());
         }
     }
 
-
     private void addSound(File file) {
         String s = file.getName().toLowerCase();
-        if (s.endsWith(".au") || s.endsWith(".rmf") ||
-            s.endsWith(".mid") || s.endsWith(".wav") ||
-            s.endsWith(".aif") || s.endsWith(".aiff"))
-        {
+        final boolean b = s.endsWith(".wav") || s.endsWith(".rmf") || s.endsWith(".mid");
+        final boolean b1 = s.endsWith(".au") || s.endsWith(".aif") || s.endsWith(".aiff");
+        if (b || b1) {
             sounds.add(file);
         }
     }
 
-
-    public boolean loadSound(Object object) {
-
+    public boolean loadSound(File file) {
         duration = 0.0;
-        (loading = new Loading()).start();
-
-        if (object instanceof URL) {
-            currentName = ((URL) object).getFile();
-            playbackMonitor.repaint();
-            try {
-                currentSound = AudioSystem.getAudioInputStream((URL) object);
-            } catch(Exception e) {
-                try { 
-                    currentSound = MidiSystem.getSequence((URL) object);
-		} catch (InvalidMidiDataException imde) {
-		    System.out.println("Unsupported audio file.");
-		    return false;
-                } catch (Exception ex) { 
-                    ex.printStackTrace(); 
-		    currentSound = null;
-		    return false;
-                }
-            }
-        } else if (object instanceof File) {
-            currentName = ((File) object).getName();
-            playbackMonitor.repaint();
-            try {
-                currentSound = AudioSystem.getAudioInputStream((File) object);
-            } catch(Exception e1) {
-                // load midi & rmf as inputstreams for now
-                //try { 
-                    //currentSound = MidiSystem.getSequence((File) object);
-                //} catch (Exception e2) { 
-                    try { 
-                        FileInputStream is = new FileInputStream((File) object);
-                        currentSound = new BufferedInputStream(is, 1024);
-                    } catch (Exception e3) { 
-                        e3.printStackTrace(); 
-			currentSound = null;
-			return false;
-                    }
-                //}
+        loading = new Loading();
+        loading.start();
+        currentName = file.getName();
+        playbackMonitor.repaint();
+        try {
+            currentSound = AudioSystem.getAudioInputStream(file);
+        } catch (UnsupportedAudioFileException | IOException e1) {
+            LOGGER.debug("UnsupportedAudioFileException | IOException", e1);
+            try (FileInputStream is = new FileInputStream(file)) {
+                currentSound = new BufferedInputStream(is, 1024);
+            } catch (IOException e3) {
+                LOGGER.error("IOException", e3);
+                currentSound = null;
+                return false;
             }
         }
-
-
         loading.interrupt();
 
         // user pressed stop or changed tabs while loading
         if (sequencer == null) {
             currentSound = null;
             return false;
-        } 
+        }
 
-        if (currentSound instanceof AudioInputStream) {
-           try {
-                AudioInputStream stream = (AudioInputStream) currentSound;
+        if (currentSound instanceof AudioInputStream stream) {
+            try {
                 AudioFormat format = stream.getFormat();
-
-                /**
-                 * we can't yet open the device for ALAW/ULAW playback,
-                 * convert ALAW/ULAW to PCM
-                 */
                 if ((format.getEncoding() == AudioFormat.Encoding.ULAW) ||
-                    (format.getEncoding() == AudioFormat.Encoding.ALAW)) 
-                {
+                        (format.getEncoding() == AudioFormat.Encoding.ALAW)) {
                     AudioFormat tmp = new AudioFormat(
-                                              AudioFormat.Encoding.PCM_SIGNED, 
-                                              format.getSampleRate(),
-                                              format.getSampleSizeInBits() * 2,
-                                              format.getChannels(),
-                                              format.getFrameSize() * 2,
-                                              format.getFrameRate(),
-                                              true);
+                            AudioFormat.Encoding.PCM_SIGNED,
+                            format.getSampleRate(),
+                            format.getSampleSizeInBits() * 2,
+                            format.getChannels(),
+                            format.getFrameSize() * 2,
+                            format.getFrameRate(),
+                            true);
                     stream = AudioSystem.getAudioInputStream(tmp, stream);
                     format = tmp;
                 }
                 DataLine.Info info = new DataLine.Info(
-                                          Clip.class, 
-                                          stream.getFormat(), 
-                                          ((int) stream.getFrameLength() *
-                                              format.getFrameSize()));
+                        Clip.class,
+                        stream.getFormat(),
+                        ((int) stream.getFrameLength() *
+                                format.getFrameSize()));
 
                 Clip clip = (Clip) AudioSystem.getLine(info);
-                clip.addLineListener(this);
+                clip.addLineListener(this::update);
                 clip.open(stream);
                 currentSound = clip;
                 seekSlider.setMaximum((int) stream.getFrameLength());
-            } catch (Exception ex) { 
-		ex.printStackTrace(); 
-		currentSound = null;
-		return false;
-	    }
+            } catch (LineUnavailableException | IOException ex) {
+                LOGGER.error("Could not open clip", ex);
+                currentSound = null;
+                return false;
+            }
         } else if (currentSound instanceof Sequence || currentSound instanceof BufferedInputStream) {
             try {
                 sequencer.open();
-                if (currentSound instanceof Sequence) {
-                    sequencer.setSequence((Sequence) currentSound);
+                if (currentSound instanceof Sequence soundSequence) {
+                    sequencer.setSequence(soundSequence);
                 } else {
                     sequencer.setSequence((BufferedInputStream) currentSound);
                 }
-				seekSlider.setMaximum((int)(sequencer.getMicrosecondLength() / 1000));
+                seekSlider.setMaximum((int) (sequencer.getMicrosecondLength() / 1000));
 
-            } catch (InvalidMidiDataException imde) { 
-		System.out.println("Unsupported audio file.");
-		currentSound = null;
-		return false;
-            } catch (Exception ex) { 
-		ex.printStackTrace(); 
-		currentSound = null;
-		return false;
-	    }
+            } catch (InvalidMidiDataException imde) {
+                LOGGER.error("Unsupported audio file.", imde);
+                currentSound = null;
+                return false;
+            } catch (IOException | MidiUnavailableException ex) {
+                LOGGER.error("IOException | MidiUnavailableException", ex);
+                currentSound = null;
+                return false;
+            }
         }
 
         seekSlider.setValue(0);
-        
-		// enable seek, pan, and gain sliders for sequences as well as clips
-		seekSlider.setEnabled(true);
-		panSlider.setEnabled(true);
-        gainSlider.setEnabled(true);        
-		
-	duration = getDuration();
 
-	return true;
+        // enable seek, pan, and gain sliders for sequences as well as clips
+        seekSlider.setEnabled(true);
+        panSlider.setEnabled(true);
+        gainSlider.setEnabled(true);
+
+        duration = getDuration();
+
+        return true;
     }
-
 
     public void playSound() {
         playbackMonitor.start();
         setGain();
         setPan();
         midiEOM = audioEOM = bump = false;
-        if (currentSound instanceof Sequence || currentSound instanceof BufferedInputStream && thread != null) {
+        if (currentSound instanceof Sequence ||
+                (currentSound instanceof BufferedInputStream && thread != null)) {
             sequencer.start();
             while (!midiEOM && thread != null && !bump) {
-                try { thread.sleep(99); } catch (Exception e) {break;}
+                try {
+                    thread.sleep(99);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
             sequencer.stop();
             sequencer.close();
-        } else if (currentSound instanceof Clip && thread != null) {
-            Clip clip = (Clip) currentSound;
+        } else if (currentSound instanceof Clip clip && thread != null) {
             clip.start();
-            try { thread.sleep(99); } catch (Exception e) { }
+            try {
+                Thread.sleep(99);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
             while ((paused || clip.isActive()) && thread != null && !bump) {
-                try { thread.sleep(99); } catch (Exception e) {break;}
+                try {
+                    Thread.sleep(99);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
             clip.stop();
             clip.close();
@@ -301,30 +335,26 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
 
     public double getDuration() {
         double duration = 0.0;
-        if (currentSound instanceof Sequence) {
-            duration = ((Sequence) currentSound).getMicrosecondLength() / 1000000.0;
-        }  else if (currentSound instanceof BufferedInputStream) {
-			duration = sequencer.getMicrosecondLength() / 1000000.0;
-		} else if (currentSound instanceof Clip) {
-            Clip clip = (Clip) currentSound;
-            duration = clip.getBufferSize() / 
-                (clip.getFormat().getFrameSize() * clip.getFormat().getFrameRate());
-        } 
+        if (currentSound instanceof Sequence sequence) {
+            duration = sequence.getMicrosecondLength() / 1000000.0;
+        } else if (currentSound instanceof BufferedInputStream) {
+            duration = sequencer.getMicrosecondLength() / 1000000.0;
+        } else if (currentSound instanceof Clip clip) {
+            duration = clip.getBufferSize() /
+                    (clip.getFormat().getFrameSize() * clip.getFormat().getFrameRate());
+        }
         return duration;
     }
 
-
     public double getSeconds() {
         double seconds = 0.0;
-        if (currentSound instanceof Clip) {
-            Clip clip = (Clip) currentSound;
+        if (currentSound instanceof Clip clip) {
             seconds = clip.getFramePosition() / clip.getFormat().getFrameRate();
-        } else if ( (currentSound instanceof Sequence) || (currentSound instanceof BufferedInputStream) ) {
+        } else if ((currentSound instanceof Sequence) || (currentSound instanceof BufferedInputStream)) {
             try {
                 seconds = sequencer.getMicrosecondPosition() / 1000000.0;
-            } catch (IllegalStateException e){
-                System.out.println("TEMP: IllegalStateException "+
-                    "on sequencer.getMicrosecondPosition(): " + e);
+            } catch (IllegalStateException e) {
+                LOGGER.error("TEMP: IllegalStateException on sequencer.getMicrosecondPosition(): ", e);
             }
         }
         return seconds;
@@ -332,14 +362,15 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
 
 
     public void update(LineEvent event) {
-        if (event.getType() == LineEvent.Type.STOP && !paused) { 
+        if (event.getType() == LineEvent.Type.STOP && !paused) {
             audioEOM = true;
         }
     }
 
 
     public void meta(MetaMessage message) {
-        if (message.getType() == 47) {  // 47 is end of track
+        final int END_OF_TRACK = 47;
+        if (message.getType() == END_OF_TRACK) {
             midiEOM = true;
         }
     }
@@ -347,7 +378,7 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
 
     private void reportStatus(String msg) {
         if ((errStr = msg) != null) {
-            System.out.println(errStr);
+            LOGGER.error(errStr);
             playbackMonitor.repaint();
         }
         if (credits != null && credits.isAlive()) {
@@ -360,13 +391,11 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         return thread;
     }
 
-
-    public void start() {
-        thread = new Thread(this);
+    public void startJuke() {
+        thread = new Thread(this::run);
         thread.setName("Juke");
         thread.start();
     }
-
 
     public void stop() {
         if (thread != null) {
@@ -375,18 +404,22 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         thread = null;
     }
 
-
     public void run() {
         do {
-            table.scrollRectToVisible(new Rectangle(0,0,1,1));
+            table.scrollRectToVisible(new Rectangle(0, 0, 1, 1));
             for (; num < sounds.size() && thread != null; num++) {
-                table.scrollRectToVisible(new Rectangle(0,(num+2)*(table.getRowHeight()+table.getRowMargin()),1,1));
+                table.scrollRectToVisible(new Rectangle(0, (num + 2) * (table.getRowHeight() + table.getRowMargin()), 1, 1));
                 table.setRowSelectionInterval(num, num);
-                if( loadSound(sounds.get(num)) == true ) {
+                if (loadSound(sounds.get(num))) {
                     playSound();
-		}
+                }
                 // take a little break between sounds
-                try { thread.sleep(222); } catch (Exception e) {break;}
+                try {
+                    thread.sleep(222);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
             num = 0;
         } while (loopB.isSelected() && thread != null);
@@ -402,85 +435,79 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
 
 
     public void setPan() {
-
         int value = panSlider.getValue();
 
-        if (currentSound instanceof Clip) {
-            try {
-                Clip clip = (Clip) currentSound;
-                FloatControl panControl = 
-                    (FloatControl) clip.getControl(FloatControl.Type.PAN);
-                panControl.setValue(value/100.0f);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+        if (currentSound instanceof Clip clip) {
+            FloatControl panControl = (FloatControl) clip.getControl(FloatControl.Type.PAN);
+            panControl.setValue((float) (value / 100.0));
         } else if (currentSound instanceof Sequence || currentSound instanceof BufferedInputStream) {
-            for (int i = 0; i < channels.length; i++) {                
-				channels[i].controlChange(10, (int)(((double)value + 100.0) / 200.0 *  127.0));
-            }										 
+            for (MidiChannel channel : channels) {
+                channel.controlChange(10, (int) (((double) value + 100.0) / 200.0 * 127.0));
+            }
         }
     }
 
 
     public void setGain() {
         double value = gainSlider.getValue() / 100.0;
-
-        if (currentSound instanceof Clip) {
-            try {
-                Clip clip = (Clip) currentSound;
-                FloatControl gainControl = 
-                  (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-                float dB = (float) 
-                  (Math.log(value==0.0?0.0001:value)/Math.log(10.0)*20.0);
-                gainControl.setValue(dB);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
+        if (currentSound instanceof Clip clip) {
+            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            float dB = (float)
+                    (Math.log(value == 0.0 ? 0.0001 : value) / Math.log(10.0) * 20.0);
+            gainControl.setValue(dB);
         } else if (currentSound instanceof Sequence || currentSound instanceof BufferedInputStream) {
-            for (int i = 0; i < channels.length; i++) {                
-				channels[i].controlChange(7, (int)(value * 127.0));
-
-			}
+            for (int i = 0; i < channels.length; i++) {
+                channels[i].controlChange(7, (int) (value * 127.0));
+            }
         }
     }
-
 
 
     /**
      * GUI controls for start, stop, previous, next, pan and gain.
      */
-    class JukeControls extends JPanel implements ActionListener, ChangeListener {
+    private final class JukeControls extends JPanel implements ChangeListener {
 
         public JukeControls() {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
             JPanel p1 = new JPanel();
             p1.setLayout(new BoxLayout(p1, BoxLayout.Y_AXIS));
-            p1.setBorder(new EmptyBorder(10,0,5,0));
-            JPanel p2 = new JPanel();
-            startB = addButton("Start", p2, sounds.size() != 0);
-            pauseB = addButton("Pause", p2, false);
-            p1.add(p2);
+            p1.setBorder(new EmptyBorder(10, 0, 5, 0));
+
             JPanel p3 = new JPanel();
-            prevB = addButton("<<", p3, false);
-            nextB = addButton(">>", p3, false);
+            JButton prevB = createButton("<<", false);
+            prevB.addActionListener(this::actionPerformed);
+            p3.add(prevB);
+            JButton nextB = createButton(">>", false);
+            nextB.addActionListener(this::actionPerformed);
+            p3.add(nextB);
+            startB = createButton(START, sounds.size() != 0);
+            startB.addActionListener(e -> startButtonAction(prevB, nextB));
+
+            JPanel p2 = new JPanel();
+            p2.add(startB);
+            pauseB = createButton(PAUSE, false);
+            pauseB.addActionListener(e -> pauseButtonAction());
+            p2.add(pauseB);
+            p1.add(p2);
             p1.add(p3);
             add(p1);
-    
+
             JPanel p4 = new JPanel(new BorderLayout());
-            EmptyBorder eb = new EmptyBorder(5,20,10,20);
+            EmptyBorder eb = new EmptyBorder(5, 20, 10, 20);
             BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
-            p4.setBorder(new CompoundBorder(eb,bb));
+            p4.setBorder(new CompoundBorder(eb, bb));
             p4.add(playbackMonitor);
-            seekSlider = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
+            seekSlider = new JSlider(SwingConstants.HORIZONTAL, 0, 100, 0);
             seekSlider.setEnabled(false);
             seekSlider.addChangeListener(this);
-            p4.add("South", seekSlider);
+            p4.add(SOUTH, seekSlider);
             add(p4);
 
             JPanel p5 = new JPanel();
             p5.setLayout(new BoxLayout(p5, BoxLayout.X_AXIS));
-            p5.setBorder(new EmptyBorder(5,5,10,5));
+            p5.setBorder(new EmptyBorder(5, 5, 10, 5));
             panSlider = new JSlider(-100, 100, 0);
             panSlider.addChangeListener(this);
             TitledBorder tb = new TitledBorder(new EtchedBorder());
@@ -496,11 +523,9 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
             add(p5);
         }
 
-        private JButton addButton(String name, JPanel panel, boolean state) {
+        private JButton createButton(String name, boolean state) {
             JButton b = new JButton(name);
-            b.addActionListener(this);
             b.setEnabled(state);
-            panel.add(b);
             return b;
         }
 
@@ -512,10 +537,10 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                     ((Clip) currentSound).setFramePosition(value);
                 } else if (currentSound instanceof Sequence) {
                     long dur = ((Sequence) currentSound).getMicrosecondLength();
-					sequencer.setMicrosecondPosition(value * 1000);
+                    sequencer.setMicrosecondPosition(value * 1000);
                 } else if (currentSound instanceof BufferedInputStream) {
                     long dur = sequencer.getMicrosecondLength();
-					sequencer.setMicrosecondPosition(value * 1000);
+                    sequencer.setMicrosecondPosition(value * 1000);
                 }
                 playbackMonitor.repaint();
                 return;
@@ -523,51 +548,52 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
             TitledBorder tb = (TitledBorder) slider.getBorder();
             String s = tb.getTitle();
             if (s.startsWith("Pan")) {
-                s = s.substring(0, s.indexOf('=')+1) + s.valueOf(value/100.0);
+                s = s.substring(0, s.indexOf('=') + 1) + value / 100.0;
                 if (currentSound != null) {
                     setPan();
                 }
             } else if (s.startsWith("Gain")) {
-                s = s.substring(0, s.indexOf('=')+1) + s.valueOf(value);
+                s = s.substring(0, s.indexOf('=') + 1) + value;
                 if (currentSound != null) {
                     setGain();
                 }
-            } 
+            }
             tb.setTitle(s);
             slider.repaint();
         }
 
 
-        public void setComponentsEnabled(boolean state) {
+        public void setComponentsEnabled(boolean state, JButton prevB, JButton nextB) {
             seekSlider.setEnabled(state);
             pauseB.setEnabled(state);
             prevB.setEnabled(state);
             nextB.setEnabled(state);
         }
 
-
-
-        public void actionPerformed(ActionEvent e) {
-            JButton button = (JButton) e.getSource();
-            if (button.getText().equals("Start")) {
+        private void startButtonAction(JButton prevButton, JButton nextButton) {
+            if (startB.getText().equals(START)) {
                 if (credits != null) {
                     credits.interrupt();
                 }
                 paused = false;
                 num = table.getSelectedRow();
                 num = num == -1 ? 0 : num;
-                start();
-                button.setText("Stop");
-                setComponentsEnabled(true);
-            } else if (button.getText().equals("Stop")) {
+                startJuke();
+                startB.setText("Stop");
+                setComponentsEnabled(true, prevButton, nextButton);
+            } else if (startB.getText().equals("Stop")) {
                 credits = new Credits();
                 credits.start();
                 paused = false;
                 stop();
-                button.setText("Start");
-                pauseB.setText("Pause");
-                setComponentsEnabled(false);
-            } else if (button.getText().equals("Pause")) {
+                startB.setText(START);
+                pauseB.setText(PAUSE);
+                setComponentsEnabled(false, prevButton, nextButton);
+            }
+        }
+
+        private void pauseButtonAction() {
+            if (pauseB.getText().equals(PAUSE)) {
                 paused = true;
                 if (currentSound instanceof Clip) {
                     ((Clip) currentSound).stop();
@@ -576,7 +602,7 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                 }
                 playbackMonitor.stop();
                 pauseB.setText("Resume");
-            } else if (button.getText().equals("Resume")) {
+            } else if (pauseB.getText().equals("Resume")) {
                 paused = false;
                 if (currentSound instanceof Clip) {
                     ((Clip) currentSound).start();
@@ -584,31 +610,36 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                     sequencer.start();
                 }
                 playbackMonitor.start();
-                pauseB.setText("Pause");
-            } else if (button.getText().equals("<<")) {
+                pauseB.setText(PAUSE);
+            }
+        }
+
+
+        public void actionPerformed(ActionEvent e) {
+            JButton button = (JButton) e.getSource();
+            if (button.getText().equals("<<")) {
                 paused = false;
-                pauseB.setText("Pause");
-                num = num-1 < 0 ? sounds.size()-1 : num-2;
+                pauseB.setText(PAUSE);
+                num = num - 1 < 0 ? sounds.size() - 1 : num - 2;
                 bump = true;
             } else if (button.getText().equals(">>")) {
                 paused = false;
-                pauseB.setText("Pause");
-                num = num+1 == sounds.size() ? -1 : num;
+                pauseB.setText(PAUSE);
+                num = num + 1 == sounds.size() ? -1 : num;
                 bump = true;
             }
         }
-    }  // End JukeControls
-
+    }
 
 
     /**
      * Displays current sound and time elapsed.
      */
     public class PlaybackMonitor extends JPanel implements Runnable {
-        
+
         String welcomeStr = "Welcome to Java Sound";
         Thread pbThread;
-        Color black = new Color(20, 20, 20); 
+        Color black = new Color(20, 20, 20);
         Color jfcBlue = new Color(204, 204, 255);
         Color jfcDarkBlue = jfcBlue.darker();
         Font font24 = new Font("serif", Font.BOLD, 24);
@@ -620,7 +651,7 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
             fm28 = getFontMetrics(font28);
             fm42 = getFontMetrics(font42);
         }
-    
+
         public void paint(Graphics g) {
             Graphics2D g2 = (Graphics2D) g;
             Dimension d = getSize();
@@ -642,7 +673,7 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                 float x = 5, y = 25;
                 lbm.setPosition(0);
                 while (lbm.getPosition() < errStr.length()) {
-                    TextLayout tl = lbm.nextLayout(d.width-x-5);
+                    TextLayout tl = lbm.nextLayout(d.width - x - 5);
                     if (!tl.isLeftToRight()) {
                         x = d.width - tl.getAdvance();
                     }
@@ -652,14 +683,14 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
             } else if (currentName == null) {
                 FontRenderContext frc = g2.getFontRenderContext();
                 TextLayout tl = new TextLayout(welcomeStr, font28, frc);
-                float x = (float) (d.width/2-tl.getBounds().getWidth()/2);
-                tl.draw(g2, x, d.height/2);
+                float x = (float) (d.width / 2 - tl.getBounds().getWidth() / 2);
+                tl.draw(g2, x, d.height / 2);
                 if (credits != null) {
                     credits.render(d, g2);
                 }
             } else {
                 g2.setFont(font24);
-                g2.drawString(currentName, 5, fm28.getHeight()-5);
+                g2.drawString(currentName, 5, fm28.getHeight() - 5);
                 if (duration <= 0.0) {
                     loading.render(d, g2);
                 } else {
@@ -670,142 +701,146 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                     if (seconds > 0.0) {
                         g2.setFont(font42);
                         String s = String.valueOf(seconds);
-                        s =  s.substring(0,s.indexOf('.')+2);
+                        s = s.substring(0, s.indexOf('.') + 2);
                         int strW = (int) fm42.getStringBounds(s, g2).getWidth();
-                        g2.drawString(s, d.width-strW-9, fm42.getAscent());
+                        g2.drawString(s, d.width - strW - 9, fm42.getAscent());
 
                         int num = 30;
                         int progress = (int) (seconds / duration * num);
                         double ww = ((double) (d.width - 10) / (double) num);
                         double hh = (int) (d.height * 0.25);
                         double x = 0.0;
-                        for ( ; x < progress; x+=1.0) {
-                            g2.fill(new Rectangle2D.Double(x*ww+5, d.height-hh-5, ww-1, hh));
+                        for (; x < progress; x += 1.0) {
+                            g2.fill(new Rectangle2D.Double(x * ww + 5, d.height - hh - 5, ww - 1, hh));
                         }
                         g2.setColor(jfcDarkBlue);
-                        for ( ; x < num; x+=1.0) {
-                            g2.fill(new Rectangle2D.Double(x*ww+5, d.height-hh-5, ww-1, hh));
+                        for (; x < num; x += 1.0) {
+                            g2.fill(new Rectangle2D.Double(x * ww + 5, d.height - hh - 5, ww - 1, hh));
                         }
                     }
                 }
             }
         }
-        
+
         public void start() {
             pbThread = new Thread(this);
             pbThread.setName("PlaybackMonitor");
             pbThread.start();
         }
-        
+
         public void stop() {
             if (pbThread != null) {
                 pbThread.interrupt();
             }
             pbThread = null;
         }
-        
+
         public void run() {
             while (pbThread != null) {
                 try {
                     pbThread.sleep(99);
-                } catch (Exception e) { break; }
+                } catch (Exception e) {
+                    break;
+                }
                 repaint();
             }
             pbThread = null;
         }
     } // End PlaybackMonitor
-            
 
 
     /**
      * Table to display the name of the sound.
      */
-    class JukeTable extends JPanel implements ActionListener {
+    private final class JukeTable extends JPanel {
 
-        TableModel dataModel;
-        JFrame frame;
-        JTextField textField;
-        JButton applyB;
+        private final transient TableModel dataModel;
+        private JFrame frame;
+        private JTextField textField;
+        private JButton applyB;
 
         public JukeTable() {
             setLayout(new BorderLayout());
-            setPreferredSize(new Dimension(260,300));
+            setPreferredSize(new Dimension(260, 300));
 
-            final String[] names = { "#", "Name" };
-    
+            final String[] names = {"#", "Name"};
+
             dataModel = new AbstractTableModel() {
-                public int getColumnCount() { return names.length; }
-                public int getRowCount() { return sounds.size();}
-                public Object getValueAt(int row, int col) { 
+                public int getColumnCount() {
+                    return names.length;
+                }
+
+                public int getRowCount() {
+                    return sounds.size();
+                }
+
+                public Object getValueAt(int row, int col) {
                     if (col == 0) {
-                        return new Integer(row);
+                        return row;
                     } else if (col == 1) {
-                        Object object = sounds.get(row);
-                        if (object instanceof File) {
-                            return ((File) object).getName();
-                        } else if (object instanceof URL) {
-                            return ((URL) object).getFile();
-                        }
-                    } 
+                        File file = sounds.get(row);
+                        return file.getName();
+                    }
                     return null;
                 }
-                public String getColumnName(int col) {return names[col]; }
-                public Class getColumnClass(int c) {
-                    return getValueAt(0, c).getClass();
+
+                @Override
+                public String getColumnName(int col) {
+                    return names[col];
                 }
-                public boolean isCellEditable(int row, int col) {
-                    return false;
-                }
-                public void setValueAt(Object aValue, int row, int col) {
+
+                @Override
+                public Class<?> getColumnClass(int c) {
+                    return Optional.ofNullable(getValueAt(0, c)).map(Object::getClass).orElseThrow();
                 }
             };
-    
+
             table = new JTable(dataModel);
             TableColumn col = table.getColumn("#");
             col.setMaxWidth(20);
             table.sizeColumnsToFit(0);
-        
+
             JScrollPane scrollPane = new JScrollPane(table);
-            EmptyBorder eb = new EmptyBorder(5,5,2,5);
-            scrollPane.setBorder(new CompoundBorder(eb,new EtchedBorder()));
+            EmptyBorder eb = new EmptyBorder(5, 5, 2, 5);
+            scrollPane.setBorder(new CompoundBorder(eb, new EtchedBorder()));
             add(scrollPane);
 
             JPanel p1 = new JPanel();
             JMenuBar menuBar = new JMenuBar();
             menuBar.setBorder(new BevelBorder(BevelBorder.RAISED));
             JMenu menu = (JMenu) menuBar.add(new JMenu("Add"));
-            String items[] = { "File or Directory of Files", "URL" };
+            String items[] = {"File or Directory of Files", "URL"};
             for (int i = 0; i < items.length; i++) {
                 JMenuItem item = menu.add(new JMenuItem(items[i]));
-                item.addActionListener(this);
-            } 
+                item.addActionListener(this::actionPerformed);
+            }
             p1.add(menuBar);
 
             menuBar = new JMenuBar();
             menuBar.setBorder(new BevelBorder(BevelBorder.RAISED));
-            menu = (JMenu) menuBar.add(new JMenu("Remove"));
+            menu = menuBar.add(new JMenu("Remove"));
             JMenuItem item = menu.add(new JMenuItem("Selected"));
-            item.addActionListener(this);
+            item.addActionListener(this::actionPerformed);
             item = menu.add(new JMenuItem("All"));
-            item.addActionListener(this);
+            item.addActionListener(this::actionPerformed);
             p1.add(menuBar);
 
             loopB = addButton("loop", p1);
             loopB.setBackground(Color.gray);
             loopB.setSelected(true);
 
-            add("South", p1);
+            add(SOUTH, p1);
         }
 
-        
+
         private JButton addButton(String name, JPanel p) {
             JButton b = new JButton(name);
-            b.addActionListener(this);
+            b.addActionListener(this::actionPerformed);
             p.add(b);
             return b;
         }
 
- 
+
         private void doFrame(String titleName) {
             int w = 500;
             int h = 130;
@@ -814,33 +849,34 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
             if (titleName.endsWith("URL")) {
                 p1.add(new JLabel("URL :"));
                 textField = new JTextField("http://foo.bar.com/foo.wav");
-                textField.addActionListener(this);
+                textField.addActionListener(this::actionPerformed);
             } else {
                 p1.add(new JLabel("File or Dir :"));
                 String sep = String.valueOf(System.getProperty("file.separator").toCharArray()[0]);
-                String text = null;
+                String text;
                 try {
                     text = System.getProperty("user.dir") + sep;
                 } catch (SecurityException ex) {
                     reportStatus(ex.toString());
                     JavaSound.showInfoDialog();
+                    LOGGER.debug("Security exception", ex);
                     return;
                 }
                 textField = new JTextField(text);
-                textField.setPreferredSize(new Dimension(w-100, 30));
-                textField.addActionListener(this);
+                textField.setPreferredSize(new Dimension(w - 100, 30));
+                textField.addActionListener(this::actionPerformed);
             }
             p1.add(textField);
             panel.add(p1);
             JPanel p2 = new JPanel();
             applyB = addButton("Apply", p2);
             addButton("Cancel", p2);
-            panel.add("South", p2);
+            panel.add(SOUTH, p2);
             frame = new JFrame(titleName);
             frame.getContentPane().add("Center", panel);
             frame.pack();
             Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            frame.setLocation(d.width/2 - w/2, d.height/2 - h/2);
+            frame.setLocation(d.width / 2 - w / 2, d.height / 2 - h / 2);
             frame.setSize(w, h);
             frame.setVisible(true);
         }
@@ -858,9 +894,9 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                     doFrame("Add URL");
                 } else if (mi.getText().equals("Selected")) {
                     int rows[] = table.getSelectedRows();
-                    Vector tmp = new Vector();
-                    for (int i = 0; i < rows.length;i++) {
-                        tmp.add(sounds.get(rows[i]));
+                    List<File> tmp = new Vector();
+                    for (int row : rows) {
+                        tmp.add(sounds.get(row));
                     }
                     sounds.removeAll(tmp);
                     tableChanged();
@@ -874,8 +910,10 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
                     String name = textField.getText().trim();
                     if (name.startsWith("http") || name.startsWith("file")) {
                         try {
-                            sounds.add(new URL(name));
-                        } catch (Exception ex) { ex.printStackTrace(); };
+                            sounds.add(new File(name));
+                        } catch (RuntimeException ex) {
+                            LOGGER.error("", ex);
+                        }
                     } else {
                         loadJuke(name);
                     }
@@ -896,34 +934,40 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         public void tableChanged() {
             table.tableChanged(new TableModelEvent(dataModel));
         }
-    }  // End JukeTable
-
+    }
 
 
     /**
      * Animation thread for when an audio file loads.
      */
-    class Loading extends Thread {
+    private final class Loading extends Thread {
 
-        double extent; int incr;
+        private double extent;
+        private int incr;
 
         public void run() {
-            extent = 360.0; incr = 10;
+            extent = 360.0;
+            incr = 10;
             while (true) {
-                try { sleep(99); } catch (Exception ex) { break; }
+                try {
+                    sleep(99);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
                 playbackMonitor.repaint();
             }
         }
 
-        public void render(Dimension d, Graphics2D g2) { 
+        public void render(Dimension d, Graphics2D g2) {
             if (isAlive()) {
                 FontRenderContext frc = g2.getFontRenderContext();
                 TextLayout tl = new TextLayout("Loading", g2.getFont(), frc);
                 float sw = (float) tl.getBounds().getWidth();
-                tl.draw(g2, d.width-sw-45, d.height-10);
-                double x = d.width-33, y = d.height-30, ew = 25, eh = 25;
-                g2.draw(new Ellipse2D.Double(x,y,ew,eh));
-                g2.fill(new Arc2D.Double(x,y,ew,eh,90,extent,Arc2D.PIE));
+                tl.draw(g2, d.width - sw - 45, d.height - 10);
+                double x = d.width - 33, y = d.height - 30, ew = 25, eh = 25;
+                g2.draw(new Ellipse2D.Double(x, y, ew, eh));
+                g2.fill(new Arc2D.Double(x, y, ew, eh, 90, extent, Arc2D.PIE));
                 if ((extent -= incr) < 0) {
                     extent = 350.0;
                 }
@@ -931,55 +975,76 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         }
     }
 
-            
 
     /**
      * Animation thread for the contributors of Java Sound.
      */
-    class Credits extends Thread {
+    private final class Credits extends Thread {
 
-        int x;
-        Font font16 = new Font("serif", Font.PLAIN, 16);
-        String contributors = "Contributors : Kara Kytle, " + 
-                              "Jan Borgersen, " + "Brian Lichtenwalter";
-        int strWidth = getFontMetrics(font16).stringWidth(contributors);
+        private int x;
+        private Font font16 = new Font("serif", Font.PLAIN, 16);
+        private String contributors = "Contributors : Kara Kytle, " +
+                "Jan Borgersen, " + "Brian Lichtenwalter";
+        private int strWidth = getFontMetrics(font16).stringWidth(contributors);
 
+        @Override
         public void run() {
-            x = -999; 
+            x = -999;
             while (!playbackMonitor.isShowing()) {
-                try { sleep(999); } catch (Exception e) { return; }
+                try {
+                    sleep(999);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
             for (int i = 0; i < 100; i++) {
-                try { sleep(99); } catch (Exception e) { return; }
+                try {
+                    sleep(99);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
             }
             while (true) {
                 if (--x < -strWidth) {
                     x = playbackMonitor.getSize().width;
                 }
                 playbackMonitor.repaint();
-                try { sleep(99); } catch (Exception ex) { break; }
+                try {
+                    sleep(99);
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
         }
 
         public void render(Dimension d, Graphics2D g2) {
             if (isAlive()) {
                 g2.setFont(font16);
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, 
-                                    RenderingHints.VALUE_ANTIALIAS_OFF);
-                g2.drawString(contributors, x, d.height-5);
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_OFF);
+                g2.drawString(contributors, x, d.height - 5);
             }
         }
     }
-            
 
-    public static void main(String args[]) {
+
+    public static void main(String[] args) {
         String media = "media";
         final Juke juke = new Juke(args.length == 0 ? media : args[0]);
         juke.open();
         JFrame f = new JFrame("Juke Box");
         f.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {System.exit(0);}
-            public void windowIconified(WindowEvent e) { 
+            @Override
+            @SuppressWarnings("all")
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
                 juke.credits.interrupt();
             }
         });
@@ -988,14 +1053,14 @@ public class Juke extends JPanel implements Runnable, LineListener, MetaEventLis
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int w = 750;
         int h = 340;
-        f.setLocation(screenSize.width/2 - w/2, screenSize.height/2 - h/2);
+        f.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h / 2);
         f.setSize(w, h);
         f.setVisible(true);
         if (args.length > 0) {
             File file = new File(args[0]);
-            if (file == null && !file.isDirectory()) {
-                System.out.println("usage: java Juke audioDirectory");
-            } 
+            if (!file.isDirectory()) {
+                LOGGER.info("usage: java Juke audioDirectory");
+            }
         }
     }
 } 

@@ -5,96 +5,119 @@ package hzt.sound;
  */
 
 
-import java.awt.*;
-import java.awt.geom.*;
-import java.awt.event.*;
-import javax.swing.*;
-import java.util.Vector;
 import javax.sound.midi.Sequencer;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * Midi tempo dial in beats per minute.
  *
+ * @author Brian Lichtenwalter
  * @version @(#)TempoDial.java	1.9 02/02/06
- * @author Brian Lichtenwalter  
  */
 public class TempoDial extends JPanel {
 
-    private int dotSize = 6;
-    private Ellipse2D ellipse;
-    private Vector data;
-    private Data currentData;
-    private Sequencer sequencer;
-
+    private static final int DOT_SIZE = 6;
+    
+    private final transient Ellipse2D ellipse;
+    private final transient List<Data> data;
+    private transient Data currentData;
+    private transient Sequencer sequencer;
 
     public TempoDial() {
-        setBackground(new Color(20, 20, 20)); 
-
-        ellipse = new Ellipse2D.Float(2,20,92,120);
-        Vector dots = new Vector();
-        PathIterator pi = ellipse.getPathIterator(null, 0.9);
-        while ( !pi.isDone() ) {
+        ellipse = new Ellipse2D.Float(2, 20, 92, 120);
+        List<Ellipse2D.Float> dots = new ArrayList<>();
+        PathIterator pathIterator = ellipse.getPathIterator(null, 0.9);
+        while (!pathIterator.isDone()) {
             float[] pt = new float[6];
-            switch ( pi.currentSegment(pt) ) {
-                case FlatteningPathIterator.SEG_MOVETO:
-                case FlatteningPathIterator.SEG_LINETO:
-                    dots.add(new Ellipse2D.Float(pt[0],pt[1],dotSize,dotSize));
+            final int segment = pathIterator.currentSegment(pt);
+            if (segment == PathIterator.SEG_MOVETO || segment == PathIterator.SEG_LINETO) {
+                dots.add(new Ellipse2D.Float(pt[0], pt[1], DOT_SIZE, DOT_SIZE));
             }
-            pi.next();
+            pathIterator.next();
         }
-        Vector tmp = new Vector();
-        for (int i = 0; i < dots.size(); i++) {
-            if (((Ellipse2D) dots.get(i)).getY() >= ellipse.getHeight()/2) {
-                tmp.add(dots.get(i));
+        List<Ellipse2D.Float> tmp = new ArrayList<>();
+        for (Ellipse2D.Float dot : dots) {
+            if (dot.getY() >= ellipse.getHeight() / 2) {
+                tmp.add(dot);
             }
         }
         dots.removeAll(tmp);
 
-        float x = (float) (ellipse.getX() + ellipse.getWidth()/2);
-        float y = (float) (ellipse.getY() + (ellipse.getHeight()/2));
-        Vector paths = new Vector(dots.size());
+        float x = (float) (ellipse.getX() + ellipse.getWidth() / 2);
+        float y = (float) (ellipse.getY() + (ellipse.getHeight() / 2));
+        List<GeneralPath> paths = new ArrayList<>(dots.size());
         for (int i = 0; i < dots.size(); i++) {
-            GeneralPath gp = new GeneralPath(GeneralPath.WIND_NON_ZERO);
+            GeneralPath gp = new GeneralPath(Path2D.WIND_NON_ZERO);
             gp.moveTo(x, y);
-            Ellipse2D e1 = (Ellipse2D) dots.get(i);
+            Ellipse2D e1 = dots.get(i);
             gp.lineTo((float) e1.getX(), (float) e1.getY());
-            if (i+1 < dots.size()) {
-                Ellipse2D e2 = (Ellipse2D) dots.get(i+1);
+            if (i + 1 < dots.size()) {
+                Ellipse2D e2 = dots.get(i + 1);
                 gp.lineTo((float) e2.getX(), (float) e2.getY());
             }
             gp.closePath();
             paths.add(gp);
         }
 
-        data = new Vector(paths.size());
-        for (int i = 0, tempo = 40; i < paths.size(); i++, tempo+=10) {
+        data = new ArrayList<>(paths.size());
+        for (int i = 0, tempo = 40; i < paths.size(); i++, tempo += 10) {
             data.add(new Data(tempo, dots.get(i), paths.get(i)));
             if (tempo == 120) {
-                currentData = (Data) data.lastElement();
+                currentData = data.get(data.size() - 1);
             }
         }
+        configureDial();
+    }
 
+    private void configureDial() {
+        setBackground(new Color(20, 20, 20));
         addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseDragged(MouseEvent e) { processMouse(e); }
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                processMouse(e);
+            }
         });
         addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) { processMouse(e); }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                processMouse(e);
+            }
         });
     }
 
-    
+
     private void processMouse(MouseEvent e) {
         if (ellipse.contains(e.getPoint())) {
-            for (int i = 0; i < data.size(); i++) {
-                currentData = (Data) data.get(i);
+            for (Data datum : data) {
+                currentData = datum;
                 if (currentData.path.contains(e.getPoint())) {
                     break;
                 }
             }
             repaint();
             if (sequencer != null) {
-                sequencer.setTempoInBPM((float) getTempo());
+                sequencer.setTempoInBPM(getTempo());
             }
         }
     }
@@ -106,18 +129,18 @@ public class TempoDial extends JPanel {
 
 
     public float getTempo() {
-        return ((float) currentData.tempo);
+        return currentData.tempo;
     }
 
 
     /**
-     * Tempo value must match one found in data vector.  
+     * Tempo value must match one found in data vector.
      * Acceptable tempo values start at 40 increment by 10 until 160.
      */
-    public void setTempo(float tempo) {
-        for (int i = 0; i < data.size(); i++) {
-            currentData = (Data) data.get(i);
-            if (currentData.tempo == tempo) {
+    public void setTempo(double tempo) {
+        for (Data datum : data) {
+            currentData = datum;
+            if (Double.compare(currentData.tempo, tempo) == 0) {
                 break;
             }
         }
@@ -125,41 +148,44 @@ public class TempoDial extends JPanel {
     }
 
 
+    @Override
     public void paint(Graphics g) {
-	Dimension d = getSize();
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setBackground(getBackground());
-        g2.clearRect(0, 0, d.width, d.height);
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                            RenderingHints.VALUE_ANTIALIAS_ON);
+        Dimension d = getSize();
+        Graphics2D graphics = (Graphics2D) g;
+        graphics.setBackground(getBackground());
+        graphics.clearRect(0, 0, d.width, d.height);
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                RenderingHints.VALUE_ANTIALIAS_ON);
 
-        double x = ellipse.getWidth()/2+ellipse.getX()+dotSize/2;
-        double y = ellipse.getHeight()/2;
-        double x2 = currentData.dot.getX() + dotSize/2;
-        double y2 = currentData.dot.getY() + dotSize/2;
-        Ellipse2D e = new Ellipse2D.Double(x-5,y-5,10,10);
+        double x = ellipse.getWidth() / 2 + ellipse.getX() + DOT_SIZE / 2.0;
+        double y = ellipse.getHeight() / 2;
+        double x2 = currentData.dot.getX() + DOT_SIZE / 2.0;
+        double y2 = currentData.dot.getY() + DOT_SIZE / 2.0;
+        Ellipse2D e = new Ellipse2D.Double(x - 5, y - 5, 10, 10);
 
         Color jfcBlue = new Color(204, 204, 255);
-        g2.setColor(jfcBlue);
-        g2.setStroke(new BasicStroke(3));
-        g2.draw(new Line2D.Double(e.getX()+5, e.getY()+5, x2, y2));
-        g2.fill(e);
-        g2.setFont(new Font("serif", Font.BOLD, 12));
-        g2.drawString(String.valueOf(currentData.tempo) + " bpm", 2, 12);
+        graphics.setColor(jfcBlue);
+        graphics.setStroke(new BasicStroke(3));
+        graphics.draw(new Line2D.Double(e.getX() + 5, e.getY() + 5, x2, y2));
+        graphics.fill(e);
+        graphics.setFont(new Font("serif", Font.BOLD, 12));
+        graphics.drawString(currentData.tempo + " bpm", 2, 12);
 
-        g2.fill(currentData.dot);
-        g2.setStroke(new BasicStroke(1.5f));
-        g2.setColor(jfcBlue.darker());
-        for (int i = 0; i < data.size(); i++) {
-            g2.draw(((Data) data.get(i)).dot);
+        graphics.fill(currentData.dot);
+        graphics.setStroke(new BasicStroke(1.5F));
+        graphics.setColor(jfcBlue.darker());
+        for (Data datum : data) {
+            graphics.draw(datum.dot);
         }
     }
 
 
+    @Override
     public Dimension getPreferredSize() {
-        return new Dimension(105,70);
+        return new Dimension(105, 70);
     }
 
+    @Override
     public Dimension getMaximumSize() {
         return getPreferredSize();
     }
@@ -168,24 +194,31 @@ public class TempoDial extends JPanel {
     /**
      * Convenience storage class for our tempo dial data.
      */
-    class Data extends Object {
-        int tempo; Ellipse2D dot; GeneralPath path;
-        public Data(int tempo, Object dot, Object path) {
+    private static final class Data {
+        private final int tempo;
+        private final Ellipse2D dot;
+        private final GeneralPath path;
+
+        private Data(int tempo, Ellipse2D.Float dot, GeneralPath path) {
             this.tempo = tempo;
-            this.dot = (Ellipse2D) dot;
-            this.path = (GeneralPath) path;
+            this.dot = dot;
+            this.path = path;
         }
     }
-       
 
-    public static void main(String argv[]) {
-        JFrame f = new JFrame("Tempo Dial");
-        f.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {System.exit(0);}
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Tempo Dial");
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            @SuppressWarnings("all")
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
         });
-        f.getContentPane().add("Center", new TempoDial());
-        f.pack();
-        f.setSize(new Dimension(200,140));
-        f.setVisible(true);
+        frame.getContentPane().add("Center", new TempoDial());
+        frame.pack();
+        frame.setSize(new Dimension(200, 140));
+        frame.setVisible(true);
     }
 }

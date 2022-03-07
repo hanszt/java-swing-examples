@@ -5,29 +5,49 @@ package hzt.sound;
  */
 
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.border.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.sampled.AudioSystem;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
-import java.util.Vector;
-import javax.sound.sampled.*;
-import javax.sound.midi.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * The Java Sound Samples : MidiSynth, Juke, CapturePlayback, Groove.
  *
+ * @author Brian Lichtenwalter
  * @version @(#)JavaSound.java	1.17 02/02/06
- * @author Brian Lichtenwalter  
  */
-public class JavaSound extends JPanel implements ChangeListener, Runnable {
+public final class JavaSound extends JPanel implements ControlContext {
 
-    Vector demos = new Vector(4);
-    JTabbedPane tabPane = new JTabbedPane();
-    int width = 760, height = 500;
-    int index;
+    private static final Logger LOGGER = LoggerFactory.getLogger(JavaSound.class);
+    
+    private static final int SCENE_WIDTH = 760;
+    private static final int SCENE_HEIGHT = 500;
+    
+    private final JTabbedPane tabPane = new JTabbedPane();
+    private final transient List<ControlContext> demos = new ArrayList<>(4);
+    private int index;
 
 
     public JavaSound(String audioDirectory) {
@@ -35,83 +55,60 @@ public class JavaSound extends JPanel implements ChangeListener, Runnable {
         setLayout(new BorderLayout());
 
         JMenuBar menuBar = new JMenuBar();
-       
-        JMenu options = (JMenu) menuBar.add(new JMenu("Options"));
-        JMenuItem item = (JMenuItem) options.add(new JMenuItem("Applet Info"));
-        item.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) { showInfoDialog(); }
-        });
+        JMenu options = menuBar.add(new JMenu("Options"));
+        JMenuItem item = options.add(new JMenuItem("Applet Info"));
+        item.addActionListener(e -> showInfoDialog());
         add(menuBar, BorderLayout.NORTH);
 
-        tabPane.addChangeListener(this);
+        tabPane.addChangeListener(this::changeTab);
 
-        EmptyBorder eb = new EmptyBorder(5,5,5,5);
+        EmptyBorder eb = new EmptyBorder(5, 5, 5, 5);
         BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
-        CompoundBorder cb = new CompoundBorder(eb,bb);
+        CompoundBorder cb = new CompoundBorder(eb, bb);
         JPanel p = new JPanel(new BorderLayout());
-        p.setBorder(new CompoundBorder(cb,new EmptyBorder(0,0,90,0)));
+        p.setBorder(new CompoundBorder(cb, new EmptyBorder(0, 0, 90, 0)));
         final Juke juke = new Juke(audioDirectory);
         p.add(juke);
         demos.add(juke);
         tabPane.addTab("Juke Box", p);
 
-        new Thread(this).start();
+        new Thread(this::run).start();
 
         add(tabPane, BorderLayout.CENTER);
     }
 
 
-    public void stateChanged(ChangeEvent e) {
+    public void changeTab(ChangeEvent e) {
         close();
-        System.gc();
         index = tabPane.getSelectedIndex();
         open();
     }
 
 
     public void close() {
-        ((ControlContext) demos.get(index)).close();
+        demos.get(index).close();
     }
 
 
     public void open() {
-        ((ControlContext) demos.get(index)).open();
+        demos.get(index).open();
     }
 
 
+    @Override
     public Dimension getPreferredSize() {
-        return new Dimension(width, height);
+        return new Dimension(SCENE_WIDTH, SCENE_HEIGHT);
     }
-
-
-    public static void showInfoDialog() {
-        final String msg = 
-            "When running the Java Sound demo as an applet these permissions\n" +
-            "are necessary in order to load/save files and record audio :  \n\n"+
-            "grant { \n" +
-            "  permission java.io.FilePermission \"<<ALL FILES>>\", \"read, write\";\n" +
-            "  permission javax.sound.sampled.AudioPermission \"record\"; \n" +
-            "  permission java.util.PropertyPermission \"user.dir\", \"read\";\n"+
-            "}; \n\n" +
-            "The permissions need to be added to the .java.policy file.";
-        new Thread(new Runnable() {
-            public void run() {
-                JOptionPane.showMessageDialog(null, msg, "Applet Info", JOptionPane.INFORMATION_MESSAGE);
-            }
-        }).start();
-    }
-
-
 
     /**
      * Lazy load the tabbed pane with CapturePlayback, MidiSynth and Groove.
      */
     public void run() {
-        EmptyBorder eb = new EmptyBorder(5,5,5,5);
+        EmptyBorder eb = new EmptyBorder(5, 5, 5, 5);
         BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
-        CompoundBorder cb = new CompoundBorder(eb,bb);
+        CompoundBorder cb = new CompoundBorder(eb, bb);
         JPanel p = new JPanel(new BorderLayout());
-        p.setBorder(new CompoundBorder(cb,new EmptyBorder(0,0,90,0)));
+        p.setBorder(new CompoundBorder(cb, new EmptyBorder(0, 0, 90, 0)));
         CapturePlaybackPanel capturePlaybackPanel = new CapturePlaybackPanel();
         demos.add(capturePlaybackPanel);
         p.add(capturePlaybackPanel);
@@ -122,48 +119,80 @@ public class JavaSound extends JPanel implements ChangeListener, Runnable {
         tabPane.addTab("Midi Synthesizer", midiSynthesizer);
 
         p = new JPanel(new BorderLayout());
-        p.setBorder(new CompoundBorder(cb,new EmptyBorder(0,0,5,20)));
+        p.setBorder(new CompoundBorder(cb, new EmptyBorder(0, 0, 5, 20)));
         Groove groove = new Groove();
         demos.add(groove);
-        p.add(groove);
+        p.add(groove.getMainPanel());
         tabPane.addTab("Groove Box", p);
     }
 
 
     public static void main(String[] args) {
-
-        try { 
+        try {
             if (MidiSystem.getSequencer() == null) {
-                System.err.println("MidiSystem Sequencer Unavailable, exiting!");
+                LOGGER.error("MidiSystem Sequencer Unavailable, exiting!");
                 System.exit(1);
-            } else if (AudioSystem.getMixer(null) == null) {
-                System.err.println("AudioSystem Unavailable, exiting!");
+            } 
+            if (AudioSystem.getMixer(null) == null) {
+                LOGGER.error("AudioSystem Unavailable, exiting!");
                 System.exit(1);
             }
-        } catch (Exception ex) { ex.printStackTrace(); System.exit(1); }
+        } catch (MidiUnavailableException ex) {
+            LOGGER.error("Midi unavailable", ex);
+            System.exit(1);
+        }
 
         String media = "media";
         if (args.length > 0) {
             File file = new File(args[0]);
-            if (file == null && !file.isDirectory()) {
-                System.out.println("usage: java JavaSound audioDirectory");
-            } else {
+            if (file.isDirectory()) {
                 media = args[0];
+            } else {
+                LOGGER.info("usage: java JavaSound audioDirectory");
             }
         }
 
         final JavaSound demo = new JavaSound(media);
         JFrame f = new JFrame("Java Sound Demo");
         f.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {System.exit(0);}
-            public void windowDeiconified(WindowEvent e) { demo.open(); }
-            public void windowIconified(WindowEvent e) { demo.close(); }
+            @Override
+            @SuppressWarnings("all")
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {
+                demo.open();
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {
+                demo.close();
+            }
         });
         f.getContentPane().add("Center", demo);
         f.pack();
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-        f.setLocation(d.width/2 - demo.width/2, d.height/2 - demo.height/2);
-        f.setSize(new Dimension(demo.width, demo.height));
+        f.setLocation(d.width / 2 - JavaSound.SCENE_WIDTH / 2, d.height / 2 - JavaSound.SCENE_HEIGHT / 2);
+        f.setSize(new Dimension(JavaSound.SCENE_WIDTH, JavaSound.SCENE_HEIGHT));
         f.setVisible(true);
+    }
+
+    public static void showInfoDialog() {
+        final String msg = """
+                When running the Java Sound demo as an applet these permissions
+                are necessary in order to load/save files and record audio :
+                   
+                    grant {
+                      permission java.io.FilePermission "<<ALL FILES>>", "read", "write"
+                      permission javax.sound.sampled.AudioPermission "record";
+                      permission java.util.PropertyPermission "user.dir", "read"
+                    };
+                    
+                The permissions need to be added to the .java.policy file.
+                """;
+        new Thread(() -> JOptionPane.showMessageDialog(null, msg,
+                "Applet Info", JOptionPane.INFORMATION_MESSAGE)).start();
     }
 }

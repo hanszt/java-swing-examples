@@ -5,70 +5,128 @@ package hzt.sound;
  */
 
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import javax.swing.table.*;
-import javax.swing.event.*;
-import javax.sound.midi.*;
-import java.util.Vector;
+import org.hzt.swing_utils.function.mouse_listeners.MouseMovedListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.sound.midi.Instrument;
+import javax.sound.midi.InvalidMidiDataException;
+import javax.sound.midi.MetaMessage;
+import javax.sound.midi.MidiChannel;
+import javax.sound.midi.MidiEvent;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.MidiUnavailableException;
+import javax.sound.midi.Sequence;
+import javax.sound.midi.Sequencer;
+import javax.sound.midi.ShortMessage;
+import javax.sound.midi.Soundbank;
+import javax.sound.midi.Synthesizer;
+import javax.sound.midi.Track;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.TableModelEvent;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.IntConsumer;
 
 /**
  * Illustrates general MIDI melody instruments and MIDI controllers.
  *
+ * @author Brian Lichtenwalter
  * @version @(#)MidiSynth.java	1.16 02/02/06
- * @author Brian Lichtenwalter  
  */
-public class MidiSynthesizer extends JPanel implements ControlContext {
+public final class MidiSynthesizer extends JPanel implements ControlContext {
 
-    final int PROGRAM = 192;
-    final int NOTEON = 144;
-    final int NOTEOFF = 128;
-    final int SUSTAIN = 64;
-    final int REVERB = 91;
-    final int ON = 0, OFF = 1;
-    final Color jfcBlue = new Color(204, 204, 255);
-    final Color pink = new Color(255, 175, 175);
-    Sequencer sequencer;
-    Sequence sequence;
-    Synthesizer synthesizer;
-    Instrument instruments[];
-    ChannelData channels[];
-    ChannelData cc;    // current channel
-    JCheckBox mouseOverCB = new JCheckBox("mouseOver", true);
-    JSlider veloS, presS, bendS, revbS;
-    JCheckBox soloCB, monoCB, muteCB, sustCB; 
-    Vector keys = new Vector();
-    Vector whiteKeys = new Vector();
-    JTable table;
-    Piano piano;
-    boolean record;
-    Track track;
-    long startTime;
-    RecordFrame recordFrame;
-    Controls controls;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MidiSynthesizer.class);
+
+    private static final int PROGRAM = 192;
+    private static final int NOTE_ON = 144;
+    private static final int NOTE_OFF = 128;
+    private static final int SUSTAIN = 64;
+    private static final int REVERB = 91;
+    private static final int ON = 0;
+    private static final int OFF = 1;
+    private static final String RECORD = "Record";
+
+    private static final Color jfcBlue = new Color(204, 204, 255);
+    private static final Color pink = new Color(255, 175, 175);
+
+    private final Piano piano;
+
+    private transient Sequencer sequencer;
+    private transient Sequence sequence;
+    private transient Synthesizer synthesizer;
+    // current channel
+    private transient ChannelData channelData;
+    private transient Instrument[] instruments;
+    private transient ChannelData[] channels;
+
+    private final JCheckBox mouseOverCB = new JCheckBox("mouseOver", true);
+
+    private JTable table;
+    private boolean isRecord;
+    private transient Track track;
+    private long startTime;
+    private RecordFrame recordFrame;
+    private final ControlsPanel controlsPanel;
 
 
     public MidiSynthesizer() {
         setLayout(new BorderLayout());
-
         JPanel p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        EmptyBorder eb = new EmptyBorder(5,5,5,5);
+        EmptyBorder eb = new EmptyBorder(5, 5, 5, 5);
         BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
-        CompoundBorder cb = new CompoundBorder(eb,bb);
-        p.setBorder(new CompoundBorder(cb,eb));
+        CompoundBorder cb = new CompoundBorder(eb, bb);
+        p.setBorder(new CompoundBorder(cb, eb));
         JPanel pp = new JPanel(new BorderLayout());
-        pp.setBorder(new EmptyBorder(10,20,10,5));
-        pp.add(piano = new Piano());
+        pp.setBorder(new EmptyBorder(10, 20, 10, 5));
+        piano = new Piano();
+        pp.add(piano);
         p.add(pp);
-        p.add(controls = new Controls());
+        controlsPanel = new ControlsPanel();
+        p.add(controlsPanel);
         p.add(new InstrumentsTable());
-
         add(p);
     }
 
@@ -76,34 +134,39 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
     public void open() {
         try {
             if (synthesizer == null) {
-                if ((synthesizer = MidiSystem.getSynthesizer()) == null) {
-                    System.out.println("getSynthesizer() failed!");
+                synthesizer = MidiSystem.getSynthesizer();
+                if (synthesizer == null) {
+                    LOGGER.error("getSynthesizer() failed!");
                     return;
                 }
-            } 
+            }
             synthesizer.open();
             sequencer = MidiSystem.getSequencer();
             sequence = new Sequence(Sequence.PPQ, 10);
-        } catch (Exception ex) { ex.printStackTrace(); return; }
+        } catch (InvalidMidiDataException | MidiUnavailableException ex) {
+            LOGGER.error("", ex);
+            return;
+        }
 
         Soundbank sb = synthesizer.getDefaultSoundbank();
-	if (sb != null) {
+        if (sb != null) {
             instruments = synthesizer.getDefaultSoundbank().getInstruments();
             synthesizer.loadInstrument(instruments[0]);
         }
-        MidiChannel midiChannels[] = synthesizer.getChannels();
+        MidiChannel[] midiChannels = synthesizer.getChannels();
         channels = new ChannelData[midiChannels.length];
         for (int i = 0; i < channels.length; i++) {
-            channels[i] = new ChannelData(midiChannels[i], i);
+            final ChannelData data = new ChannelData(midiChannels[i], i);
+            ChannelData.configureSliders(controlsPanel.getSliders());
+            channels[i] = data;
         }
-        cc = channels[0];
+        channelData = channels[0];
 
         ListSelectionModel lsm = table.getSelectionModel();
-        lsm.setSelectionInterval(0,0);
+        lsm.setSelectionInterval(0, 0);
         lsm = table.getColumnModel().getSelectionModel();
-        lsm.setSelectionInterval(0,0);
+        lsm.setSelectionInterval(0, 0);
     }
-
 
     public void close() {
         if (synthesizer != null) {
@@ -122,150 +185,193 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
         }
     }
 
-
-
-
     /**
      * given 120 bpm:
-     *   (120 bpm) / (60 seconds per minute) = 2 beats per second
-     *   2 / 1000 beats per millisecond
-     *   (2 * resolution) ticks per second
-     *   (2 * resolution)/1000 ticks per millisecond, or 
-     *      (resolution / 500) ticks per millisecond
-     *   ticks = milliseconds * resolution / 500
+     * (120 bpm) / (60 seconds per minute) = 2 beats per second
+     * 2 / 1000 beats per millisecond
+     * (2 * resolution) ticks per second
+     * (2 * resolution)/1000 ticks per millisecond, or
+     * (resolution / 500) ticks per millisecond
+     * ticks = milliseconds * resolution / 500
      */
     public void createShortEvent(int type, int num) {
         ShortMessage message = new ShortMessage();
         try {
             long millis = System.currentTimeMillis() - startTime;
             long tick = millis * sequence.getResolution() / 500;
-            message.setMessage(type+cc.num, num, cc.velocity); 
+            message.setMessage(type + channelData.num, num, channelData.volume);
             MidiEvent event = new MidiEvent(message, tick);
             track.add(event);
-        } catch (Exception ex) { ex.printStackTrace(); }
+        } catch (InvalidMidiDataException ex) {
+            LOGGER.error("Error creating short event", ex);
+        }
     }
-
 
     /**
      * Black and white keys or notes on the piano.
      */
-    class Key extends Rectangle {
-        int noteState = OFF;
-        int kNum;
+    private final class Key extends Rectangle {
+
+        private int noteState = OFF;
+        private final int keyNumber;
+
         public Key(int x, int y, int width, int height, int num) {
             super(x, y, width, height);
-            kNum = num;
+            keyNumber = num;
         }
+
         public boolean isNoteOn() {
             return noteState == ON;
         }
+
         public void on() {
             setNoteState(ON);
-            cc.channel.noteOn(kNum, cc.velocity);
-            if (record) {
-                createShortEvent(NOTEON, kNum);
+            channelData.channel.noteOn(keyNumber, channelData.volume);
+            if (isRecord) {
+                createShortEvent(NOTE_ON, keyNumber);
             }
         }
+
         public void off() {
             setNoteState(OFF);
-            cc.channel.noteOff(kNum, cc.velocity);
-            if (record) {
-                createShortEvent(NOTEOFF, kNum);
+            channelData.channel.noteOff(keyNumber, channelData.volume);
+            if (isRecord) {
+                createShortEvent(NOTE_OFF, keyNumber);
             }
         }
+
         public void setNoteState(int state) {
             noteState = state;
         }
-    } // End class Key
-
-
+    }
 
     /**
-     * Piano renders black & white keys and plays the notes for a MIDI 
-     * channel.  
+     * Piano renders black & white keys and plays the notes for a MIDI
+     * channel.
      */
-    class Piano extends JPanel implements MouseListener {
+    private final class Piano extends JPanel {
 
-        Vector blackKeys = new Vector();
-        Key prevKey;
-        final int kw = 16, kh = 80;
+        private static final int TRANSPOSE = 24;
+        private static final int NOTES_IN_OCTAVE = 12;
+        private static final int NR_OF_OCTAVES = 6;
 
+        private static final int WHITE_KEY_WIDTH = 16;
+        private static final int WHITE_KEY_HEIGHT = 80;
+        private static final int WHITE_KEY_COUNT = 42;
 
-        public Piano() {
+        private static final int BLACK_KEY_WIDTH = WHITE_KEY_WIDTH / 2;
+        private static final int BLACK_KEY_HEIGHT = WHITE_KEY_HEIGHT / 2;
+
+        private final List<Key> pianoKeys = new ArrayList<>();
+        private final List<Key> whiteKeys;
+        private final List<Key> blackKeys;
+
+        private Key prevKey;
+
+        private Piano() {
             setLayout(new BorderLayout());
-            setPreferredSize(new Dimension(42*kw, kh+1));
-            int transpose = 24;  
-            int whiteIDs[] = { 0, 2, 4, 5, 7, 9, 11 }; 
-          
-            for (int i = 0, x = 0; i < 6; i++) {
-                for (int j = 0; j < 7; j++, x += kw) {
-                    int keyNum = i * 12 + whiteIDs[j] + transpose;
-                    whiteKeys.add(new Key(x, 0, kw, kh, keyNum));
+            setPreferredSize(new Dimension(WHITE_KEY_COUNT * WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT + 1));
+            whiteKeys = createWhiteKeys();
+            blackKeys = createBlackKeys();
+            pianoKeys.addAll(blackKeys);
+            pianoKeys.addAll(whiteKeys);
+
+            addMouseMotionListener((MouseMovedListener) this::playKeyIfMouseMovedOver);
+            addMouseListener(new PianoMouseMouseListener());
+        }
+
+        private void turnAllNotesOff() {
+            for (ChannelData channel : channels) {
+                channel.channel.allNotesOff();
+            }
+            for (Key key : pianoKeys) {
+                key.setNoteState(OFF);
+            }
+        }
+
+        private void playKeyIfMouseMovedOver(MouseEvent e) {
+            if (mouseOverCB.isSelected()) {
+                Key key = getKey(e.getPoint());
+                if (prevKey != null && !prevKey.equals(key)) {
+                    prevKey.off();
+                }
+                if (key != null && !key.equals(prevKey)) {
+                    key.on();
+                }
+                prevKey = key;
+                repaint();
+            }
+        }
+
+        private class PianoMouseMouseListener extends MouseAdapter {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                prevKey = getKey(e.getPoint());
+                if (prevKey != null) {
+                    prevKey.on();
+                    repaint();
                 }
             }
-            for (int i = 0, x = 0; i < 6; i++, x += kw) {
-                int keyNum = i * 12 + transpose;
-                blackKeys.add(new Key((x += kw)-4, 0, kw/2, kh/2, keyNum+1));
-                blackKeys.add(new Key((x += kw)-4, 0, kw/2, kh/2, keyNum+3));
-                x += kw;
-                blackKeys.add(new Key((x += kw)-4, 0, kw/2, kh/2, keyNum+6));
-                blackKeys.add(new Key((x += kw)-4, 0, kw/2, kh/2, keyNum+8));
-                blackKeys.add(new Key((x += kw)-4, 0, kw/2, kh/2, keyNum+10));
-            }
-            keys.addAll(blackKeys);
-            keys.addAll(whiteKeys);
 
-            addMouseMotionListener(new MouseMotionAdapter() {
-                public void mouseMoved(MouseEvent e) {
-                    if (mouseOverCB.isSelected()) {
-                        Key key = getKey(e.getPoint());
-                        if (prevKey != null && prevKey != key) {
-                            prevKey.off();
-                        } 
-                        if (key != null && prevKey != key) {
-                            key.on();
-                        }
-                        prevKey = key;
-                        repaint();
-                    }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (prevKey != null) {
+                    prevKey.off();
+                    repaint();
                 }
-            });
-            addMouseListener(this);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (prevKey != null) {
+                    prevKey.off();
+                    repaint();
+                    prevKey = null;
+                }
+            }
         }
 
-        public void mousePressed(MouseEvent e) { 
-            prevKey = getKey(e.getPoint());
-            if (prevKey != null) {
-                prevKey.on();
-                repaint();
+        private List<Key> createBlackKeys() {
+            final List<Key> keys = new ArrayList<>();
+            int x = 0;
+            for (int i = 0; i < NR_OF_OCTAVES; i++) {
+                int keyNum = i * NOTES_IN_OCTAVE + Piano.TRANSPOSE;
+                x += WHITE_KEY_WIDTH;
+                final int X_OFFSET = 4;
+                keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 1));
+                x += WHITE_KEY_WIDTH;
+                keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 3));
+                x += WHITE_KEY_WIDTH;
+                x += WHITE_KEY_WIDTH;
+                keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 6));
+                x += WHITE_KEY_WIDTH;
+                keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 8));
+                x += WHITE_KEY_WIDTH;
+                keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 10));
+                x += WHITE_KEY_WIDTH;
             }
+            return keys;
         }
-        public void mouseReleased(MouseEvent e) { 
-            if (prevKey != null) {
-                prevKey.off();
-                repaint();
-            }
-        }
-        public void mouseExited(MouseEvent e) { 
-            if (prevKey != null) {
-                prevKey.off();
-                repaint();
-                prevKey = null;
-            }
-        }
-        public void mouseClicked(MouseEvent e) { }
-        public void mouseEntered(MouseEvent e) { }
 
+        private List<Key> createWhiteKeys() {
+            final List<Key> keys = new ArrayList<>();
+            int[] whiteIDs = {0, 2, 4, 5, 7, 9, 11};
+            int x = 0;
+            for (int i = 0; i < NR_OF_OCTAVES; i++) {
+                for (int j = 0; j < NR_OF_OCTAVES + 1; j++) {
+                    int keyNum = i * NOTES_IN_OCTAVE + whiteIDs[j] + Piano.TRANSPOSE;
+                    keys.add(new Key(x, 0, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT, keyNum));
+                    x += WHITE_KEY_WIDTH;
+                }
+            }
+            return keys;
+        }
 
         public Key getKey(Point point) {
-            for (int i = 0; i < keys.size(); i++) {
-                if (((Key) keys.get(i)).contains(point)) {
-                    return (Key) keys.get(i);
-                }
-            }
-            return null;
+            return pianoKeys.stream().filter(key -> key.contains(point)).findFirst().orElse(null);
         }
 
+        @Override
         public void paint(Graphics g) {
             Graphics2D g2 = (Graphics2D) g;
             Dimension d = getSize();
@@ -274,21 +380,19 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
             g2.clearRect(0, 0, d.width, d.height);
 
             g2.setColor(Color.white);
-            g2.fillRect(0, 0, 42*kw, kh);
+            g2.fillRect(0, 0, WHITE_KEY_COUNT * WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT);
 
-            for (int i = 0; i < whiteKeys.size(); i++) {
-                Key key = (Key) whiteKeys.get(i);
-                if (key.isNoteOn()) {
-                    g2.setColor(record ? pink : jfcBlue);
-                    g2.fill(key);
+            for (Key whiteKey : whiteKeys) {
+                if (whiteKey.isNoteOn()) {
+                    g2.setColor(isRecord ? pink : jfcBlue);
+                    g2.fill(whiteKey);
                 }
                 g2.setColor(Color.black);
-                g2.draw(key);
+                g2.draw(whiteKey);
             }
-            for (int i = 0; i < blackKeys.size(); i++) {
-                Key key = (Key) blackKeys.get(i);
+            for (Key key : blackKeys) {
                 if (key.isNoteOn()) {
-                    g2.setColor(record ? pink : jfcBlue);
+                    g2.setColor(isRecord ? pink : jfcBlue);
                     g2.fill(key);
                     g2.setColor(Color.black);
                     g2.draw(key);
@@ -298,139 +402,149 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
                 }
             }
         }
-    } // End class Piano
-
+    }
 
 
     /**
      * Stores MidiChannel information.
      */
-    class ChannelData {
+    private static final class ChannelData {
 
-        MidiChannel channel;
-        boolean solo, mono, mute, sustain;
-        int velocity, pressure, bend, reverb;
-        int row, col, num;
- 
+        private final MidiChannel channel;
+        private final int num;
+
+        private int volume = 64;
+        private int row;
+        private int col;
+
         public ChannelData(MidiChannel channel, int num) {
             this.channel = channel;
             this.num = num;
-            velocity = pressure = bend = reverb = 64;
         }
 
-        public void setComponentStates() {
+        public void setComponentStates(JTable table, JCheckBox soloCB, JCheckBox monoCB, JCheckBox muteCB) {
             table.setRowSelectionInterval(row, row);
             table.setColumnSelectionInterval(col, col);
 
-            soloCB.setSelected(solo);
-            monoCB.setSelected(mono);
-            muteCB.setSelected(mute);
-            //sustCB.setSelected(sustain);
+            soloCB.setSelected(channel.getSolo());
+            monoCB.setSelected(channel.getMono());
+            muteCB.setSelected(channel.getMute());
+        }
 
-            JSlider slider[] = { veloS, presS, bendS, revbS };
-            int v[] = { velocity, pressure, bend, reverb };
-            for (int i = 0; i < slider.length; i++) {
-                TitledBorder tb = (TitledBorder) slider[i].getBorder();
-                String s = tb.getTitle();
-                tb.setTitle(s.substring(0, s.indexOf('=')+1)+s.valueOf(v[i]));
-                slider[i].repaint();
+        private static void configureSliders(JSlider... sliders) {
+            for (JSlider slider : sliders) {
+                TitledBorder titledBorder = (TitledBorder) slider.getBorder();
+                String s = titledBorder.getTitle();
+                titledBorder.setTitle(s.substring(0, s.indexOf('=') + 1) + slider.getValue());
+                slider.repaint();
             }
         }
-    } // End class ChannelData
 
+        public void setRow(int row) {
+            this.row = row;
+        }
+
+        public void setCol(int col) {
+            this.col = col;
+        }
+    }
 
 
     /**
      * Table for 128 general MIDI melody instuments.
      */
-    class InstrumentsTable extends JPanel {
+    private final class InstrumentsTable extends JPanel {
 
-        private String names[] = { 
-           "Piano", "Chromatic Perc.", "Organ", "Guitar", 
-           "Bass", "Strings", "Ensemble", "Brass", 
-           "Reed", "Pipe", "Synth Lead", "Synth Pad",
-           "Synth Effects", "Ethnic", "Percussive", "Sound Effects" };
-        private int nRows = 8;
-        private int nCols = names.length; // just show 128 instruments
+        private static final String[] names = {
+                "Piano", "Chromatic Perc.", "Organ", "Guitar",
+                "Bass", "Strings", "Ensemble", "Brass",
+                "Reed", "Pipe", "Synth Lead", "Synth Pad",
+                "Synth Effects", "Ethnic", "Percussive", "Sound Effects"};
+        private static final int N_ROWS = 8;
+        // just show 128 instruments
+        private static final int N_COLS = names.length;
 
-        public InstrumentsTable() {
+        private InstrumentsTable() {
             setLayout(new BorderLayout());
+            TableModel dataModel = new InstrumentTableModel();
 
-            TableModel dataModel = new AbstractTableModel() {
-                public int getColumnCount() { return nCols; }
-                public int getRowCount() { return nRows;}
-                public Object getValueAt(int r, int c) { 
-                    if (instruments != null) {
-                        return instruments[c*nRows+r].getName();
-                    } else {
-                        return Integer.toString(c*nRows+r);
-                    }
-                }
-                public String getColumnName(int c) { 
-                    return names[c];
-                }
-                public Class getColumnClass(int c) {
-                    return getValueAt(0, c).getClass();
-                }
-                public boolean isCellEditable(int r, int c) {return false;}
-                public void setValueAt(Object obj, int r, int c) {}
-            };
-    
             table = new JTable(dataModel);
             table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-            // Listener for row changes
-            ListSelectionModel lsm = table.getSelectionModel();
-            lsm.addListSelectionListener(new ListSelectionListener() {
-                public void valueChanged(ListSelectionEvent e) {
-                    ListSelectionModel sm = (ListSelectionModel) e.getSource();
-                    if (!sm.isSelectionEmpty()) {
-                        cc.row = sm.getMinSelectionIndex();
-                    }
-                    programChange(cc.col*nRows+cc.row);
-                }
-            });
+            ListSelectionModel rowChangeListener = table.getSelectionModel();
+            rowChangeListener.addListSelectionListener(e -> newSelectionAction(e, channelData::setRow));
 
-            // Listener for column changes
-            lsm = table.getColumnModel().getSelectionModel();
-            lsm.addListSelectionListener(new ListSelectionListener() {
-                public void valueChanged(ListSelectionEvent e) {
-                    ListSelectionModel sm = (ListSelectionModel) e.getSource();
-                    if (!sm.isSelectionEmpty()) {
-                        cc.col = sm.getMinSelectionIndex();
-                    }
-                    programChange(cc.col*nRows+cc.row);
-                }
-            });
+            ListSelectionModel columnChangeListener = table.getColumnModel().getSelectionModel();
+            columnChangeListener.addListSelectionListener(e -> newSelectionAction(e, channelData::setCol));
 
-            table.setPreferredScrollableViewportSize(new Dimension(nCols*110, 200));
+            table.setPreferredScrollableViewportSize(new Dimension(N_COLS * 110, 200));
             table.setCellSelectionEnabled(true);
             table.setColumnSelectionAllowed(true);
-            for (int i = 0; i < names.length; i++) {
-                TableColumn column = table.getColumn(names[i]);
+            for (String name : names) {
+                TableColumn column = table.getColumn(name);
                 column.setPreferredWidth(110);
             }
-            table.setAutoResizeMode(table.AUTO_RESIZE_OFF);
-        
-            JScrollPane sp = new JScrollPane(table);
-            sp.setVerticalScrollBarPolicy(sp.VERTICAL_SCROLLBAR_NEVER);
-            sp.setHorizontalScrollBarPolicy(sp.HORIZONTAL_SCROLLBAR_ALWAYS);
-            add(sp);
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+
+            JScrollPane scrollPane = new JScrollPane(table);
+            scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+            scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
+            add(scrollPane);
         }
 
-        public Dimension getPreferredSize() {
-            return new Dimension(800,170);
+        private final class InstrumentTableModel extends AbstractTableModel {
+
+            public int getColumnCount() {
+                return N_COLS;
+            }
+
+            public int getRowCount() {
+                return N_ROWS;
+            }
+
+            public Object getValueAt(int r, int c) {
+                if (instruments != null) {
+                    return instruments[c * N_ROWS + r].getName();
+                } else {
+                    return Integer.toString(c * N_ROWS + r);
+                }
+            }
+
+            @Override
+            public String getColumnName(int c) {
+                return names[c];
+            }
+
+            @Override
+            public Class<?> getColumnClass(int c) {
+                return getValueAt(0, c).getClass();
+            }
         }
+
+        private void newSelectionAction(ListSelectionEvent e, IntConsumer consumer) {
+            ListSelectionModel model = (ListSelectionModel) e.getSource();
+            if (!model.isSelectionEmpty()) {
+                consumer.accept(model.getMinSelectionIndex());
+            }
+            programChange(channelData.col * N_ROWS + channelData.row);
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(800, 170);
+        }
+
+        @Override
         public Dimension getMaximumSize() {
-            return new Dimension(800,170);
+            return new Dimension(800, 170);
         }
 
         private void programChange(int program) {
             if (instruments != null) {
                 synthesizer.loadInstrument(instruments[program]);
             }
-            cc.channel.programChange(program);
-            if (record) {
+            channelData.channel.programChange(program);
+            if (isRecord) {
                 createShortEvent(PROGRAM, program);
             }
         }
@@ -440,320 +554,315 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
     /**
      * A collection of MIDI controllers.
      */
-    class Controls extends JPanel implements ActionListener, ChangeListener, ItemListener {
+    private final class ControlsPanel extends JPanel {
 
-        public JButton recordB;
-        JMenu menu;
-        int fileNum = 0;
+        private final JSlider velocitySlider;
+        private final JSlider pressureSlider;
+        private final JSlider pitchBendSlider;
+        private final JSlider reverbSlider;
+        private final JCheckBox soloCB;
+        private final JCheckBox monoCB;
+        private final JCheckBox muteCB;
 
-        public Controls() {
+        public ControlsPanel() {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-            setBorder(new EmptyBorder(5,10,5,10));
+            setBorder(new EmptyBorder(5, 10, 5, 10));
 
-            JPanel p = new JPanel();
-            p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
+            final JPanel sliderPanel = new JPanel();
+            sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.X_AXIS));
 
-            veloS = createSlider("Velocity", p);
-            presS = createSlider("Pressure", p);
-            revbS = createSlider("Reverb", p);
+            velocitySlider = addSlider(sliderPanel, "Volume", 127, 64, this::adjustVolume);
+            pressureSlider = addSlider(sliderPanel, "Pressure", 127, 64, this::adjustPressure);
+            reverbSlider = addSlider(sliderPanel, "Reverb", 127, 64, this::adjustReverb);
+            pitchBendSlider = addSlider(sliderPanel, "Bend", 16383, 8192, this::adjustBend);
 
-			// create a slider with a 14-bit range of values for pitch-bend
-            bendS = create14BitSlider("Bend", p);
+            sliderPanel.add(pitchBendSlider);
+            sliderPanel.add(Box.createHorizontalStrut(5));
+            sliderPanel.add(Box.createHorizontalStrut(10));
+            add(sliderPanel);
 
-            p.add(Box.createHorizontalStrut(10));
-            add(p);
+            final JPanel panel = new JPanel();
+            panel.setBorder(new EmptyBorder(10, 0, 10, 0));
+            panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-            p = new JPanel();
-            p.setBorder(new EmptyBorder(10,0,10,0));
-            p.setLayout(new BoxLayout(p, BoxLayout.X_AXIS));
-
-            JComboBox combo = new JComboBox();
-            combo.setPreferredSize(new Dimension(120,25));
-            combo.setMaximumSize(new Dimension(120,25));
+            JComboBox<String> combo = new JComboBox<>();
+            combo.setPreferredSize(new Dimension(120, 25));
+            combo.setMaximumSize(new Dimension(120, 25));
             for (int i = 1; i <= 16; i++) {
-                combo.addItem("Channel " + String.valueOf(i));
-            } 
-            combo.addItemListener(this);
-            p.add(combo);
-            p.add(Box.createHorizontalStrut(20));
+                combo.addItem("Channel " + i);
+            }
+            combo.addItemListener(this::comboBoxAction);
+            panel.add(combo);
+            panel.add(Box.createHorizontalStrut(20));
 
-            muteCB = createCheckBox("Mute", p);
-            soloCB = createCheckBox("Solo", p);
-            monoCB = createCheckBox("Mono", p);
-            //sustCB = createCheckBox("Sustain", p);
+            muteCB = new JCheckBox("Mute");
+            muteCB.addItemListener(e -> channelData.channel.setMute(muteCB.isSelected()));
+            panel.add(muteCB);
+            soloCB = new JCheckBox("Solo");
+            soloCB.addItemListener(e -> channelData.channel.setSolo(soloCB.isSelected()));
+            panel.add(soloCB);
+            monoCB = new JCheckBox("Mono");
+            monoCB.addItemListener(e -> channelData.channel.setMono(monoCB.isSelected()));
 
-            createButton("All Notes Off", p);
-            p.add(Box.createHorizontalStrut(10));
-            p.add(mouseOverCB);
-            p.add(Box.createHorizontalStrut(10));
-            recordB = createButton("Record...", p);
-            add(p);
+            panel.add(monoCB);
+            JCheckBox sustain = new JCheckBox("Sustain");
+            sustain.addItemListener(e -> channelData.channel.controlChange(SUSTAIN, sustain.isSelected() ? 127 : 0));
+            panel.add(sustain);
+
+            final JButton notesOff = new JButton("All Notes Off");
+            notesOff.addActionListener(e -> piano.turnAllNotesOff());
+            panel.add(notesOff);
+            panel.add(Box.createHorizontalStrut(10));
+            panel.add(mouseOverCB);
+            panel.add(Box.createHorizontalStrut(10));
+            JButton recordB = new JButton("Record...");
+            recordB.addActionListener(e -> recordButtonAction());
+            panel.add(recordB);
+            add(panel);
         }
 
-        public JButton createButton(String name, JPanel p) {
-            JButton b = new JButton(name);
-            b.addActionListener(this);
-            p.add(b);
-            return b;
-        }
-
-        private JCheckBox createCheckBox(String name, JPanel p) {
-            JCheckBox cb = new JCheckBox(name);
-            cb.addItemListener(this);
-            p.add(cb);
-            return cb;
-        }
-
-        private JSlider createSlider(String name, JPanel p) {
-            JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 127, 64);
-            slider.addChangeListener(this);
+        private JSlider addSlider(JPanel panel, String name, int max, int value, ChangeListener changeListener) {
+            JSlider slider = new JSlider(SwingConstants.HORIZONTAL, 0, max, value);
+            slider.addChangeListener(changeListener);
             TitledBorder tb = new TitledBorder(new EtchedBorder());
-            tb.setTitle(name + " = 64");
+            tb.setTitle(name + " = " + value);
             slider.setBorder(tb);
-            p.add(slider);
-            p.add(Box.createHorizontalStrut(5));
+            panel.add(slider);
+            panel.add(Box.createHorizontalStrut(5));
             return slider;
         }
 
-        private JSlider create14BitSlider(String name, JPanel p) {
-            JSlider slider = new JSlider(JSlider.HORIZONTAL, 0, 16383, 8192);
-            slider.addChangeListener(this);
-            TitledBorder tb = new TitledBorder(new EtchedBorder());
-            tb.setTitle(name + " = 8192");
-            slider.setBorder(tb);
-            p.add(slider);
-            p.add(Box.createHorizontalStrut(5));
-            return slider;
+        private void adjustVolume(ChangeEvent e) {
+            channelData.volume = updateSliderAndGetValue((JSlider) e.getSource());
         }
 
-        public void stateChanged(ChangeEvent e) {
-            JSlider slider = (JSlider) e.getSource();
+        private void adjustPressure(ChangeEvent e) {
+            final int pressure = updateSliderAndGetValue((JSlider) e.getSource());
+            channelData.channel.setChannelPressure(pressure);
+        }
+
+        private void adjustBend(ChangeEvent e) {
+            final int pitchBend = updateSliderAndGetValue((JSlider) e.getSource());
+            channelData.channel.setPitchBend(pitchBend);
+        }
+
+        private void adjustReverb(ChangeEvent e) {
+            final int value = updateSliderAndGetValue((JSlider) e.getSource());
+            channelData.channel.controlChange(REVERB, value);
+        }
+
+        private int updateSliderAndGetValue(JSlider slider) {
             int value = slider.getValue();
             TitledBorder tb = (TitledBorder) slider.getBorder();
-            String s = tb.getTitle();
-            tb.setTitle(s.substring(0, s.indexOf('=')+1) + s.valueOf(value));
-            if (s.startsWith("Velocity")) {
-                cc.velocity = value;
-            } else if (s.startsWith("Pressure")) {
-                cc.channel.setChannelPressure(cc.pressure = value);
-            } else if (s.startsWith("Bend")) {
-                cc.channel.setPitchBend(cc.bend = value);
-            } else if (s.startsWith("Reverb")) {
-                cc.channel.controlChange(REVERB, cc.reverb = value);
-            }
+            String title = tb.getTitle();
+            tb.setTitle(title.substring(0, title.indexOf('=') + 1) + value);
             slider.repaint();
+            return value;
         }
 
-        public void itemStateChanged(ItemEvent e) {
-            if (e.getSource() instanceof JComboBox) {
-                JComboBox combo = (JComboBox) e.getSource();
-                cc = channels[combo.getSelectedIndex()];
-                cc.setComponentStates();
+        private void comboBoxAction(ItemEvent e) {
+            //noinspection unchecked
+            JComboBox<String> combo = (JComboBox<String>) e.getSource();
+            channelData = channels[combo.getSelectedIndex()];
+            channelData.setComponentStates(table, soloCB, monoCB, muteCB);
+        }
+
+        private void recordButtonAction() {
+            if (recordFrame != null) {
+                recordFrame.toFront();
             } else {
-                JCheckBox cb = (JCheckBox) e.getSource();
-                String name = cb.getText();
-                if (name.startsWith("Mute")) {
-                    cc.channel.setMute(cc.mute = cb.isSelected());
-                } else if (name.startsWith("Solo")) {
-                    cc.channel.setSolo(cc.solo = cb.isSelected());
-                } else if (name.startsWith("Mono")) {
-                    cc.channel.setMono(cc.mono = cb.isSelected());
-                } else if (name.startsWith("Sustain")) {
-                    cc.sustain = cb.isSelected();
-                    cc.channel.controlChange(SUSTAIN, cc.sustain ? 127 : 0);
-                }
+                recordFrame = new RecordFrame();
             }
         }
 
-        public void actionPerformed(ActionEvent e) {
-            JButton button = (JButton) e.getSource();
-            if (button.getText().startsWith("All")) {
-                for (int i = 0; i < channels.length; i++) {
-                    channels[i].channel.allNotesOff();
-                }
-                for (int i = 0; i < keys.size(); i++) {
-                    ((Key) keys.get(i)).setNoteState(OFF);
-                }
-            } else if (button.getText().startsWith("Record")) {
-                if (recordFrame != null) {
-                    recordFrame.toFront();
-                } else {
-                    recordFrame = new RecordFrame();
-                }
-            }
+        private JSlider[] getSliders() {
+            return new JSlider[] {velocitySlider, pitchBendSlider, reverbSlider, pressureSlider};
         }
-    } // End class Controls
-
+    }
 
 
     /**
      * A frame that allows for midi capture & saving the captured data.
      */
-    class RecordFrame extends JFrame implements ActionListener, MetaEventListener {
+    private final class RecordFrame extends JFrame {
 
-        public JButton recordB, playB, saveB;
-        Vector tracks = new Vector();
-        DefaultListModel listModel = new DefaultListModel();
-        TableModel dataModel;
-        JTable table;
-
+        private final transient List<TrackData> tracks = new ArrayList<>();
+        private final transient TableModel dataModel;
+        private final JTable table;
 
         public RecordFrame() {
             super("Midi Capture");
             addWindowListener(new WindowAdapter() {
-                public void windowClosing(WindowEvent e) {recordFrame = null;}
+                @Override
+                public void windowClosing(WindowEvent e) {
+                    recordFrame = null;
+                }
             });
+            final JButton recordButton = createButton(RECORD, true);
+            final JButton playButton = createButton("Play", false);
+            final JButton saveButton = createButton("Save...", false);
 
-            sequencer.addMetaEventListener(this);
+            sequencer.addMetaEventListener(e -> updateButtons(e, playButton, recordButton));
             try {
                 sequence = new Sequence(Sequence.PPQ, 10);
-            } catch (Exception ex) { ex.printStackTrace(); }
+            } catch (InvalidMidiDataException e) {
+                LOGGER.error("Invalid midi data", e);
+            }
+            JPanel recordPanel = new JPanel();
+            recordPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+            recordPanel.setLayout(new BoxLayout(recordPanel, BoxLayout.X_AXIS));
 
-            JPanel p1 = new JPanel(new BorderLayout());
+            recordPanel.add(recordButton);
+            recordPanel.add(playButton);
+            recordPanel.add(saveButton);
 
-            JPanel p2 = new JPanel();
-            p2.setBorder(new EmptyBorder(5,5,5,5));
-            p2.setLayout(new BoxLayout(p2, BoxLayout.X_AXIS));
+            recordButton.addActionListener(e -> recordAction(recordButton, playButton, saveButton));
+            playButton.addActionListener(e -> playAction(recordButton, playButton));
+            saveButton.addActionListener(e -> saveAction());
 
-            recordB = createButton("Record", p2, true);
-            playB = createButton("Play", p2, false);
-            saveB = createButton("Save...", p2, false);
+            getContentPane().add("North", recordPanel);
 
-            getContentPane().add("North", p2);
+            final String[] names = {"Channel #", "Instrument"};
 
-            final String[] names = { "Channel #", "Instrument" };
-    
             dataModel = new AbstractTableModel() {
-                public int getColumnCount() { return names.length; }
-                public int getRowCount() { return tracks.size();}
-                public Object getValueAt(int row, int col) { 
+                public int getColumnCount() {
+                    return names.length;
+                }
+
+                public int getRowCount() {
+                    return tracks.size();
+                }
+
+                public Object getValueAt(int row, int col) {
                     if (col == 0) {
-                        return ((TrackData) tracks.get(row)).chanNum;
+                        return (tracks.get(row)).chanNum;
                     } else if (col == 1) {
-                        return ((TrackData) tracks.get(row)).name;
-                    } 
-                    return null;
+                        return (tracks.get(row)).name;
+                    } else {
+                        return null;
+                    }
                 }
-                public String getColumnName(int col) {return names[col]; }
-                public Class getColumnClass(int c) {
-                    return getValueAt(0, c).getClass();
+
+                @Override
+                public String getColumnName(int col) {
+                    return names[col];
                 }
-                public boolean isCellEditable(int row, int col) {
-                    return false;
+
+                @Override
+                public Class<?> getColumnClass(int c) {
+                    return Objects.requireNonNull(getValueAt(0, c)).getClass();
                 }
-                public void setValueAt(Object val, int row, int col) { 
+
+                @Override
+                public void setValueAt(Object val, int row, int col) {
                     if (col == 0) {
-                        ((TrackData) tracks.get(row)).chanNum = (Integer) val;
-                    } else if (col == 1) {
-                        ((TrackData) tracks.get(row)).name = (String) val;
-                    } 
+                        (tracks.get(row)).chanNum = (int) val;
+                    }
+                    if (col == 1) {
+                        (tracks.get(row)).name = (String) val;
+                    }
                 }
             };
-    
+
             table = new JTable(dataModel);
             TableColumn col = table.getColumn("Channel #");
             col.setMaxWidth(65);
             table.sizeColumnsToFit(0);
-        
-            JScrollPane scrollPane = new JScrollPane(table);
-            EmptyBorder eb = new EmptyBorder(0,5,5,5);
-            scrollPane.setBorder(new CompoundBorder(eb,new EtchedBorder()));
 
-	    getContentPane().add("Center", scrollPane);
-	    pack();
+            JScrollPane scrollPane = new JScrollPane(table);
+            EmptyBorder eb = new EmptyBorder(0, 5, 5, 5);
+            scrollPane.setBorder(new CompoundBorder(eb, new EtchedBorder()));
+
+            getContentPane().add("Center", scrollPane);
+            pack();
             Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
             int w = 210;
             int h = 160;
-            setLocation(d.width/2 - w/2, d.height/2 - h/2);
+            setLocation(d.width / 2 - w / 2, d.height / 2 - h / 2);
             setSize(w, h);
-	    setVisible(true);
+            setVisible(true);
         }
 
-
-        public JButton createButton(String name, JPanel p, boolean state) {
-            JButton b = new JButton(name);
-            b.setFont(new Font("serif", Font.PLAIN, 10));
-            b.setEnabled(state);
-            b.addActionListener(this);
-            p.add(b);
-            return b;
+        public JButton createButton(String name, boolean state) {
+            JButton button = new JButton(name);
+            button.setFont(new Font("serif", Font.PLAIN, 10));
+            button.setEnabled(state);
+            return button;
         }
 
+        private void recordAction(JButton recordButton, JButton playButton, JButton saveButton) {
+            isRecord = recordButton.getText().startsWith(RECORD);
+            if (isRecord) {
+                track = sequence.createTrack();
+                startTime = System.currentTimeMillis();
 
-        public void actionPerformed(ActionEvent e) {
-            JButton button = (JButton) e.getSource();
-            if (button.equals(recordB)) {
-                record = recordB.getText().startsWith("Record");
-                if (record) {
-                    track = sequence.createTrack();
-                    startTime = System.currentTimeMillis();
+                // add a program change right at the beginning of
+                // the track for the current instrument
+                createShortEvent(PROGRAM, channelData.col * 8 + channelData.row);
 
-                    // add a program change right at the beginning of 
-                    // the track for the current instrument
-                    createShortEvent(PROGRAM,cc.col*8+cc.row);
-
-                    recordB.setText("Stop");
-                    playB.setEnabled(false);
-                    saveB.setEnabled(false);
+                recordButton.setText("Stop");
+                playButton.setEnabled(false);
+                saveButton.setEnabled(false);
+            } else {
+                String name;
+                if (instruments != null) {
+                    name = instruments[channelData.col * 8 + channelData.row].getName();
                 } else {
-                    String name = null;
-                    if (instruments != null) {
-                        name = instruments[cc.col*8+cc.row].getName();
-                    } else {
-                        name = Integer.toString(cc.col*8+cc.row);
-                    }
-                    tracks.add(new TrackData(cc.num+1, name, track)); 
-                    table.tableChanged(new TableModelEvent(dataModel));
-                    recordB.setText("Record");
-                    playB.setEnabled(true);
-                    saveB.setEnabled(true);
-                } 
-            } else if (button.equals(playB)) {
-                if (playB.getText().startsWith("Play")) {
-                    try {
-                        sequencer.open();
-                        sequencer.setSequence(sequence);
-                    } catch (Exception ex) { ex.printStackTrace(); }
-                    sequencer.start();
-                    playB.setText("Stop");
-                    recordB.setEnabled(false);
-                } else {
-                    sequencer.stop();
-                    playB.setText("Play");
-                    recordB.setEnabled(true);
-                } 
-            } else if (button.equals(saveB)) {
-                try {
-                    File file = new File(System.getProperty("user.dir"));
-                    JFileChooser fc = new JFileChooser(file);
-                    fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
-                        public boolean accept(File f) {
-                            if (f.isDirectory()) {
-                                return true;
-                            }
-                            return false;
-                        }
-                        public String getDescription() {
-                            return "Save as .mid file.";
-                        }
-                    });
-                    if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-                        saveMidiFile(fc.getSelectedFile());
-                    }
-                } catch (SecurityException ex) { 
-                    JavaSound.showInfoDialog();
-                    ex.printStackTrace();
-                } catch (Exception ex) { 
-                    ex.printStackTrace();
+                    name = Integer.toString(channelData.col * 8 + channelData.row);
                 }
+                tracks.add(new TrackData(channelData.num + 1, name));
+                table.tableChanged(new TableModelEvent(dataModel));
+                recordButton.setText(RECORD);
+                playButton.setEnabled(true);
+                saveButton.setEnabled(true);
             }
         }
 
+        private void playAction(JButton recordButton, JButton playButton) {
+            if (playButton.getText().startsWith("Play")) {
+                try {
+                    sequencer.open();
+                    sequencer.setSequence(sequence);
+                } catch (MidiUnavailableException | InvalidMidiDataException ex) {
+                    LOGGER.error("Midi unavailable or invalid", ex);
+                }
+                sequencer.start();
+                playButton.setText("Stop");
+                recordButton.setEnabled(false);
+            } else {
+                sequencer.stop();
+                playButton.setText("Play");
+                recordButton.setEnabled(true);
+            }
+        }
 
-        public void meta(MetaMessage message) {
-            if (message.getType() == 47) {  // 47 is end of track
-                playB.setText("Play");
-                recordB.setEnabled(true);
+        private void saveAction() {
+            try {
+                File file = new File(System.getProperty("user.dir"));
+                JFileChooser fc = new JFileChooser(file);
+                fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                    public boolean accept(File f) {
+                        return f.isDirectory();
+                    }
+
+                    public String getDescription() {
+                        return "Save as .mid file.";
+                    }
+                });
+                if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+                    saveMidiFile(fc.getSelectedFile());
+                }
+            } catch (SecurityException ex) {
+                JavaSound.showInfoDialog();
+                LOGGER.debug("Not the proper rights", ex);
+            }
+        }
+
+        private void updateButtons(MetaMessage message, JButton playButton, JButton recordButton) {
+            final int END_OF_TRACK = 47;
+            if (message.getType() == END_OF_TRACK) {
+                playButton.setText("Play");
+                recordButton.setEnabled(true);
             }
         }
 
@@ -762,45 +871,49 @@ public class MidiSynthesizer extends JPanel implements ControlContext {
             try {
                 int[] fileTypes = MidiSystem.getMidiFileTypes(sequence);
                 if (fileTypes.length == 0) {
-                    System.out.println("Can't save sequence");
+                    LOGGER.warn("Can't save sequence");
                 } else {
                     if (MidiSystem.write(sequence, fileTypes[0], file) == -1) {
-                        throw new IOException("Problems writing to file");
-                    } 
+                        throw new IllegalStateException("Problems writing to file");
+                    }
                 }
-            } catch (SecurityException ex) { 
+            } catch (SecurityException ex) {
                 JavaSound.showInfoDialog();
-            } catch (Exception ex) { 
-                ex.printStackTrace(); 
+                LOGGER.debug("No access", ex);
+            } catch (IOException e) {
+                LOGGER.error("Problem while saving file...", e);
             }
         }
 
+        private static class TrackData {
+            private int chanNum;
+            private String name;
 
-        class TrackData extends Object {
-            Integer chanNum; String name; Track track;
-            public TrackData(int chanNum, String name, Track track) {
-                this.chanNum = new Integer(chanNum);
+            public TrackData(int chanNum, String name) {
+                this.chanNum = chanNum;
                 this.name = name;
-                this.track = track;
             }
-        } // End class TrackData
-    } // End class RecordFrame
+        }
+    }
 
-
-    public static void main(String args[]) {
+    public static void main(String[] args) {
         final MidiSynthesizer midiSynthesizer = new MidiSynthesizer();
         midiSynthesizer.open();
-        JFrame f = new JFrame("Midi Synthesizer");
-        f.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {System.exit(0);}
+        JFrame frame = new JFrame("Midi Synthesizer");
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            @SuppressWarnings("all")
+            public void windowClosing(WindowEvent e) {
+                System.exit(0);
+            }
         });
-        f.getContentPane().add("Center", midiSynthesizer);
-        f.pack();
+        frame.getContentPane().add("Center", midiSynthesizer);
+        frame.pack();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int w = 760;
         int h = 470;
-        f.setLocation(screenSize.width/2 - w/2, screenSize.height/2 - h/2);
-        f.setSize(w, h);
-        f.setVisible(true);
+        frame.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h / 2);
+        frame.setSize(w, h);
+        frame.setVisible(true);
     }
 } 
