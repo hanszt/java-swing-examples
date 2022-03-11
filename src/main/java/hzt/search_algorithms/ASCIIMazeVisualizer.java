@@ -1,6 +1,6 @@
 package hzt.search_algorithms;
 
-import es.usc.citius.hipster.algorithm.Hipster;
+import es.usc.citius.hipster.algorithm.Algorithm;
 import es.usc.citius.hipster.model.CostNode;
 import es.usc.citius.hipster.model.Node;
 import es.usc.citius.hipster.model.Transition;
@@ -39,6 +39,8 @@ import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static es.usc.citius.hipster.algorithm.Hipster.*;
 
 /**
  * @author Pablo Rodríguez Mier <<a href="mailto:pablo.rodriguez.mier@usc.es">pablo.rodriguez.mier@usc.es</a>>
@@ -171,7 +173,7 @@ public class ASCIIMazeVisualizer {
             return;
         }
         // Create a new algorithm
-        algorithmIterator = createAlgorithm(maze);
+        algorithmIterator = createAlgorithm(maze).iterator();
         // Reset explored tiles
         this.explored.clear();
         runButton.setText("Pause");
@@ -255,27 +257,28 @@ public class ASCIIMazeVisualizer {
     }
 
 
-    private Iterator<? extends Node<?, Point, ?>> createAlgorithm(Maze2D maze) {
+    private Algorithm<Void, Point, WeightedNode<Void, Point, Double>> createAlgorithm(Maze2D maze) {
         return switch (comboAlgorithm.getSelectedIndex()) {
-            case 0 -> Hipster.createDepthFirstSearch(buildProblem(maze, false)).iterator();
-            case 1 -> Hipster.createBreadthFirstSearch(buildProblem(maze, false)).iterator();
-            case 2 -> Hipster.createBellmanFord(buildProblem(maze, false)).iterator();
-            case 3 -> Hipster.createDijkstra(buildProblem(maze, false)).iterator();
-            case 4 -> Hipster.createAStar(buildProblem(maze, true)).iterator();
-            case 5 -> Hipster.createIDAStar(buildProblem(maze, true)).iterator();
+            case 0 -> createDepthFirstSearch(buildProblem(maze, false));
+            case 1 -> createBreadthFirstSearch(buildProblem(maze, false));
+            case 2 -> createBellmanFord(buildProblem(maze, false));
+            case 3 -> createDijkstra(buildProblem(maze, false));
+            case 4 -> createAStar(buildProblem(maze, true));
+            case 5 -> createIDAStar(buildProblem(maze, true));
             default -> throw new IllegalStateException("Invalid algorithm");
         };
     }
 
     private String asciiMaze() {
-        return switch (comboMazes.getSelectedIndex()) {
-            case 0 -> String.join(DELIMITER, Mazes.exampleMaze1);
-            case 1 -> String.join(DELIMITER, Mazes.testMaze4);
-            case 2 -> String.join(DELIMITER, Mazes.testMaze3);
-            case 3 -> String.join(DELIMITER, Mazes.testMaze2);
-            case 4 -> String.join(DELIMITER, Mazes.testMaze5);
-            default -> throw new IllegalStateException("Unexpected value: " + comboMazes.getSelectedIndex());
-        };
+        final var selectedIndex = comboMazes.getSelectedIndex();
+        return String.join(DELIMITER, switch (selectedIndex) {
+            case 0 -> Mazes.exampleMaze1;
+            case 1 -> Mazes.testMaze4;
+            case 2 -> Mazes.testMaze3;
+            case 3 -> Mazes.testMaze2;
+            case 4 -> Mazes.testMaze5;
+            default -> throw new IllegalStateException("Unexpected value: " + selectedIndex);
+        });
     }
 
     private static SearchProblem<Void, Point, WeightedNode<Void, Point, Double>> buildProblem(

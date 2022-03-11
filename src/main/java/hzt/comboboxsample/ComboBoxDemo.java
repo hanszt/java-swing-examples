@@ -48,6 +48,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.Objects;
+import java.util.Optional;
 
 /*
  * ComboBoxDemo.java uses these additional files:
@@ -95,27 +96,21 @@ public class ComboBoxDemo {
 
 
     protected final void updateLabel(String name) {
-        ImageIcon icon = createImageIcon("images/" + name + ".gif");
-        picture.setIcon(icon);
-        picture.setToolTipText("A drawing of a " + name.toLowerCase());
-        if (icon != null) {
-            picture.setText(null);
-        } else {
-            picture.setText("Image not found");
-        }
+        final var path = "images/" + name + ".gif";
+        Optional.ofNullable(ComboBoxDemo.class.getResource(path))
+                .map(ImageIcon::new)
+                .ifPresentOrElse(icon -> setIcon(name, icon),
+                        () -> logAndDisplayErrorText(path));
     }
 
-    /**
-     * Returns an ImageIcon, or null if the path was invalid.
-     */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = ComboBoxDemo.class.getResource(path);
-        if (imgURL != null) {
-            return new ImageIcon(imgURL);
-        } else {
-            LOGGER.error("Couldn't find file: {}", path);
-            return null;
-        }
+    private void logAndDisplayErrorText(String path) {
+        picture.setText("Image not found");
+        LOGGER.error("Couldn't find file: {}", path);
+    }
+
+    private void setIcon(String name, ImageIcon icon) {
+        picture.setToolTipText("A drawing of a " + name.toLowerCase());
+        picture.setIcon(icon);
     }
 
     /**

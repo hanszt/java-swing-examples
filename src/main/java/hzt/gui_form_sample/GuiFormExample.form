@@ -10,32 +10,51 @@
     </properties>
     <border type="none"/>
     <children>
-      <vspacer id="f3bd9">
+      <grid id="267b9" layout-manager="GridLayoutManager" row-count="4" column-count="1" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">
+        <margin top="0" left="0" bottom="0" right="0"/>
         <constraints border-constraint="North"/>
-      </vspacer>
-      <component id="15cd8" class="javax.swing.JButton" binding="button">
-        <constraints border-constraint="Center"/>
         <properties>
-          <maximumSize width="50" height="30"/>
-          <minimumSize width="50" height="30"/>
-          <text value="Button"/>
+          <enabled value="true"/>
+          <foreground color="-13290187"/>
         </properties>
-      </component>
+        <border type="none"/>
+        <children>
+          <component id="99718" class="javax.swing.JLabel">
+            <constraints>
+              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="Label"/>
+            </properties>
+          </component>
+          <component id="15cd8" class="javax.swing.JButton" binding="button">
+            <constraints>
+              <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <maximumSize width="50" height="30"/>
+              <minimumSize width="50" height="30"/>
+              <text value="Button"/>
+            </properties>
+          </component>
+          <component id="c15b" class="javax.swing.JCheckBox" binding="checkBox" default-binding="true">
+            <constraints>
+              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+            <properties>
+              <text value="CheckBox"/>
+            </properties>
+          </component>
+          <vspacer id="f3bd9">
+            <constraints>
+              <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+            </constraints>
+          </vspacer>
+        </children>
+      </grid>
       <component id="5e598" class="javax.swing.JTextField" binding="textField" default-binding="true">
-        <constraints border-constraint="South"/>
+        <constraints border-constraint="Center"/>
         <properties/>
-      </component>
-      <component id="c15b" class="javax.swing.JCheckBox" binding="checkBox" default-binding="true">
-        <constraints border-constraint="East"/>
-        <properties>
-          <text value="CheckBox"/>
-        </properties>
-      </component>
-      <component id="99718" class="javax.swing.JLabel">
-        <constraints border-constraint="West"/>
-        <properties>
-          <text value="Label"/>
-        </properties>
       </component>
     </children>
   </grid>

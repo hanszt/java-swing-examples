@@ -4,6 +4,7 @@ import hzt.colorpickersample.ColorPickerSample;
 import hzt.comboboxsample.ComboBoxDemo;
 import hzt.filechoosersample.FileChooserSample;
 import hzt.physics_animation.DynamicsSimDemo;
+import hzt.radiobuttonsample.RadioButtonDemo;
 import hzt.search_algorithms.ASCIIMazeVisualizer;
 import hzt.spinnersample.SpinnerDemo4;
 import hzt.treedemoproject.TreeIconDemo;
@@ -20,5 +21,6 @@ public class Main {
         TreeIconDemo.main(args);
         ASCIIMazeVisualizer.main(args);
         DynamicsSimDemo.main(args);
+        RadioButtonDemo.main(args);
     }
 }
