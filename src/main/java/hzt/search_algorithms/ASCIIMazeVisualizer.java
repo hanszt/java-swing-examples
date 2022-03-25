@@ -4,7 +4,6 @@ import es.usc.citius.hipster.algorithm.Algorithm;
 import es.usc.citius.hipster.model.CostNode;
 import es.usc.citius.hipster.model.Node;
 import es.usc.citius.hipster.model.Transition;
-import es.usc.citius.hipster.model.function.impl.StateTransitionFunction;
 import es.usc.citius.hipster.model.impl.WeightedNode;
 import es.usc.citius.hipster.model.problem.ProblemBuilder;
 import es.usc.citius.hipster.model.problem.SearchProblem;
@@ -30,10 +29,8 @@ import javax.swing.JSpinner;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
-import java.awt.Point;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.text.DecimalFormat;
 import java.util.Iterator;
@@ -64,20 +61,21 @@ public class ASCIIMazeVisualizer {
     private JLabel labelCost;
 
     // Global execution state
+    private final MutableSetX<Point> explored = MutableSetX.empty();
+    private final Timer timer;
+
     private State appState = State.STOPPED;
     // Current algorithm used
     private Iterator<? extends Node<?, Point, ?>> algorithmIterator;
     // Move all to the algorithm executor
-    private final MutableSetX<Point> explored = MutableSetX.empty();
     private int steps = 0;
-    private final Timer timer;
     private Maze2D maze;
 
     private final JFrame mainFrame;
 
     public ASCIIMazeVisualizer(final JFrame frame) {
         this.mainFrame = frame;
-        timer = new Timer((Integer) refreshSpinner.getValue(), this::actionPerformed);
+        timer = new Timer((int) refreshSpinner.getValue(), this::updateFrame);
         // Use double buffer for smooth updates
         mazeTextArea.setDoubleBuffered(true);
         refreshSpinner.setValue(50);
@@ -100,13 +98,6 @@ public class ASCIIMazeVisualizer {
         runButton.addActionListener(this::startAnimation);
         resetButton.addActionListener(this::stopAnimation);
         comboMazes.addActionListener(e -> loadSelectedMaze(frame));
-    }
-
-    private static Double evaluate(Transition<Void, Point> transition) {
-        Point source = transition.getFromState();
-        Point destination = transition.getState();
-        double distance = source.distance(destination);
-        return rounded(distance);
     }
 
     private void startAnimation(ActionEvent e) {
@@ -190,7 +181,7 @@ public class ASCIIMazeVisualizer {
         appState = State.PAUSED;
     }
 
-    public void actionPerformed(ActionEvent e) {
+    private void updateFrame(ActionEvent e) {
         if (realtimePrintingCheckBox.isSelected() && appState == State.STARTED) {
             executeSearchStep();
         }
@@ -259,12 +250,12 @@ public class ASCIIMazeVisualizer {
 
     private Algorithm<Void, Point, WeightedNode<Void, Point, Double>> createAlgorithm(Maze2D maze) {
         return switch (comboAlgorithm.getSelectedIndex()) {
-            case 0 -> createDepthFirstSearch(buildProblem(maze, false));
-            case 1 -> createBreadthFirstSearch(buildProblem(maze, false));
-            case 2 -> createBellmanFord(buildProblem(maze, false));
-            case 3 -> createDijkstra(buildProblem(maze, false));
-            case 4 -> createAStar(buildProblem(maze, true));
-            case 5 -> createIDAStar(buildProblem(maze, true));
+            case 0 -> createDepthFirstSearch(buildSearchProblem(maze, false));
+            case 1 -> createBreadthFirstSearch(buildSearchProblem(maze, false));
+            case 2 -> createBellmanFord(buildSearchProblem(maze, false));
+            case 3 -> createDijkstra(buildSearchProblem(maze, false));
+            case 4 -> createAStar(buildSearchProblem(maze, true));
+            case 5 -> createIDAStar(buildSearchProblem(maze, true));
             default -> throw new IllegalStateException("Invalid algorithm");
         };
     }
@@ -281,28 +272,27 @@ public class ASCIIMazeVisualizer {
         });
     }
 
-    private static SearchProblem<Void, Point, WeightedNode<Void, Point, Double>> buildProblem(
+    private static SearchProblem<Void, Point, WeightedNode<Void, Point, Double>> buildSearchProblem(
             final Maze2D maze, final boolean heuristic) {
         return ProblemBuilder.create()
                 .initialState(maze.getInitialLoc())
                 .defineProblemWithoutActions()
-                .useTransitionFunction(getTransitionFunction(maze))
-                .useCostFunction(ASCIIMazeVisualizer::evaluate)
-                .useHeuristicFunction(state -> getHeuristic(maze, heuristic, state))
+                .useTransitionFunction(start -> createTransitions(maze, start))
+                .useCostFunction(ASCIIMazeVisualizer::calculateDistance)
+                .useHeuristicFunction(current -> heuristic ? rounded(current.distance(maze.getGoalLoc())) : 0)
                 .build();
     }
 
-    private static StateTransitionFunction<Point> getTransitionFunction(Maze2D maze) {
-        return new StateTransitionFunction<>() {
-            @Override
-            public Iterable<Point> successorsOf(Point state) {
-                return maze.validLocationsFrom(state);
-            }
-        };
+    private static Sequence<Transition<Void, Point>> createTransitions(Maze2D maze, Point start) {
+        return Sequence.of(maze.validLocationsFrom(start))
+                .map(current -> Transition.create(start, current));
     }
 
-    private static double getHeuristic(Maze2D maze, boolean heuristic, Point curLocation) {
-        return heuristic ? rounded(curLocation.distance(maze.getGoalLoc())) : 0;
+    private static double calculateDistance(Transition<Void, Point> transition) {
+        Point source = transition.getFromState();
+        Point destination = transition.getState();
+        double distance = source.distance(destination);
+        return rounded(distance);
     }
 
     private static double rounded(double distance) {
