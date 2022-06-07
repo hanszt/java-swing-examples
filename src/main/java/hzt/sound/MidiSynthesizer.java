@@ -45,6 +45,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
@@ -368,7 +369,10 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         }
 
         public Key getKey(Point point) {
-            return pianoKeys.stream().filter(key -> key.contains(point)).findFirst().orElse(null);
+            return pianoKeys.stream()
+                    .filter(key -> key.contains(point))
+                    .findFirst()
+                    .orElse(null);
         }
 
         @Override
@@ -451,7 +455,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
 
     /**
-     * Table for 128 general MIDI melody instuments.
+     * Table for 128 general MIDI melody instruments.
      */
     private final class InstrumentsTable extends JPanel {
 
@@ -503,11 +507,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             }
 
             public Object getValueAt(int r, int c) {
-                if (instruments != null) {
-                    return instruments[c * N_ROWS + r].getName();
-                } else {
-                    return Integer.toString(c * N_ROWS + r);
-                }
+                return instruments != null ? instruments[c * N_ROWS + r].getName() : Integer.toString(c * N_ROWS + r);
             }
 
             @Override
@@ -804,12 +804,10 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 playButton.setEnabled(false);
                 saveButton.setEnabled(false);
             } else {
-                String name;
-                if (instruments != null) {
-                    name = instruments[channelData.col * 8 + channelData.row].getName();
-                } else {
-                    name = Integer.toString(channelData.col * 8 + channelData.row);
-                }
+                String name = instruments != null ?
+                        instruments[channelData.col * 8 + channelData.row].getName() :
+                        Integer.toString(channelData.col * 8 + channelData.row);
+
                 tracks.add(new TrackData(channelData.num + 1, name));
                 table.tableChanged(new TableModelEvent(dataModel));
                 recordButton.setText(RECORD);
@@ -840,7 +838,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             try {
                 File file = new File(System.getProperty("user.dir"));
                 JFileChooser fc = new JFileChooser(file);
-                fc.setFileFilter(new javax.swing.filechooser.FileFilter() {
+                fc.setFileFilter(new FileFilter() {
                     public boolean accept(File f) {
                         return f.isDirectory();
                     }

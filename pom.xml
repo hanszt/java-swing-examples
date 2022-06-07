@@ -15,13 +15,13 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--dependencies-->
         <junit.jupiter.version>5.8.2</junit.jupiter.version>
-        <dyn4j.version>4.2.0</dyn4j.version>
+        <dyn4j.version>4.2.1</dyn4j.version>
         <hipster-core.version>1.0.1</hipster-core.version>
-        <logback-classic.version>1.2.10</logback-classic.version>
+        <logback-classic.version>1.2.11</logback-classic.version>
+        <hzt.utils.version>0.7.5.17</hzt.utils.version>
         <!--plugins-->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
-        <hzt.utils.version>0.7.5.17</hzt.utils.version>
     </properties>
 
     <dependencies>

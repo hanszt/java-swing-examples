@@ -237,12 +237,7 @@ public final class Groove implements ControlContext {
         }
         if (col != 0) {
             final Color[] staff = (data.get(row)).staff;
-            Color c = staff[col - 1];
-            if (c.equals(Color.white)) {
-                staff[col - 1] = Color.black;
-            } else {
-                staff[col - 1] = Color.white;
-            }
+            staff[col - 1] = staff[col - 1].equals(Color.white) ? Color.black : Color.white;
             table.tableChanged(new TableModelEvent(dataModel));
         }
     }
@@ -380,12 +375,10 @@ public final class Groove implements ControlContext {
 
 
     private void setCell(int id, int tick) {
-        for (Data d : data) {
-            if (d.id == id) {
-                d.staff[tick] = Color.black;
-                break;
-            }
-        }
+        data.stream()
+                .filter(d -> d.id == id)
+                .findFirst()
+                .ifPresent(d -> d.staff[tick] = Color.black);
     }
 
 
