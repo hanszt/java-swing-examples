@@ -31,19 +31,9 @@
 
 package hzt.splitpanedividersample;
 
-import javax.swing.Icon;
-import javax.swing.JComponent;
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Composite;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.font.FontRenderContext;
-import java.awt.geom.Rectangle2D;
 import java.util.Objects;
 
 public final class SizeDisplayer extends JComponent {
@@ -60,23 +50,23 @@ public final class SizeDisplayer extends JComponent {
     private Dimension userMinimumSize;
     private Dimension userMaximumSize;
 
-    private SizeDisplayer(String text, Icon icon) {
+    private SizeDisplayer(final String text, final Icon icon) {
         this.text = text;
         this.icon = icon;
     }
 
-    public static SizeDisplayer with(String text, Icon icon) {
-        SizeDisplayer sizeDisplayer = new SizeDisplayer(text, icon);
+    public static SizeDisplayer with(final String text, final Icon icon) {
+        final var sizeDisplayer = new SizeDisplayer(text, icon);
         sizeDisplayer.setOpaque(true);
         return sizeDisplayer;
     }
 
     @Override
-    protected void paintComponent(Graphics graphics) {
-        Graphics2D graphics2D = (Graphics2D) graphics.create();
-        Dimension minSize = getMinimumSize();
-        Dimension prefSize = getPreferredSize();
-        Dimension size = getSize();
+    protected void paintComponent(final Graphics graphics) {
+        final var graphics2D = (Graphics2D) graphics.create();
+        final var minSize = getMinimumSize();
+        final var prefSize = getPreferredSize();
+        final var size = getSize();
         setRenderingHints(graphics2D);
         drawMaxSizeRectangleIfOpaque(graphics2D, size);
         drawIcon(graphics2D, size);
@@ -92,28 +82,28 @@ public final class SizeDisplayer extends JComponent {
         graphics2D.dispose();
     }
 
-    private static void drawRectangle(Graphics2D graphics2D, Dimension prefSize, Dimension size, Color red) {
-        int prefX = (size.width - prefSize.width) / 2;
-        int prefY = (size.height - prefSize.height) / 2;
+    private static void drawRectangle(final Graphics2D graphics2D, final Dimension prefSize, final Dimension size, final Color red) {
+        final var prefX = (size.width - prefSize.width) / 2;
+        final var prefY = (size.height - prefSize.height) / 2;
         graphics2D.setColor(red);
         graphics2D.drawRect(prefX, prefY, prefSize.width - 1, prefSize.height - 1);
     }
 
-    private static void setRenderingHints(Graphics2D graphics2D) {
+    private static void setRenderingHints(final Graphics2D graphics2D) {
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         graphics2D.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
     }
 
-    private void drawMaxSizeRectangleIfOpaque(Graphics2D graphics2D, Dimension size) {
+    private void drawMaxSizeRectangleIfOpaque(final Graphics2D graphics2D, final Dimension size) {
         if (isOpaque()) {
             graphics2D.setColor(getBackground());
             graphics2D.fillRect(0, 0, size.width, size.height);
         }
     }
 
-    private void drawIcon(Graphics2D graphics2D, Dimension size) {
+    private void drawIcon(final Graphics2D graphics2D, final Dimension size) {
         if (icon != null) {
-            Composite oldComposite = graphics2D.getComposite();
+            final var oldComposite = graphics2D.getComposite();
             graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.1F));
             icon.paintIcon(this, graphics2D,
                     (size.width - icon.getIconWidth()) / 2,
@@ -122,9 +112,9 @@ public final class SizeDisplayer extends JComponent {
         }
     }
 
-    private void drawText(Graphics2D g2d, Dimension size) {
+    private void drawText(final Graphics2D g2d, final Dimension size) {
         if (text != null) {
-            Dimension textSize = getTextSize(g2d);
+            final var textSize = getTextSize(g2d);
             g2d.setColor(getForeground());
             g2d.drawString(text,
                     (size.width - textSize.width) / 2,
@@ -133,13 +123,13 @@ public final class SizeDisplayer extends JComponent {
         }
     }
 
-    private Dimension getTextSize(Graphics2D g2d) {
+    private Dimension getTextSize(final Graphics2D g2d) {
         if (text == null) {
             textSizeD.setSize(0, 0);
         } else {
-            FontRenderContext frc = g2d != null ? g2d.getFontRenderContext() :
+            final var frc = g2d != null ? g2d.getFontRenderContext() :
                     new FontRenderContext(null, false, false);
-            Rectangle2D textRect = getFont().getStringBounds(text, frc);
+            final var textRect = getFont().getStringBounds(text, frc);
             textSizeR.setRect(textRect);
             textSizeD.setSize(textSizeR.width, textSizeR.height);
         }
@@ -166,32 +156,32 @@ public final class SizeDisplayer extends JComponent {
     }
 
     @Override
-    public void setMinimumSize(Dimension newSize) {
+    public void setMinimumSize(final Dimension newSize) {
         userMinimumSize = newSize;
     }
 
     @Override
-    public void setPreferredSize(Dimension newSize) {
+    public void setPreferredSize(final Dimension newSize) {
         userPreferredSize = newSize;
     }
 
     @Override
-    public void setMaximumSize(Dimension newSize) {
+    public void setMaximumSize(final Dimension newSize) {
         userMaximumSize = newSize;
     }
 
     private Dimension calculatePreferredSize() {
-        Insets insets = getInsets();
-        Dimension textSize = getTextSize(null);
-        int iconWidth = 0;
-        int iconHeight = 0;
+        final var insets = getInsets();
+        final var textSize = getTextSize(null);
+        var iconWidth = 0;
+        var iconHeight = 0;
 
         if (icon != null) {
             iconWidth = icon.getIconWidth();
             iconHeight = icon.getIconHeight();
         }
-        int width = Math.max(iconWidth, textSize.width + 2 * X_TEXT_PAD) + insets.left + insets.right;
-        int height = Math.max(iconHeight, textSize.height + 2 * Y_TEXT_PAD) + insets.top + insets.bottom;
+        final var width = Math.max(iconWidth, textSize.width + 2 * X_TEXT_PAD) + insets.left + insets.right;
+        final var height = Math.max(iconHeight, textSize.height + 2 * Y_TEXT_PAD) + insets.top + insets.bottom;
         return new Dimension(width, height);
     }
 }

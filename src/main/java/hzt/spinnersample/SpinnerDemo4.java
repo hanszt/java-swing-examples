@@ -37,33 +37,21 @@ package hzt.spinnersample;
  *   SpringUtilities.java
  */
 
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerModel;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SpringLayout;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
+import java.awt.*;
 
-public class SpinnerDemo4 {
+public final class SpinnerDemo4 {
 
     private final JPanel mainPanel;
 
     public SpinnerDemo4() {
         mainPanel = new JPanel(new SpringLayout());
 
-        String[] labels = {"Shade of Gray: "};
-        int numPairs = labels.length;
+        final var labels = new String[]{"Shade of Gray: "};
+        final var numPairs = labels.length;
 
-        JSpinner spinner = addLabeledSpinner(mainPanel, labels[0], new GrayModel(170));
+        final var spinner = addLabeledSpinner(mainPanel, labels[0], new GrayModel(170));
         spinner.setEditor(new GrayEditor().withConfigurationFor(spinner));
 
         //Lay out the
@@ -72,11 +60,11 @@ public class SpinnerDemo4 {
                 6, 10);       //xPad, yPad
     }
 
-    protected static JSpinner addLabeledSpinner(Container container, String text, SpinnerModel model) {
-        JLabel label = new JLabel(text);
+    protected static JSpinner addLabeledSpinner(final Container container, final String text, final SpinnerModel model) {
+        final var label = new JLabel(text);
         container.add(label);
 
-        JSpinner spinner = new JSpinner(model);
+        final var spinner = new JSpinner(model);
         label.setLabelFor(spinner);
         container.add(spinner);
 
@@ -90,12 +78,12 @@ public class SpinnerDemo4 {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("SpinnerDemo4");
+        final var frame = new JFrame("SpinnerDemo4");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         final var spinnerDemo4 = new SpinnerDemo4();
-        JComponent newContentPane = spinnerDemo4.mainPanel;
+        final JComponent newContentPane = spinnerDemo4.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
@@ -104,7 +92,7 @@ public class SpinnerDemo4 {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(SpinnerDemo4::run);
@@ -117,7 +105,7 @@ public class SpinnerDemo4 {
     }
 
     private static class GrayModel extends SpinnerNumberModel {
-        public GrayModel(int value) {
+        public GrayModel(final int value) {
             super(value, 0, 255, 5);
         }
 
@@ -126,18 +114,18 @@ public class SpinnerDemo4 {
         }
 
         public Color getColor() {
-            int intValue = getIntValue();
+            final var intValue = getIntValue();
             return new Color(intValue, intValue, intValue);
         }
     }
 
     private static class GrayEditor extends JLabel {
 
-        private GrayEditor withConfigurationFor(JSpinner spinner) {
+        private GrayEditor withConfigurationFor(final JSpinner spinner) {
             setOpaque(true);
 
             //Get info from the model.
-            GrayModel myModel = (GrayModel) (spinner.getModel());
+            final var myModel = (GrayModel) (spinner.getModel());
             setBackground(myModel.getColor());
             spinner.addChangeListener(this::stateChanged);
 
@@ -145,14 +133,14 @@ public class SpinnerDemo4 {
             updateToolTipText(spinner);
 
             //Set size info.
-            Dimension size = new Dimension(60, 15);
+            final var size = new Dimension(60, 15);
             setMinimumSize(size);
             setPreferredSize(size);
             return this;
         }
 
-        protected final void updateToolTipText(JSpinner spinner) {
-            String toolTipText = spinner.getToolTipText();
+        protected final void updateToolTipText(final JSpinner spinner) {
+            final var toolTipText = spinner.getToolTipText();
             if (toolTipText != null) {
                 //JSpinner has tool tip text.  Use it.
                 if (!toolTipText.equals(getToolTipText())) {
@@ -160,15 +148,15 @@ public class SpinnerDemo4 {
                 }
             } else {
                 //Define our own tool tip text.
-                GrayModel myModel = (GrayModel) (spinner.getModel());
-                int rgb = myModel.getIntValue();
+                final var myModel = (GrayModel) (spinner.getModel());
+                final var rgb = myModel.getIntValue();
                 setToolTipText("(" + rgb + "," + rgb + "," + rgb + ")");
             }
         }
 
-        public void stateChanged(ChangeEvent e) {
-            JSpinner mySpinner = (JSpinner) (e.getSource());
-            GrayModel myModel = (GrayModel) (mySpinner.getModel());
+        public void stateChanged(final ChangeEvent e) {
+            final var mySpinner = (JSpinner) (e.getSource());
+            final var myModel = (GrayModel) (mySpinner.getModel());
             final var color = myModel.getColor();
             setBackground(color);
             updateToolTipText(mySpinner);

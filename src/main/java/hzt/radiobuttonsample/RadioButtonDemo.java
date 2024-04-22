@@ -34,19 +34,8 @@ package hzt.radiobuttonsample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.Optional;
@@ -76,29 +65,29 @@ public class RadioButtonDemo {
         mainPanel = new JPanel(new BorderLayout());
 
         //Create the radio buttons.
-        JRadioButton birdButton = new JRadioButton(BIRD_STRING);
+        final var birdButton = new JRadioButton(BIRD_STRING);
         birdButton.setMnemonic(KeyEvent.VK_B);
         birdButton.setActionCommand(BIRD_STRING);
         birdButton.setSelected(true);
 
-        JRadioButton catButton = new JRadioButton(CAT_STRING);
+        final var catButton = new JRadioButton(CAT_STRING);
         catButton.setMnemonic(KeyEvent.VK_C);
         catButton.setActionCommand(CAT_STRING);
 
-        JRadioButton dogButton = new JRadioButton(DOG_STRING);
+        final var dogButton = new JRadioButton(DOG_STRING);
         dogButton.setMnemonic(KeyEvent.VK_D);
         dogButton.setActionCommand(DOG_STRING);
 
-        JRadioButton rabbitButton = new JRadioButton(RABBIT_STRING);
+        final var rabbitButton = new JRadioButton(RABBIT_STRING);
         rabbitButton.setMnemonic(KeyEvent.VK_R);
         rabbitButton.setActionCommand(RABBIT_STRING);
 
-        JRadioButton pigButton = new JRadioButton(PIG_STRING);
+        final var pigButton = new JRadioButton(PIG_STRING);
         pigButton.setMnemonic(KeyEvent.VK_P);
         pigButton.setActionCommand(PIG_STRING);
 
         //Group the radio buttons.
-        ButtonGroup group = new ButtonGroup();
+        final var group = new ButtonGroup();
         group.add(birdButton);
         group.add(catButton);
         group.add(dogButton);
@@ -124,7 +113,7 @@ public class RadioButtonDemo {
 
 
         //Put the radio buttons in a column in a panel.
-        JPanel radioPanel = new JPanel(new GridLayout(0, 1));
+        final var radioPanel = new JPanel(new GridLayout(0, 1));
         radioPanel.add(birdButton);
         radioPanel.add(catButton);
         radioPanel.add(dogButton);
@@ -139,7 +128,7 @@ public class RadioButtonDemo {
     /**
      * Listens to the radio buttons.
      */
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(final ActionEvent e) {
         final var actionCommand = e.getActionCommand();
         createImageIcon("images/" + actionCommand + ".gif")
                 .ifPresentOrElse(picture::setIcon, () -> LOGGER.error("Couldn't find file: {}", actionCommand));
@@ -148,7 +137,7 @@ public class RadioButtonDemo {
     /**
      * Returns an ImageIcon, or null if the path was invalid.
      */
-    protected static Optional<ImageIcon> createImageIcon(String path) {
+    protected static Optional<ImageIcon> createImageIcon(final String path) {
         return Optional.ofNullable(RadioButtonDemo.class.getResource(path))
                 .map(ImageIcon::new);
     }
@@ -160,12 +149,12 @@ public class RadioButtonDemo {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("RadioButtonDemo");
+        final var frame = new JFrame("RadioButtonDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         final var radioButtonDemo = new RadioButtonDemo();
-        JComponent newContentPane = radioButtonDemo.mainPanel;
+        final JComponent newContentPane = radioButtonDemo.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
@@ -174,7 +163,7 @@ public class RadioButtonDemo {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(RadioButtonDemo::createAndShowGUI);

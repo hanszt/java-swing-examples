@@ -2,10 +2,8 @@ package hzt.physics_animation.framework;
 
 import org.dyn4j.dynamics.Body;
 import org.dyn4j.dynamics.BodyFixture;
-import org.dyn4j.geometry.Convex;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Ellipse2D;
 
@@ -33,7 +31,7 @@ public class SimulationBody extends Body {
 	 * @param g the graphics object to render to
 	 * @param scale the scaling factor
 	 */
-	public void render(Graphics2D g, double scale) {
+	public void render(final Graphics2D g, final double scale) {
 		this.render(g, scale, this.color);
 	}
 	
@@ -45,15 +43,15 @@ public class SimulationBody extends Body {
 	 * @param scale the scaling factor
 	 * @param color the color to render the body
 	 */
-	public void render(Graphics2D g, double scale, Color color) {
+	public void render(final Graphics2D g, final double scale, final Color color) {
 		// point radius
-		final int pointRadius = 4;
+		final var pointRadius = 4;
 		
 		// save the original transform
-		AffineTransform ot = g.getTransform();
+        final var ot = g.getTransform();
 		
 		// transform the coordinate system from world coordinates to local coordinates
-		AffineTransform lt = new AffineTransform();
+        final var lt = new AffineTransform();
 		lt.translate(this.transform.getTranslationX() * scale, this.transform.getTranslationY() * scale);
 		lt.rotate(this.transform.getRotationAngle());
 		
@@ -61,12 +59,12 @@ public class SimulationBody extends Body {
 		g.transform(lt);
 		
 		// loop over all the body fixtures for this body
-		for (BodyFixture fixture : fixtures) {
+		for (final var fixture : fixtures) {
 			this.renderFixture(g, scale, fixture, color);
 		}
 		
 		// draw a center point
-		Ellipse2D.Double ce = new Ellipse2D.Double(
+        final var ce = new Ellipse2D.Double(
 				this.getLocalCenter().x * scale - pointRadius * 0.5,
 				this.getLocalCenter().y * scale - pointRadius * 0.5,
 				pointRadius,
@@ -87,9 +85,9 @@ public class SimulationBody extends Body {
 	 * @param fixture the fixture to render
 	 * @param color the color to render the fixture
 	 */
-	protected void renderFixture(Graphics2D g, double scale, BodyFixture fixture, Color color) {
+	protected void renderFixture(final Graphics2D g, final double scale, final BodyFixture fixture, Color color) {
 		// get the shape on the fixture
-		Convex convex = fixture.getShape();
+        final var convex = fixture.getShape();
 		
 		// brighten the color if asleep
 		if (this.isAtRest()) {

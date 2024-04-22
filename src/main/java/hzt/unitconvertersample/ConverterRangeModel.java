@@ -36,7 +36,7 @@ package hzt.unitconvertersample;
  * Used by the Converter example.
  */
 
-import javax.swing.BoundedRangeModel;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.EventListenerList;
@@ -65,7 +65,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return multiplier;
     }
 
-    public void setMultiplier(double multiplier) {
+    public void setMultiplier(final double multiplier) {
         this.multiplier = multiplier;
         fireStateChanged();
     }
@@ -74,7 +74,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return maximum;
     }
 
-    public void setMaximum(int newMaximum) {
+    public void setMaximum(final int newMaximum) {
         setRangeProperties(value, newMaximum, isAdjusting);
     }
 
@@ -82,7 +82,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return minimum;
     }
 
-    public void setMinimum(int newMinimum) {
+    public void setMinimum(final int newMinimum) {
         //Do nothing.
     }
 
@@ -90,7 +90,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return (int) getDoubleValue();
     }
 
-    public void setValue(int newValue) {
+    public void setValue(final int newValue) {
         setDoubleValue(newValue);
     }
 
@@ -98,7 +98,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return value;
     }
 
-    public void setDoubleValue(double newValue) {
+    public void setDoubleValue(final double newValue) {
         setRangeProperties(newValue, maximum, isAdjusting);
     }
 
@@ -106,7 +106,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return extent;
     }
 
-    public void setExtent(int newExtent) {
+    public void setExtent(final int newExtent) {
         //Do nothing.
     }
 
@@ -114,19 +114,19 @@ public class ConverterRangeModel implements BoundedRangeModel {
         return isAdjusting;
     }
 
-    public void setValueIsAdjusting(boolean b) {
+    public void setValueIsAdjusting(final boolean b) {
         setRangeProperties(value, maximum, b);
     }
 
-    public void setRangeProperties(int newValue,
-                                   int newExtent,
-                                   int newMin,
-                                   int newMax,
-                                   boolean newAdjusting) {
+    public void setRangeProperties(final int newValue,
+                                   final int newExtent,
+                                   final int newMin,
+                                   final int newMax,
+                                   final boolean newAdjusting) {
         setRangeProperties(newValue, newMax, newAdjusting);
     }
 
-    public void setRangeProperties(double newValue, int newMax, boolean newAdjusting) {
+    public void setRangeProperties(double newValue, int newMax, final boolean newAdjusting) {
         if (newMax <= minimum) {
             newMax = minimum + 1;
         }
@@ -134,7 +134,7 @@ public class ConverterRangeModel implements BoundedRangeModel {
             newValue = newMax;
         }
 
-        boolean changeOccurred = false;
+        var changeOccurred = false;
         if (Double.compare(newValue, value) != 0) {
             value = newValue;
             changeOccurred = true;
@@ -157,17 +157,17 @@ public class ConverterRangeModel implements BoundedRangeModel {
      * The rest of this is event handling code copied from
      * DefaultBoundedRangeModel.
      */
-    public void addChangeListener(ChangeListener l) {
+    public void addChangeListener(final ChangeListener l) {
         listenerList.add(ChangeListener.class, l);
     }
 
-    public void removeChangeListener(ChangeListener l) {
+    public void removeChangeListener(final ChangeListener l) {
         listenerList.remove(ChangeListener.class, l);
     }
 
     protected void fireStateChanged() {
-        Object[] listeners = listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+        final var listeners = listenerList.getListenerList();
+        for (var i = listeners.length - 2; i >= 0; i -= 2) {
             if (listeners[i] == ChangeListener.class) {
                 if (changeEvent == null) {
                     changeEvent = new ChangeEvent(this);

@@ -1,11 +1,6 @@
 package hzt.gui_form_sample;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 
 public final class GuiFormExample {
 
@@ -25,7 +20,7 @@ public final class GuiFormExample {
     }
 
     private void buildFrame() {
-        JFrame frame = new JFrame("Gui form sample");
+        final var frame = new JFrame("Gui form sample");
         frame.setContentPane(mainPanel);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.pack();
@@ -33,7 +28,7 @@ public final class GuiFormExample {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         new GuiFormExample().start();
     }
 }

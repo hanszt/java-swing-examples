@@ -31,30 +31,21 @@
 
 package hzt.unitconvertersample;
 
-/*
- * A application that requires the following files:
+import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
+
+/**
+ * An application that requires the following files:
  *   ConversionPanel.java
  *   ConverterRangeModel.java
  *   FollowerRangeModel.java
  *   Unit.java
  */
-
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
-import java.awt.Color;
-import java.awt.Dimension;
-
 public final class Converter extends JPanel {
 
     private static final int MAX = 10_000;
@@ -87,7 +78,7 @@ public final class Converter extends JPanel {
 
 
         //Create a JPanel, and add the ConversionPanels to it.
-        Converter mainPane = new Converter();
+        final var mainPane = new Converter();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
         if (MULTICOLORED) {
             mainPane.setOpaque(true);
@@ -99,56 +90,51 @@ public final class Converter extends JPanel {
         mainPane.add(Box.createRigidArea(new Dimension(0, 5)));
         mainPane.add(usaPanel);
         mainPane.add(Box.createGlue());
-        int maximum = calculateMaximum();
+        final var maximum = calculateMaximum();
         dataModel.setMaximum(maximum);
         dataModel.setDoubleValue(maximum);
         return mainPane;
     }
 
     @NotNull
-    private ConversionPanel buildMetricConversionPanel(ConverterRangeModel dataModel) {
-        Unit[] metricDistances = new Unit[]{
+    private ConversionPanel buildMetricConversionPanel(final ConverterRangeModel dataModel) {
+        final var metricDistances = List.of(
                 new Unit("Centimeters", 0.01),
                 new Unit("Meters", 1.0),
                 new Unit("Kilometers", 1000.0)
-        };
-        final ConversionPanel panel = new ConversionPanel(dataModel).buildContent(metricDistances);
+        );
+        final var panel = new ConversionPanel(dataModel).buildContent(metricDistances);
         panel.setOnUnitChanged(e -> dataModel.setMaximum(calculateMaximum()));
         panel.setTittle("Metric System");
         return panel;
     }
 
     @NotNull
-    private ConversionPanel buildUsaConversionPanel(ConverterRangeModel dataModel) {
-        Unit[] usaDistances = new Unit[]{
+    private ConversionPanel buildUsaConversionPanel(final ConverterRangeModel dataModel) {
+        final var usaDistances = List.of(
                 new Unit("Inches", 0.0254),
                 new Unit("Feet", 0.305),
                 new Unit("Yards", 0.914),
                 new Unit("Miles", 1613.0)
-        };
-        final ConversionPanel panel = new ConversionPanel(new FollowerRangeModel(dataModel)).buildContent(usaDistances);
+        );
+        final var panel = new ConversionPanel(new FollowerRangeModel(dataModel)).buildContent(usaDistances);
         panel.setOnUnitChanged(e -> dataModel.setMaximum(calculateMaximum()));
         panel.setTittle("U.S. System");
         return panel;
     }
 
     private int calculateMaximum() {
-        double metricMultiplier = metricPanel.getMultiplier();
-        double usaMultiplier = usaPanel.getMultiplier();
-        int maximum = MAX;
-
-        if (metricMultiplier > usaMultiplier) {
-            maximum = (int) (MAX * (usaMultiplier / metricMultiplier));
-        }
-        return maximum;
+        final var metricMultiplier = metricPanel.getMultiplier();
+        final var usaMultiplier = usaPanel.getMultiplier();
+        return (metricMultiplier > usaMultiplier) ? (int) (MAX * (usaMultiplier / metricMultiplier)) : MAX;
     }
 
     private static void initLookAndFeel() {
-        String lookAndFeel = UIManager.getCrossPlatformLookAndFeelClassName();
+        final var lookAndFeel = UIManager.getCrossPlatformLookAndFeelClassName();
         try {
             UIManager.setLookAndFeel(lookAndFeel);
-        } catch (ClassNotFoundException | InstantiationException |
-                IllegalAccessException | UnsupportedLookAndFeelException e) {
+        } catch (final ClassNotFoundException | InstantiationException |
+                       IllegalAccessException | UnsupportedLookAndFeelException e) {
             LOGGER.error("Can not set look and feel with class name {}", lookAndFeel, e);
         }
     }
@@ -163,11 +149,11 @@ public final class Converter extends JPanel {
         initLookAndFeel();
 
         //Create and set up the window.
-        JFrame frame = new JFrame("Converter");
+        final var frame = new JFrame("Converter");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        JPanel converter = buildConverter();
+        final JPanel converter = buildConverter();
         converter.setOpaque(true); //content panes must be opaque
         frame.setContentPane(converter);
 
@@ -176,10 +162,10 @@ public final class Converter extends JPanel {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
-        Converter converter = new Converter();
+        final var converter = new Converter();
         SwingUtilities.invokeLater(converter::createAndShowGUI);
     }
 

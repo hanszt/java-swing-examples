@@ -35,29 +35,15 @@ import hzt.Loggers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Font;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
-/*
- * SliderDemo.java requires all the files in the images/doggy
- * directory.
+/**
+ * SliderDemo.java requires all the files in the images/doggy directory.
  */
 public class SliderDemo {
 
@@ -85,11 +71,11 @@ public class SliderDemo {
         delay = 1000 / FPS_INIT;
 
         //Create the label.
-        JLabel sliderLabel = new JLabel("Frames Per Second", SwingConstants.CENTER);
+        final var sliderLabel = new JLabel("Frames Per Second", SwingConstants.CENTER);
         sliderLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         //Create the slider.
-        JSlider framesPerSecond = new JSlider(SwingConstants.HORIZONTAL, FPS_MIN, FPS_MAX, FPS_INIT);
+        final var framesPerSecond = new JSlider(SwingConstants.HORIZONTAL, FPS_MIN, FPS_MAX, FPS_INIT);
 
 
         framesPerSecond.addChangeListener(this::stateChanged);
@@ -128,10 +114,10 @@ public class SliderDemo {
     /**
      * Listen to the slider.
      */
-    public void stateChanged(ChangeEvent e) {
-        JSlider source = (JSlider) e.getSource();
+    public void stateChanged(final ChangeEvent e) {
+        final var source = (JSlider) e.getSource();
         if (!source.getValueIsAdjusting()) {
-            int fps = source.getValue();
+            final var fps = source.getValue();
             if (fps == 0) {
                 if (!frozen) {
                     stopAnimation();
@@ -160,7 +146,7 @@ public class SliderDemo {
     }
 
     //Called when the Timer fires.
-    public void actionPerformed(ActionEvent e) {
+    public void actionPerformed(final ActionEvent e) {
         //Advance the animation frame.
         if (frameNumber == (NUM_FRAMES - 1)) {
             frameNumber = 0;
@@ -198,8 +184,8 @@ public class SliderDemo {
     /**
      * Returns an ImageIcon, or null if the path was invalid.
      */
-    protected static ImageIcon createImageIcon(String path) {
-        java.net.URL imgURL = SliderDemo.class.getResource(path);
+    protected static ImageIcon createImageIcon(final String path) {
+        final var imgURL = SliderDemo.class.getResource(path);
         if (imgURL != null) {
             return new ImageIcon(imgURL);
         } else {
@@ -215,9 +201,9 @@ public class SliderDemo {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("SliderDemo");
+        final var frame = new JFrame("SliderDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        SliderDemo demo = new SliderDemo();
+        final var demo = new SliderDemo();
         //Add content to the window.
         final var mainPanel = demo.mainPanel;
         frame.add(mainPanel, BorderLayout.CENTER);
@@ -229,7 +215,7 @@ public class SliderDemo {
         demo.startAnimation();
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         /* Turn off metal's use of bold fonts */
         UIManager.put("swing.boldMetal", Boolean.FALSE);
 
@@ -240,31 +226,31 @@ public class SliderDemo {
 
     private class AnimationWindowListener implements WindowListener {
 
-        public void windowIconified(WindowEvent e) {
+        public void windowIconified(final WindowEvent e) {
             stopAnimation();
         }
 
-        public void windowDeiconified(WindowEvent e) {
+        public void windowDeiconified(final WindowEvent e) {
             startAnimation();
         }
 
-        public void windowOpened(WindowEvent e) {
+        public void windowOpened(final WindowEvent e) {
             Loggers.logIfInfoEnabled(LOGGER, e::toString);
         }
 
-        public void windowClosing(WindowEvent e) {
+        public void windowClosing(final WindowEvent e) {
             Loggers.logIfInfoEnabled(LOGGER, e::toString);
         }
 
-        public void windowClosed(WindowEvent e) {
+        public void windowClosed(final WindowEvent e) {
             Loggers.logIfInfoEnabled(LOGGER, e::toString);
         }
 
-        public void windowActivated(WindowEvent e) {
+        public void windowActivated(final WindowEvent e) {
             Loggers.logIfInfoEnabled(LOGGER, e::toString);
         }
 
-        public void windowDeactivated(WindowEvent e) {
+        public void windowDeactivated(final WindowEvent e) {
             Loggers.logIfInfoEnabled(LOGGER, e::toString);
         }
     }

@@ -1,19 +1,15 @@
 package hzt.colorpickersample;
 
-import javax.swing.JButton;
-import javax.swing.JColorChooser;
-import javax.swing.JFrame;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Color;
+import javax.swing.*;
+import java.awt.*;
 
 public class ColorPickerPopupSample {
 
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("JColorChooser Sample Popup");
+    public static void main(final String[] args) {
+        final var frame = new JFrame("JColorChooser Sample Popup");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        final JButton button = new JButton("Pick to Change Background");
+        final var button = new JButton("Pick to Change Background");
 
         button.addActionListener(actionEvent -> changeBackgroundColor(button));
         frame.add(button, BorderLayout.CENTER);
@@ -22,9 +18,9 @@ public class ColorPickerPopupSample {
         frame.setVisible(true);
     }
 
-    private static void changeBackgroundColor(JButton button) {
-        Color initialBackground = button.getBackground();
-        Color background = JColorChooser.showDialog(null, "Change Button Background", initialBackground);
+    private static void changeBackgroundColor(final JButton button) {
+        final var initialBackground = button.getBackground();
+        final var background = JColorChooser.showDialog(null, "Change Button Background", initialBackground);
         if (background != null) {
             button.setBackground(background);
         }

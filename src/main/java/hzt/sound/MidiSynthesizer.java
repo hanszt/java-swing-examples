@@ -19,23 +19,9 @@ import javax.sound.midi.MidiUnavailableException;
 import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
-import javax.sound.midi.Soundbank;
 import javax.sound.midi.Synthesizer;
 import javax.sound.midi.Track;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -47,17 +33,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -114,13 +91,13 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
     public MidiSynthesizer() {
         setLayout(new BorderLayout());
-        JPanel p = new JPanel();
+        final var p = new JPanel();
         p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        EmptyBorder eb = new EmptyBorder(5, 5, 5, 5);
-        BevelBorder bb = new BevelBorder(BevelBorder.LOWERED);
-        CompoundBorder cb = new CompoundBorder(eb, bb);
+        final var eb = new EmptyBorder(5, 5, 5, 5);
+        final var bb = new BevelBorder(BevelBorder.LOWERED);
+        final var cb = new CompoundBorder(eb, bb);
         p.setBorder(new CompoundBorder(cb, eb));
-        JPanel pp = new JPanel(new BorderLayout());
+        final var pp = new JPanel(new BorderLayout());
         pp.setBorder(new EmptyBorder(10, 20, 10, 5));
         piano = new Piano();
         pp.add(piano);
@@ -144,26 +121,26 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             synthesizer.open();
             sequencer = MidiSystem.getSequencer();
             sequence = new Sequence(Sequence.PPQ, 10);
-        } catch (InvalidMidiDataException | MidiUnavailableException ex) {
+        } catch (final InvalidMidiDataException | MidiUnavailableException ex) {
             LOGGER.error("", ex);
             return;
         }
 
-        Soundbank sb = synthesizer.getDefaultSoundbank();
+        final var sb = synthesizer.getDefaultSoundbank();
         if (sb != null) {
             instruments = synthesizer.getDefaultSoundbank().getInstruments();
             synthesizer.loadInstrument(instruments[0]);
         }
-        MidiChannel[] midiChannels = synthesizer.getChannels();
+        final var midiChannels = synthesizer.getChannels();
         channels = new ChannelData[midiChannels.length];
-        for (int i = 0; i < channels.length; i++) {
-            final ChannelData data = new ChannelData(midiChannels[i], i);
+        for (var i = 0; i < channels.length; i++) {
+            final var data = new ChannelData(midiChannels[i], i);
             ChannelData.configureSliders(controlsPanel.getSliders());
             channels[i] = data;
         }
         channelData = channels[0];
 
-        ListSelectionModel lsm = table.getSelectionModel();
+        var lsm = table.getSelectionModel();
         lsm.setSelectionInterval(0, 0);
         lsm = table.getColumnModel().getSelectionModel();
         lsm.setSelectionInterval(0, 0);
@@ -195,15 +172,15 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
      * (resolution / 500) ticks per millisecond
      * ticks = milliseconds * resolution / 500
      */
-    public void createShortEvent(int type, int num) {
-        ShortMessage message = new ShortMessage();
+    public void createShortEvent(final int type, final int num) {
+        final var message = new ShortMessage();
         try {
-            long millis = System.currentTimeMillis() - startTime;
-            long tick = millis * sequence.getResolution() / 500;
+            final var millis = System.currentTimeMillis() - startTime;
+            final var tick = millis * sequence.getResolution() / 500;
             message.setMessage(type + channelData.num, num, channelData.volume);
-            MidiEvent event = new MidiEvent(message, tick);
+            final var event = new MidiEvent(message, tick);
             track.add(event);
-        } catch (InvalidMidiDataException ex) {
+        } catch (final InvalidMidiDataException ex) {
             LOGGER.error("Error creating short event", ex);
         }
     }
@@ -216,7 +193,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         private int noteState = OFF;
         private final int keyNumber;
 
-        public Key(int x, int y, int width, int height, int num) {
+        public Key(final int x, final int y, final int width, final int height, final int num) {
             super(x, y, width, height);
             keyNumber = num;
         }
@@ -241,7 +218,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             }
         }
 
-        public void setNoteState(int state) {
+        public void setNoteState(final int state) {
             noteState = state;
         }
     }
@@ -282,17 +259,17 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         }
 
         private void turnAllNotesOff() {
-            for (ChannelData channel : channels) {
+            for (final var channel : channels) {
                 channel.channel.allNotesOff();
             }
-            for (Key key : pianoKeys) {
+            for (final var key : pianoKeys) {
                 key.setNoteState(OFF);
             }
         }
 
-        private void playKeyIfMouseMovedOver(MouseEvent e) {
+        private void playKeyIfMouseMovedOver(final MouseEvent e) {
             if (mouseOverCB.isSelected()) {
-                Key key = getKey(e.getPoint());
+                final var key = getKey(e.getPoint());
                 if (prevKey != null && !prevKey.equals(key)) {
                     prevKey.off();
                 }
@@ -306,7 +283,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
         private class PianoMouseMouseListener extends MouseAdapter {
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(final MouseEvent e) {
                 prevKey = getKey(e.getPoint());
                 if (prevKey != null) {
                     prevKey.on();
@@ -315,7 +292,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
+            public void mouseReleased(final MouseEvent e) {
                 if (prevKey != null) {
                     prevKey.off();
                     repaint();
@@ -323,7 +300,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             }
 
             @Override
-            public void mouseExited(MouseEvent e) {
+            public void mouseExited(final MouseEvent e) {
                 if (prevKey != null) {
                     prevKey.off();
                     repaint();
@@ -334,11 +311,11 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
         private List<Key> createBlackKeys() {
             final List<Key> keys = new ArrayList<>();
-            int x = 0;
-            for (int i = 0; i < NR_OF_OCTAVES; i++) {
-                int keyNum = i * NOTES_IN_OCTAVE + Piano.TRANSPOSE;
+            var x = 0;
+            for (var i = 0; i < NR_OF_OCTAVES; i++) {
+                final var keyNum = i * NOTES_IN_OCTAVE + Piano.TRANSPOSE;
                 x += WHITE_KEY_WIDTH;
-                final int X_OFFSET = 4;
+                final var X_OFFSET = 4;
                 keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 1));
                 x += WHITE_KEY_WIDTH;
                 keys.add(new Key(x - X_OFFSET, 0, BLACK_KEY_WIDTH, BLACK_KEY_HEIGHT, keyNum + 3));
@@ -356,11 +333,11 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
         private List<Key> createWhiteKeys() {
             final List<Key> keys = new ArrayList<>();
-            int[] whiteIDs = {0, 2, 4, 5, 7, 9, 11};
-            int x = 0;
-            for (int i = 0; i < NR_OF_OCTAVES; i++) {
-                for (int j = 0; j < NR_OF_OCTAVES + 1; j++) {
-                    int keyNum = i * NOTES_IN_OCTAVE + whiteIDs[j] + Piano.TRANSPOSE;
+            final var whiteIDs = new int[]{0, 2, 4, 5, 7, 9, 11};
+            var x = 0;
+            for (var i = 0; i < NR_OF_OCTAVES; i++) {
+                for (var j = 0; j < NR_OF_OCTAVES + 1; j++) {
+                    final var keyNum = i * NOTES_IN_OCTAVE + whiteIDs[j] + Piano.TRANSPOSE;
                     keys.add(new Key(x, 0, WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT, keyNum));
                     x += WHITE_KEY_WIDTH;
                 }
@@ -368,7 +345,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             return keys;
         }
 
-        public Key getKey(Point point) {
+        public Key getKey(final Point point) {
             return pianoKeys.stream()
                     .filter(key -> key.contains(point))
                     .findFirst()
@@ -376,9 +353,9 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         }
 
         @Override
-        public void paint(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g;
-            Dimension d = getSize();
+        public void paint(final Graphics g) {
+            final var g2 = (Graphics2D) g;
+            final var d = getSize();
 
             g2.setBackground(getBackground());
             g2.clearRect(0, 0, d.width, d.height);
@@ -386,7 +363,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             g2.setColor(Color.white);
             g2.fillRect(0, 0, WHITE_KEY_COUNT * WHITE_KEY_WIDTH, WHITE_KEY_HEIGHT);
 
-            for (Key whiteKey : whiteKeys) {
+            for (final var whiteKey : whiteKeys) {
                 if (whiteKey.isNoteOn()) {
                     g2.setColor(isRecord ? pink : jfcBlue);
                     g2.fill(whiteKey);
@@ -394,7 +371,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 g2.setColor(Color.black);
                 g2.draw(whiteKey);
             }
-            for (Key key : blackKeys) {
+            for (final var key : blackKeys) {
                 if (key.isNoteOn()) {
                     g2.setColor(isRecord ? pink : jfcBlue);
                     g2.fill(key);
@@ -421,12 +398,12 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         private int row;
         private int col;
 
-        public ChannelData(MidiChannel channel, int num) {
+        public ChannelData(final MidiChannel channel, final int num) {
             this.channel = channel;
             this.num = num;
         }
 
-        public void setComponentStates(JTable table, JCheckBox soloCB, JCheckBox monoCB, JCheckBox muteCB) {
+        public void setComponentStates(final JTable table, final JCheckBox soloCB, final JCheckBox monoCB, final JCheckBox muteCB) {
             table.setRowSelectionInterval(row, row);
             table.setColumnSelectionInterval(col, col);
 
@@ -435,20 +412,20 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             muteCB.setSelected(channel.getMute());
         }
 
-        private static void configureSliders(JSlider... sliders) {
-            for (JSlider slider : sliders) {
-                TitledBorder titledBorder = (TitledBorder) slider.getBorder();
-                String s = titledBorder.getTitle();
+        private static void configureSliders(final JSlider... sliders) {
+            for (final var slider : sliders) {
+                final var titledBorder = (TitledBorder) slider.getBorder();
+                final var s = titledBorder.getTitle();
                 titledBorder.setTitle(s.substring(0, s.indexOf('=') + 1) + slider.getValue());
                 slider.repaint();
             }
         }
 
-        public void setRow(int row) {
+        public void setRow(final int row) {
             this.row = row;
         }
 
-        public void setCol(int col) {
+        public void setCol(final int col) {
             this.col = col;
         }
     }
@@ -470,27 +447,27 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
         private InstrumentsTable() {
             setLayout(new BorderLayout());
-            TableModel dataModel = new InstrumentTableModel();
+            final TableModel dataModel = new InstrumentTableModel();
 
             table = new JTable(dataModel);
             table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-            ListSelectionModel rowChangeListener = table.getSelectionModel();
+            final var rowChangeListener = table.getSelectionModel();
             rowChangeListener.addListSelectionListener(e -> newSelectionAction(e, channelData::setRow));
 
-            ListSelectionModel columnChangeListener = table.getColumnModel().getSelectionModel();
+            final var columnChangeListener = table.getColumnModel().getSelectionModel();
             columnChangeListener.addListSelectionListener(e -> newSelectionAction(e, channelData::setCol));
 
             table.setPreferredScrollableViewportSize(new Dimension(N_COLS * 110, 200));
             table.setCellSelectionEnabled(true);
             table.setColumnSelectionAllowed(true);
-            for (String name : names) {
-                TableColumn column = table.getColumn(name);
+            for (final var name : names) {
+                final var column = table.getColumn(name);
                 column.setPreferredWidth(110);
             }
             table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 
-            JScrollPane scrollPane = new JScrollPane(table);
+            final var scrollPane = new JScrollPane(table);
             scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
             scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
             add(scrollPane);
@@ -506,23 +483,23 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 return N_ROWS;
             }
 
-            public Object getValueAt(int r, int c) {
+            public Object getValueAt(final int r, final int c) {
                 return instruments != null ? instruments[c * N_ROWS + r].getName() : Integer.toString(c * N_ROWS + r);
             }
 
             @Override
-            public String getColumnName(int c) {
+            public String getColumnName(final int c) {
                 return names[c];
             }
 
             @Override
-            public Class<?> getColumnClass(int c) {
+            public Class<?> getColumnClass(final int c) {
                 return getValueAt(0, c).getClass();
             }
         }
 
-        private void newSelectionAction(ListSelectionEvent e, IntConsumer consumer) {
-            ListSelectionModel model = (ListSelectionModel) e.getSource();
+        private void newSelectionAction(final ListSelectionEvent e, final IntConsumer consumer) {
+            final var model = (ListSelectionModel) e.getSource();
             if (!model.isSelectionEmpty()) {
                 consumer.accept(model.getMinSelectionIndex());
             }
@@ -539,7 +516,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             return new Dimension(800, 170);
         }
 
-        private void programChange(int program) {
+        private void programChange(final int program) {
             if (instruments != null) {
                 synthesizer.loadInstrument(instruments[program]);
             }
@@ -568,7 +545,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
             setBorder(new EmptyBorder(5, 10, 5, 10));
 
-            final JPanel sliderPanel = new JPanel();
+            final var sliderPanel = new JPanel();
             sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.X_AXIS));
 
             velocitySlider = addSlider(sliderPanel, "Volume", 127, 64, this::adjustVolume);
@@ -581,14 +558,14 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             sliderPanel.add(Box.createHorizontalStrut(10));
             add(sliderPanel);
 
-            final JPanel panel = new JPanel();
+            final var panel = new JPanel();
             panel.setBorder(new EmptyBorder(10, 0, 10, 0));
             panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-            JComboBox<String> combo = new JComboBox<>();
+            final var combo = new JComboBox<String>();
             combo.setPreferredSize(new Dimension(120, 25));
             combo.setMaximumSize(new Dimension(120, 25));
-            for (int i = 1; i <= 16; i++) {
+            for (var i = 1; i <= 16; i++) {
                 combo.addItem("Channel " + i);
             }
             combo.addItemListener(this::comboBoxAction);
@@ -605,26 +582,26 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             monoCB.addItemListener(e -> channelData.channel.setMono(monoCB.isSelected()));
 
             panel.add(monoCB);
-            JCheckBox sustain = new JCheckBox("Sustain");
+            final var sustain = new JCheckBox("Sustain");
             sustain.addItemListener(e -> channelData.channel.controlChange(SUSTAIN, sustain.isSelected() ? 127 : 0));
             panel.add(sustain);
 
-            final JButton notesOff = new JButton("All Notes Off");
+            final var notesOff = new JButton("All Notes Off");
             notesOff.addActionListener(e -> piano.turnAllNotesOff());
             panel.add(notesOff);
             panel.add(Box.createHorizontalStrut(10));
             panel.add(mouseOverCB);
             panel.add(Box.createHorizontalStrut(10));
-            JButton recordB = new JButton("Record...");
+            final var recordB = new JButton("Record...");
             recordB.addActionListener(e -> recordButtonAction());
             panel.add(recordB);
             add(panel);
         }
 
-        private JSlider addSlider(JPanel panel, String name, int max, int value, ChangeListener changeListener) {
-            JSlider slider = new JSlider(SwingConstants.HORIZONTAL, 0, max, value);
+        private JSlider addSlider(final JPanel panel, final String name, final int max, final int value, final ChangeListener changeListener) {
+            final var slider = new JSlider(SwingConstants.HORIZONTAL, 0, max, value);
             slider.addChangeListener(changeListener);
-            TitledBorder tb = new TitledBorder(new EtchedBorder());
+            final var tb = new TitledBorder(new EtchedBorder());
             tb.setTitle(name + " = " + value);
             slider.setBorder(tb);
             panel.add(slider);
@@ -632,37 +609,37 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             return slider;
         }
 
-        private void adjustVolume(ChangeEvent e) {
+        private void adjustVolume(final ChangeEvent e) {
             channelData.volume = updateSliderAndGetValue((JSlider) e.getSource());
         }
 
-        private void adjustPressure(ChangeEvent e) {
-            final int pressure = updateSliderAndGetValue((JSlider) e.getSource());
+        private void adjustPressure(final ChangeEvent e) {
+            final var pressure = updateSliderAndGetValue((JSlider) e.getSource());
             channelData.channel.setChannelPressure(pressure);
         }
 
-        private void adjustBend(ChangeEvent e) {
-            final int pitchBend = updateSliderAndGetValue((JSlider) e.getSource());
+        private void adjustBend(final ChangeEvent e) {
+            final var pitchBend = updateSliderAndGetValue((JSlider) e.getSource());
             channelData.channel.setPitchBend(pitchBend);
         }
 
-        private void adjustReverb(ChangeEvent e) {
-            final int value = updateSliderAndGetValue((JSlider) e.getSource());
+        private void adjustReverb(final ChangeEvent e) {
+            final var value = updateSliderAndGetValue((JSlider) e.getSource());
             channelData.channel.controlChange(REVERB, value);
         }
 
-        private int updateSliderAndGetValue(JSlider slider) {
-            int value = slider.getValue();
-            TitledBorder tb = (TitledBorder) slider.getBorder();
-            String title = tb.getTitle();
+        private int updateSliderAndGetValue(final JSlider slider) {
+            final var value = slider.getValue();
+            final var tb = (TitledBorder) slider.getBorder();
+            final var title = tb.getTitle();
             tb.setTitle(title.substring(0, title.indexOf('=') + 1) + value);
             slider.repaint();
             return value;
         }
 
-        private void comboBoxAction(ItemEvent e) {
+        private void comboBoxAction(final ItemEvent e) {
             //noinspection unchecked
-            JComboBox<String> combo = (JComboBox<String>) e.getSource();
+            final var combo = (JComboBox<String>) e.getSource();
             channelData = channels[combo.getSelectedIndex()];
             channelData.setComponentStates(table, soloCB, monoCB, muteCB);
         }
@@ -694,21 +671,21 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             super("Midi Capture");
             addWindowListener(new WindowAdapter() {
                 @Override
-                public void windowClosing(WindowEvent e) {
+                public void windowClosing(final WindowEvent e) {
                     recordFrame = null;
                 }
             });
-            final JButton recordButton = createButton(RECORD, true);
-            final JButton playButton = createButton("Play", false);
-            final JButton saveButton = createButton("Save...", false);
+            final var recordButton = createButton(RECORD, true);
+            final var playButton = createButton("Play", false);
+            final var saveButton = createButton("Save...", false);
 
             sequencer.addMetaEventListener(e -> updateButtons(e, playButton, recordButton));
             try {
                 sequence = new Sequence(Sequence.PPQ, 10);
-            } catch (InvalidMidiDataException e) {
+            } catch (final InvalidMidiDataException e) {
                 LOGGER.error("Invalid midi data", e);
             }
-            JPanel recordPanel = new JPanel();
+            final var recordPanel = new JPanel();
             recordPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
             recordPanel.setLayout(new BoxLayout(recordPanel, BoxLayout.X_AXIS));
 
@@ -722,7 +699,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
             getContentPane().add("North", recordPanel);
 
-            final String[] names = {"Channel #", "Instrument"};
+            final var names = new String[]{"Channel #", "Instrument"};
 
             dataModel = new AbstractTableModel() {
                 public int getColumnCount() {
@@ -733,7 +710,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                     return tracks.size();
                 }
 
-                public Object getValueAt(int row, int col) {
+                public Object getValueAt(final int row, final int col) {
                     if (col == 0) {
                         return (tracks.get(row)).chanNum;
                     } else if (col == 1) {
@@ -744,17 +721,17 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 }
 
                 @Override
-                public String getColumnName(int col) {
+                public String getColumnName(final int col) {
                     return names[col];
                 }
 
                 @Override
-                public Class<?> getColumnClass(int c) {
+                public Class<?> getColumnClass(final int c) {
                     return Objects.requireNonNull(getValueAt(0, c)).getClass();
                 }
 
                 @Override
-                public void setValueAt(Object val, int row, int col) {
+                public void setValueAt(final Object val, final int row, final int col) {
                     if (col == 0) {
                         (tracks.get(row)).chanNum = (int) val;
                     }
@@ -765,32 +742,32 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             };
 
             table = new JTable(dataModel);
-            TableColumn col = table.getColumn("Channel #");
+            final var col = table.getColumn("Channel #");
             col.setMaxWidth(65);
             table.sizeColumnsToFit(0);
 
-            JScrollPane scrollPane = new JScrollPane(table);
-            EmptyBorder eb = new EmptyBorder(0, 5, 5, 5);
+            final var scrollPane = new JScrollPane(table);
+            final var eb = new EmptyBorder(0, 5, 5, 5);
             scrollPane.setBorder(new CompoundBorder(eb, new EtchedBorder()));
 
             getContentPane().add("Center", scrollPane);
             pack();
-            Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-            int w = 210;
-            int h = 160;
+            final var d = Toolkit.getDefaultToolkit().getScreenSize();
+            final var w = 210;
+            final var h = 160;
             setLocation(d.width / 2 - w / 2, d.height / 2 - h / 2);
             setSize(w, h);
             setVisible(true);
         }
 
-        public JButton createButton(String name, boolean state) {
-            JButton button = new JButton(name);
+        public JButton createButton(final String name, final boolean state) {
+            final var button = new JButton(name);
             button.setFont(new Font("serif", Font.PLAIN, 10));
             button.setEnabled(state);
             return button;
         }
 
-        private void recordAction(JButton recordButton, JButton playButton, JButton saveButton) {
+        private void recordAction(final JButton recordButton, final JButton playButton, final JButton saveButton) {
             isRecord = recordButton.getText().startsWith(RECORD);
             if (isRecord) {
                 track = sequence.createTrack();
@@ -804,7 +781,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 playButton.setEnabled(false);
                 saveButton.setEnabled(false);
             } else {
-                String name = instruments != null ?
+                final var name = instruments != null ?
                         instruments[channelData.col * 8 + channelData.row].getName() :
                         Integer.toString(channelData.col * 8 + channelData.row);
 
@@ -816,12 +793,12 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             }
         }
 
-        private void playAction(JButton recordButton, JButton playButton) {
+        private void playAction(final JButton recordButton, final JButton playButton) {
             if (playButton.getText().startsWith("Play")) {
                 try {
                     sequencer.open();
                     sequencer.setSequence(sequence);
-                } catch (MidiUnavailableException | InvalidMidiDataException ex) {
+                } catch (final MidiUnavailableException | InvalidMidiDataException ex) {
                     LOGGER.error("Midi unavailable or invalid", ex);
                 }
                 sequencer.start();
@@ -836,10 +813,10 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
 
         private void saveAction() {
             try {
-                File file = new File(System.getProperty("user.dir"));
-                JFileChooser fc = new JFileChooser(file);
+                final var file = new File(System.getProperty("user.dir"));
+                final var fc = new JFileChooser(file);
                 fc.setFileFilter(new FileFilter() {
-                    public boolean accept(File f) {
+                    public boolean accept(final File f) {
                         return f.isDirectory();
                     }
 
@@ -850,14 +827,14 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                 if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
                     saveMidiFile(fc.getSelectedFile());
                 }
-            } catch (SecurityException ex) {
+            } catch (final SecurityException ex) {
                 JavaSound.showInfoDialog();
                 LOGGER.debug("Not the proper rights", ex);
             }
         }
 
-        private void updateButtons(MetaMessage message, JButton playButton, JButton recordButton) {
-            final int END_OF_TRACK = 47;
+        private void updateButtons(final MetaMessage message, final JButton playButton, final JButton recordButton) {
+            final var END_OF_TRACK = 47;
             if (message.getType() == END_OF_TRACK) {
                 playButton.setText("Play");
                 recordButton.setEnabled(true);
@@ -865,9 +842,9 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         }
 
 
-        public void saveMidiFile(File file) {
+        public void saveMidiFile(final File file) {
             try {
-                int[] fileTypes = MidiSystem.getMidiFileTypes(sequence);
+                final var fileTypes = MidiSystem.getMidiFileTypes(sequence);
                 if (fileTypes.length == 0) {
                     LOGGER.warn("Can't save sequence");
                 } else {
@@ -875,10 +852,10 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
                         throw new IllegalStateException("Problems writing to file");
                     }
                 }
-            } catch (SecurityException ex) {
+            } catch (final SecurityException ex) {
                 JavaSound.showInfoDialog();
                 LOGGER.debug("No access", ex);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 LOGGER.error("Problem while saving file...", e);
             }
         }
@@ -887,17 +864,17 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
             private int chanNum;
             private String name;
 
-            public TrackData(int chanNum, String name) {
+            public TrackData(final int chanNum, final String name) {
                 this.chanNum = chanNum;
                 this.name = name;
             }
         }
     }
 
-    public static void main(String[] args) {
-        final MidiSynthesizer midiSynthesizer = new MidiSynthesizer();
+    public static void main(final String[] args) {
+        final var midiSynthesizer = new MidiSynthesizer();
         midiSynthesizer.open();
-        JFrame frame = new JFrame("Midi Synthesizer");
+        final var frame = new JFrame("Midi Synthesizer");
         frame.addWindowListener(new WindowAdapter() {
             @Override
             @SuppressWarnings("all")
@@ -907,9 +884,9 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         });
         frame.getContentPane().add("Center", midiSynthesizer);
         frame.pack();
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int w = 760;
-        int h = 470;
+        final var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final var w = 760;
+        final var h = 470;
         frame.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h / 2);
         frame.setSize(w, h);
         frame.setVisible(true);

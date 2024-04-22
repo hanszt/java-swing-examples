@@ -37,32 +37,25 @@ package hzt.unitconvertersample;
 
 import org.jetbrains.annotations.NotNull;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
-import java.awt.Color;
-import java.awt.Dimension;
+import java.awt.*;
 import java.beans.PropertyChangeEvent;
 import java.text.NumberFormat;
-import java.util.stream.Stream;
+import java.util.List;
 
-public class ConversionPanel extends JPanel {
+public final class ConversionPanel extends JPanel {
 
     private final transient ConverterRangeModel converterRangeModel;
     private transient ChangeListener onUnitChanged;
 
-    ConversionPanel(ConverterRangeModel rangeModel) {
+    ConversionPanel(final ConverterRangeModel rangeModel) {
         converterRangeModel = rangeModel;
     }
 
-    public ConversionPanel buildContent(Unit[] units) {
+    public ConversionPanel buildContent(final List<Unit> units) {
         //Put everything together.
         setLayout(new BoxLayout(this, BoxLayout.LINE_AXIS));
         add(buildUnitGroup());
@@ -72,13 +65,13 @@ public class ConversionPanel extends JPanel {
 
     @NotNull
     private JPanel buildUnitGroup() {
-        JPanel unitGroup = getUnitGroup();
+        final var unitGroup = getUnitGroup();
         unitGroup.setLayout(new BoxLayout(unitGroup, BoxLayout.PAGE_AXIS));
         unitGroup.setOpaque(true);
         unitGroup.setBackground(new Color(0, 0, 255));
         unitGroup.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
-        JFormattedTextField textField = buildTextField();
-        final JSlider slider = new JSlider(converterRangeModel);
+        final var textField = buildTextField();
+        final var slider = new JSlider(converterRangeModel);
         converterRangeModel.addChangeListener(e -> updateTextAndSlider(textField, slider));
         unitGroup.add(textField);
         unitGroup.add(slider);
@@ -88,7 +81,7 @@ public class ConversionPanel extends JPanel {
 
     @NotNull
     private JFormattedTextField buildTextField() {
-        NumberFormat numberFormat = NumberFormat.getNumberInstance();
+        final var numberFormat = NumberFormat.getNumberInstance();
         numberFormat.setMaximumFractionDigits(2);
         return formattedTextField(numberFormat);
     }
@@ -114,9 +107,9 @@ public class ConversionPanel extends JPanel {
     }
 
     @NotNull
-    private JPanel createChooserPanel(Unit[] units) {
+    private JPanel createChooserPanel(final List<Unit> units) {
         //Create a sub-panel so the combo box isn't too tall and is sufficiently wide.
-        JPanel chooserPanel = new JPanel();
+        final var chooserPanel = new JPanel();
         chooserPanel.setLayout(new BoxLayout(chooserPanel, BoxLayout.PAGE_AXIS));
         chooserPanel.setOpaque(true);
         chooserPanel.setBackground(new Color(255, 0, 255));
@@ -126,25 +119,25 @@ public class ConversionPanel extends JPanel {
         return chooserPanel;
     }
 
-    private JComboBox<String> buildUnitChooser(Unit[] units) {
-        JComboBox<String> unitChooser = new JComboBox<>(Stream.of(units)
+    private JComboBox<String> buildUnitChooser(final List<Unit> units) {
+        final var unitChooser = new JComboBox<>(units.stream()
                 .map(Unit::description)
                 .toArray(String[]::new));
-        converterRangeModel.setMultiplier(units[unitChooser.getSelectedIndex()].multiplier());
-        unitChooser.addActionListener(e -> updateSliderModel(units[unitChooser.getSelectedIndex()]));
+        converterRangeModel.setMultiplier(units.get(unitChooser.getSelectedIndex()).multiplier());
+        unitChooser.addActionListener(e -> updateSliderModel(units.get(unitChooser.getSelectedIndex())));
         return unitChooser;
     }
 
-    private void updateSliderModel(Unit unit) {
+    private void updateSliderModel(final Unit unit) {
         converterRangeModel.setMultiplier(unit.multiplier());
         onUnitChanged.stateChanged(new ChangeEvent(this));
     }
 
-    private JFormattedTextField formattedTextField(NumberFormat numberFormat) {
-        NumberFormatter formatter = new NumberFormatter(numberFormat);
+    private JFormattedTextField formattedTextField(final NumberFormat numberFormat) {
+        final var formatter = new NumberFormatter(numberFormat);
         formatter.setAllowsInvalid(false);
         formatter.setCommitsOnValidEdit(true);
-        JFormattedTextField textField = new JFormattedTextField(formatter);
+        final var textField = new JFormattedTextField(formatter);
         textField.setColumns(10);
         textField.setValue(converterRangeModel.getDoubleValue());
         textField.addPropertyChangeListener(this::propertyChange);
@@ -167,11 +160,11 @@ public class ConversionPanel extends JPanel {
     /**
      * Updates the text field when the main data model is updated.
      */
-    public void updateTextAndSlider(JFormattedTextField textField, JSlider slider) {
-        int min = converterRangeModel.getMinimum();
-        int max = converterRangeModel.getMaximum();
-        double value = converterRangeModel.getDoubleValue();
-        NumberFormatter formatter = (NumberFormatter) textField.getFormatter();
+    public void updateTextAndSlider(final JFormattedTextField textField, final JSlider slider) {
+        final var min = converterRangeModel.getMinimum();
+        final var max = converterRangeModel.getMaximum();
+        final var value = converterRangeModel.getDoubleValue();
+        final var formatter = (NumberFormatter) textField.getFormatter();
 
         formatter.setMinimum((double) min);
         formatter.setMaximum((double) max);
@@ -183,20 +176,20 @@ public class ConversionPanel extends JPanel {
      * Detects when the value of the text field (not necessarily the same
      * number as you'd get from getText) changes.
      */
-    public void propertyChange(PropertyChangeEvent e) {
+    public void propertyChange(final PropertyChangeEvent e) {
         if ("value".equals(e.getPropertyName())) {
-            Number value = (Number) e.getNewValue();
+            final var value = (Number) e.getNewValue();
             converterRangeModel.setDoubleValue(value.doubleValue());
         }
     }
 
-    public void setTittle(String myTitle) {
+    public void setTittle(final String myTitle) {
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createTitledBorder(myTitle),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
     }
 
-    public void setOnUnitChanged(ChangeListener changedListener) {
+    public void setOnUnitChanged(final ChangeListener changedListener) {
         onUnitChanged = changedListener;
     }
 }

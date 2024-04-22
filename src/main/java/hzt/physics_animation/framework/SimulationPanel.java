@@ -26,15 +26,9 @@ package hzt.physics_animation.framework;
 
 import org.dyn4j.world.World;
 
-import javax.swing.JPanel;
-import java.awt.Canvas;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Toolkit;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
-import java.awt.image.BufferStrategy;
 
 /**
  * A simple framework for building samples.
@@ -55,7 +49,7 @@ public abstract class SimulationPanel extends JPanel {
     private boolean paused;
     private long last;
 
-    protected SimulationPanel(double scale) {
+    protected SimulationPanel(final double scale) {
         this.scale = scale;
         this.world = new World<>();
         this.canvas = new Canvas();
@@ -82,7 +76,7 @@ public abstract class SimulationPanel extends JPanel {
         this.canvas.createBufferStrategy(2);
         // run a separate thread to do active rendering
         // because we don't want to do it on the EDT
-        Thread thread = new Thread(this::startGameLoop);
+        final var thread = new Thread(this::startGameLoop);
         // set the game loop thread to a daemon thread so that
         // it cannot stop the JVM from exiting
         thread.setDaemon(true);
@@ -101,7 +95,7 @@ public abstract class SimulationPanel extends JPanel {
             try {
                 //noinspection BusyWait
                 Thread.sleep(5);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 e.printStackTrace();
                 Thread.currentThread().interrupt();
             }
@@ -114,7 +108,7 @@ public abstract class SimulationPanel extends JPanel {
      */
     private void gameLoop() {
         // get the graphics object to render to
-        Graphics2D graphics2D = (Graphics2D) this.canvas.getBufferStrategy().getDrawGraphics();
+        final var graphics2D = (Graphics2D) this.canvas.getBufferStrategy().getDrawGraphics();
 
         // by default, set (0, 0) to be the center of the screen with the positive x-axis
         // pointing right and the positive y-axis pointing up
@@ -124,13 +118,13 @@ public abstract class SimulationPanel extends JPanel {
         this.clear(graphics2D);
 
         // get the current time
-        long time = System.nanoTime();
+        final var time = System.nanoTime();
         // get the elapsed time from the last iteration
-        long diff = time - this.last;
+        final var diff = time - this.last;
         // set the last time
         this.last = time;
         // convert from nanoseconds to seconds
-        double elapsedTime = diff / NANO_TO_BASE;
+        final var elapsedTime = diff / NANO_TO_BASE;
 
         // render anything about the simulation (will render the World objects)
         this.render(graphics2D);
@@ -144,7 +138,7 @@ public abstract class SimulationPanel extends JPanel {
         graphics2D.dispose();
 
         // blit/flip the buffer
-        BufferStrategy strategy = this.canvas.getBufferStrategy();
+        final var strategy = this.canvas.getBufferStrategy();
         if (!strategy.contentsLost()) {
             strategy.show();
         }
@@ -162,14 +156,14 @@ public abstract class SimulationPanel extends JPanel {
      *
      * @param g the graphics object to render to
      */
-    protected void transform(Graphics2D g) {
-        final int w = this.canvas.getWidth();
-        final int h = this.canvas.getHeight();
+    protected void transform(final Graphics2D g) {
+        final var w = this.canvas.getWidth();
+        final var h = this.canvas.getHeight();
 
         // before we render everything im going to flip the y axis and move the
         // origin to the center (instead of it being in the top left corner)
-        AffineTransform yFlip = AffineTransform.getScaleInstance(1, -1);
-        AffineTransform move = AffineTransform.getTranslateInstance(w / 2D, -h / 2D);
+        final var yFlip = AffineTransform.getScaleInstance(1, -1);
+        final var move = AffineTransform.getTranslateInstance(w / 2D, -h / 2D);
         g.transform(yFlip);
         g.transform(move);
     }
@@ -179,9 +173,9 @@ public abstract class SimulationPanel extends JPanel {
      *
      * @param graphics the graphics object to render to
      */
-    protected void clear(Graphics2D graphics) {
-        final int w = this.canvas.getWidth();
-        final int h = this.canvas.getHeight();
+    protected void clear(final Graphics2D graphics) {
+        final var w = this.canvas.getWidth();
+        final var h = this.canvas.getHeight();
 
         graphics.setColor(Color.WHITE);
         graphics.fillRect(-w / 2, -h / 2, w, h);
@@ -192,14 +186,14 @@ public abstract class SimulationPanel extends JPanel {
      *
      * @param graphics the graphics object to render to
      */
-    protected void render(Graphics2D graphics) {
+    protected void render(final Graphics2D graphics) {
         graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
         graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
         // draw all the objects in the world
-        for (int i = 0; i < this.world.getBodyCount(); i++) {
+        for (var i = 0; i < this.world.getBodyCount(); i++) {
             // get the object
-            SimulationBody body = this.world.getBody(i);
+            final var body = this.world.getBody(i);
             body.render(graphics, this.scale);
         }
     }
@@ -210,7 +204,7 @@ public abstract class SimulationPanel extends JPanel {
      * @param g           the graphics object to render to
      * @param elapsedTime the elapsed time from the last update
      */
-    protected void update(Graphics2D g, double elapsedTime) {
+    protected void update(final Graphics2D g, final double elapsedTime) {
         this.world.update(elapsedTime);
     }
 

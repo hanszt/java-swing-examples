@@ -1,4 +1,4 @@
-module SwingExamples{
+module SwingExamples {
 
     requires java.desktop;
     requires org.slf4j;
@@ -7,5 +7,4 @@ module SwingExamples{
     requires org.dyn4j;
     requires hipster.core;
     requires org.jetbrains.annotations;
-
 }

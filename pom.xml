@@ -10,18 +10,20 @@
     <version>1.0-SNAPSHOT</version>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--dependencies-->
-        <junit.jupiter.version>5.8.2</junit.jupiter.version>
         <dyn4j.version>4.2.1</dyn4j.version>
+        <annotations.version>24.0.1</annotations.version>
         <hipster-core.version>1.0.1</hipster-core.version>
-        <logback-classic.version>1.2.11</logback-classic.version>
-        <hzt.utils.version>0.7.5.17</hzt.utils.version>
+        <logback-classic.version>1.5.3</logback-classic.version>
+        <hzt.utils.version>1.0.3.21</hzt.utils.version>
+        <!--test dependencies-->
+        <junit.jupiter.version>5.10.1</junit.jupiter.version>
         <!--plugins-->
-        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
     </properties>
 
     <dependencies>
@@ -59,7 +61,21 @@
             <artifactId>swing-utils</artifactId>
             <version>${hzt.utils.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>${annotations.version}</version>
+        </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>local-project-maven-repo</id>
+            <!--https://stackoverflow.com/questions/3084629/finding-the-root-directory-of-a-multi-module-maven-reactor-project-->
+            <!--suppress MavenModelInspection -->
+            <url>file:///${maven.multiModuleProjectDirectory}/_local-mvn-repo</url>
+        </repository>
+    </repositories>
 
     <build>
         <plugins>

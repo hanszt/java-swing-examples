@@ -18,28 +18,20 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSpinner;
-import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
-import javax.swing.Timer;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
-import java.awt.Point;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static es.usc.citius.hipster.algorithm.Hipster.*;
+import static es.usc.citius.hipster.algorithm.Hipster.createAStar;
+import static es.usc.citius.hipster.algorithm.Hipster.createBellmanFord;
+import static es.usc.citius.hipster.algorithm.Hipster.createBreadthFirstSearch;
+import static es.usc.citius.hipster.algorithm.Hipster.createDepthFirstSearch;
+import static es.usc.citius.hipster.algorithm.Hipster.createDijkstra;
+import static es.usc.citius.hipster.algorithm.Hipster.createIDAStar;
 
 /**
  * @author Pablo Rodríguez Mier <<a href="mailto:pablo.rodriguez.mier@usc.es">pablo.rodriguez.mier@usc.es</a>>
@@ -102,7 +94,7 @@ public class ASCIIMazeVisualizer {
         comboMazes.addActionListener(e -> loadSelectedMaze(frame));
     }
 
-    private void startAnimation(ActionEvent e) {
+    private void startAnimation(final ActionEvent e) {
         switch (appState) {
             case STARTED -> pause();
             case STOPPED -> start();
@@ -110,21 +102,21 @@ public class ASCIIMazeVisualizer {
         }
     }
 
-    private void stopAnimation(ActionEvent e) {
+    private void stopAnimation(final ActionEvent e) {
         stop();
         mazeTextArea.setText(asciiMaze());
     }
 
     private enum State {STOPPED, STARTED, PAUSED}
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
-        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {
+        } catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {
             LOGGER.error("Error on startup: ", ex);
         }
 
-        JFrame frame = new JFrame("Hipster Maze Shortest Path Visualizer V2");
+        final var frame = new JFrame("Hipster Maze Shortest Path Visualizer V2");
         final var asciiMazeVisualizer = new ASCIIMazeVisualizer(frame);
         asciiMazeVisualizer.begin();
         frame.setContentPane(asciiMazeVisualizer.mainPanel);
@@ -142,7 +134,7 @@ public class ASCIIMazeVisualizer {
         timer.start();
     }
 
-    private void loadSelectedMaze(JFrame frame) {
+    private void loadSelectedMaze(final JFrame frame) {
         mazeTextArea.setText(asciiMaze());
         // Resize to adapt the window
         frame.pack();
@@ -160,7 +152,7 @@ public class ASCIIMazeVisualizer {
         steps = 0;
         try {
             maze = new Maze2D(SPLITTER.split(mazeTextArea.getText()));
-        } catch (IllegalArgumentException ex) {
+        } catch (final IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(mainFrame, ex.getMessage() + ". Try to reset the map.",
                     "Maze parse exception", JOptionPane.ERROR_MESSAGE);
             return;
@@ -183,7 +175,7 @@ public class ASCIIMazeVisualizer {
         appState = State.PAUSED;
     }
 
-    private void updateFrame(ActionEvent e) {
+    private void updateFrame(final ActionEvent e) {
         if (realtimePrintingCheckBox.isSelected() && appState == State.STARTED) {
             executeSearchStep();
         }
@@ -199,7 +191,7 @@ public class ASCIIMazeVisualizer {
                     Thread.sleep(100);
                     Thread.yield();
                 }
-            } catch (InterruptedException ex) {
+            } catch (final InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
         }
@@ -207,7 +199,7 @@ public class ASCIIMazeVisualizer {
 
     private synchronized void executeSearchStep() {
         if (algorithmIterator.hasNext()) {
-            Node<?, Point, ?> node = algorithmIterator.next();
+            final var node = algorithmIterator.next();
             steps++;
             explored.add(node.state());
             if (realtimePrintingCheckBox.isSelected()) {
@@ -224,33 +216,33 @@ public class ASCIIMazeVisualizer {
 
 
     private synchronized void updateVisualizer(@NotNull final Node<?, Point, ?> node,
-                                               @NotNull Maze2D maze,
-                                               @NotNull SetX<Point> explored) {
-        ListX<Point> statePath = Sequence.of(node.path())
+                                               @NotNull final Maze2D maze,
+                                               @NotNull final SetX<Point> explored) {
+        final var statePath = Sequence.of(node.path())
                 .map(Node::state)
                 .toListX();
 
-        String mazeStr = getMazeStringSolution(maze, explored, statePath);
+        final var mazeStr = getMazeStringSolution(maze, explored, statePath);
         mazeTextArea.setText(mazeStr);
         // Update the status bar
         SwingUtilities.invokeLater(() -> printCost(node));
     }
 
-    private static String getMazeStringSolution(Maze2D maze, SetX<Point> explored, ListX<Point> path) {
+    private static String getMazeStringSolution(final Maze2D maze, final SetX<Point> explored, final ListX<Point> path) {
         return maze.getReplacedMazeString(List.of(
                 explored.toMutableMap(It::self, point -> '.'),
                 path.toMutableMap(It::self, point -> '*')));
     }
 
-    private void printCost(Node<?, Point, ?> node) {
+    private void printCost(final Node<?, Point, ?> node) {
         labelSteps.setText(Integer.toString(steps));
-        if (node instanceof CostNode<?, ?, ?, ?> costNode) {
+        if (node instanceof final CostNode<?, ?, ?, ?> costNode) {
             labelCost.setText(new DecimalFormat("#.00").format(costNode.getCost()));
         }
     }
 
 
-    private Algorithm<Void, Point, WeightedNode<Void, Point, Double>> createAlgorithm(Maze2D maze) {
+    private Algorithm<Void, Point, WeightedNode<Void, Point, Double>> createAlgorithm(final Maze2D maze) {
         return switch (comboAlgorithm.getSelectedIndex()) {
             case 0 -> createDepthFirstSearch(buildSearchProblem(maze, false));
             case 1 -> createBreadthFirstSearch(buildSearchProblem(maze, false));
@@ -285,19 +277,19 @@ public class ASCIIMazeVisualizer {
                 .build();
     }
 
-    private static Sequence<Transition<Void, Point>> createTransitions(Maze2D maze, Point start) {
+    private static Sequence<Transition<Void, Point>> createTransitions(final Maze2D maze, final Point start) {
         return Sequence.of(maze.validLocationsFrom(start))
                 .map(current -> Transition.create(start, current));
     }
 
-    private static double calculateDistance(Transition<Void, Point> transition) {
-        Point source = transition.getFromState();
-        Point destination = transition.getState();
-        double distance = source.distance(destination);
+    private static double calculateDistance(final Transition<Void, Point> transition) {
+        final var source = transition.getFromState();
+        final var destination = transition.getState();
+        final var distance = source.distance(destination);
         return rounded(distance);
     }
 
-    private static double rounded(double distance) {
+    private static double rounded(final double distance) {
         return Math.round(distance * 1e5) / 1e5;
     }
 }

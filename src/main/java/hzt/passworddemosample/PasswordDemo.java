@@ -33,18 +33,8 @@ package hzt.passworddemosample;
 
 import org.hzt.swing_utils.function.window_listeners.WindowActivatedListener;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPasswordField;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Base64;
@@ -59,7 +49,7 @@ public class PasswordDemo {
     private final JFrame controllingFrame;
     private final JPasswordField passwordField;
 
-    public PasswordDemo(JFrame frame) {
+    public PasswordDemo(final JFrame frame) {
         //Use the default FlowLayout.
         this.controllingFrame = frame;
         passwordField = new JPasswordField(10);
@@ -69,16 +59,16 @@ public class PasswordDemo {
         passwordField.setActionCommand(OK);
         passwordField.addActionListener(this::checkEnteredPassword);
 
-        JLabel label = new JLabel("Enter the password: ");
+        final var label = new JLabel("Enter the password: ");
         label.setLabelFor(passwordField);
 
-        JComponent buttonPane = createButtonPanel();
+        final var buttonPane = createButtonPanel();
 
         //Lay out everything.
-        JPanel textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+        final var textPane = new JPanel(new FlowLayout(FlowLayout.TRAILING));
         textPane.add(label);
         textPane.add(passwordField);
-        JPanel passwordPanel = new JPanel();
+        final var passwordPanel = new JPanel();
         passwordPanel.add(textPane);
         passwordPanel.add(buttonPane);
         return passwordPanel;
@@ -91,9 +81,9 @@ public class PasswordDemo {
     }
 
     protected final JComponent createButtonPanel() {
-        JPanel p = new JPanel(new GridLayout(0, 1));
-        JButton okButton = new JButton("OK");
-        JButton helpButton = new JButton("Help");
+        final var p = new JPanel(new GridLayout(0, 1));
+        final var okButton = new JButton("OK");
+        final var helpButton = new JButton("Help");
 
         okButton.setActionCommand(OK);
         helpButton.setActionCommand(HELP);
@@ -106,11 +96,11 @@ public class PasswordDemo {
         return p;
     }
 
-    public void checkEnteredPassword(ActionEvent e) {
-        String cmd = e.getActionCommand();
+    public void checkEnteredPassword(final ActionEvent e) {
+        final var cmd = e.getActionCommand();
 
         if (OK.equals(cmd)) { //Process the password.
-            char[] input = passwordField.getPassword();
+            final var input = passwordField.getPassword();
             if (isPasswordCorrect(input)) {
                 JOptionPane.showMessageDialog(controllingFrame,
                         "Success! You typed the right password.");
@@ -141,8 +131,8 @@ public class PasswordDemo {
      * After this method returns, you should invoke eraseArray
      * on the passed-in array.
      */
-    private static boolean isPasswordCorrect(char[] input) {
-        byte[] correctPasswordEncoded = {89, 110, 86, 110, 89, 87, 74, 118, 98, 119, 61, 61};
+    private static boolean isPasswordCorrect(final char[] input) {
+        final byte[] correctPasswordEncoded = {89, 110, 86, 110, 89, 87, 74, 118, 98, 119, 61, 61};
         final var decoded = new String(Base64.getDecoder().decode(correctPasswordEncoded));
         return Arrays.equals(input, decoded.toCharArray());
     }
@@ -159,11 +149,11 @@ public class PasswordDemo {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("PasswordDemo");
+        final var frame = new JFrame("PasswordDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
-        final PasswordDemo passwordDemo = new PasswordDemo(frame);
+        final var passwordDemo = new PasswordDemo(frame);
         final var contentPane = passwordDemo.buildContentPane();
         contentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(contentPane);
@@ -176,7 +166,7 @@ public class PasswordDemo {
         frame.setVisible(true);
     }
 
-        public static void main(String[] args) {
+        public static void main(final String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(PasswordDemo::run);

@@ -33,50 +33,43 @@ package hzt.textareasample;
 
 import org.hzt.swing_utils.function.document_listeners.InsertUpdateListener;
 
-import javax.swing.AbstractAction;
-import javax.swing.ActionMap;
-import javax.swing.GroupLayout;
+import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.GroupLayout.ParallelGroup;
-import javax.swing.GroupLayout.SequentialGroup;
-import javax.swing.InputMap;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.KeyStroke;
-import javax.swing.LayoutStyle;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.WindowConstants;
 import javax.swing.event.DocumentEvent;
 import javax.swing.text.BadLocationException;
 import java.awt.event.ActionEvent;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
-public class TextAreaDemo {
+public final class TextAreaDemo {
 
     public static final int MINIMUM_NR_OF_CHARS = 2;
     private static final String COMMIT_ACTION = "commit";
 
     private enum Mode {INSERT, COMPLETION}
 
-    private final JFrame frame;
-    private final JTextArea textArea;
-    private final List<String> dictionaryWords;
+    private final JFrame frame = new JFrame("TextAreaDemo");
+
+    private final JTextArea textArea = new JTextArea();
+    private final List<String> dictionaryWords = List.of("spark", "special", "spectacles", "spectacular", "swimming", "swing");
     private Mode mode = Mode.INSERT;
 
     public TextAreaDemo() {
-        frame = new JFrame("TextAreaDemo");
-        this.textArea = new JTextArea();
         initComponents();
-        InputMap inputMap = textArea.getInputMap();
-        ActionMap actionMap = textArea.getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
-        actionMap.put(COMMIT_ACTION, new CommitAction());
-        dictionaryWords = List.of("spark", "special", "spectacles", "spectacular", "swimming", "swing");
+        textArea.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), COMMIT_ACTION);
+        textArea.getActionMap().put(COMMIT_ACTION, new AbstractAction() {
+            @Override
+            public void actionPerformed(final ActionEvent ev) {
+                if (mode == Mode.COMPLETION) {
+                    final var pos = textArea.getSelectionEnd();
+                    textArea.insert(" ", pos);
+                    textArea.setCaretPosition(pos + 1);
+                    mode = Mode.INSERT;
+                } else {
+                    textArea.replaceSelection(String.format("%n"));
+                }
+            }
+        });
     }
 
     private void initComponents() {
@@ -87,10 +80,10 @@ public class TextAreaDemo {
         textArea.setWrapStyleWord(true);
         textArea.getDocument().addDocumentListener((InsertUpdateListener) this::lookForMatchingWord);
 
-        JLabel label = new JLabel("Try typing 'spectacular' or 'Swing'...");
-        JScrollPane jScrollPane = new JScrollPane(textArea);
+        final var label = new JLabel("Try typing 'spectacular' or 'Swing'...");
+        final var jScrollPane = new JScrollPane(textArea);
 
-        GroupLayout layout = new GroupLayout(frame.getContentPane());
+        final var layout = new GroupLayout(frame.getContentPane());
         frame.getContentPane().setLayout(layout);
 
         configureHorizontalLayout(label, jScrollPane, layout);
@@ -98,113 +91,87 @@ public class TextAreaDemo {
         frame.pack();
     }
 
-    private void lookForMatchingWord(DocumentEvent ev) {
+    private void lookForMatchingWord(final DocumentEvent ev) {
         if (ev.getLength() == 1) {
-            int textCursorPosition = ev.getOffset();
+            final var textCursorPosition = ev.getOffset();
             lookForMatchingWordInDictionary(textCursorPosition);
         }
     }
 
-    private static void configureHorizontalLayout(JLabel label, JScrollPane jScrollPane, GroupLayout layout) {
-        ParallelGroup scrollPaneGroup = layout.createParallelGroup(Alignment.TRAILING);
+    private static void configureHorizontalLayout(final JLabel label, final JScrollPane jScrollPane, final GroupLayout layout) {
+        final var scrollPaneGroup = layout.createParallelGroup(Alignment.TRAILING);
         scrollPaneGroup.addComponent(jScrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
         scrollPaneGroup.addComponent(label, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 212, Short.MAX_VALUE);
 
-        SequentialGroup sequentialGroup = layout.createSequentialGroup();
+        final var sequentialGroup = layout.createSequentialGroup();
         sequentialGroup.addContainerGap();
         sequentialGroup.addGroup(scrollPaneGroup);
         sequentialGroup.addContainerGap();
 
-        ParallelGroup horizontalGroup = layout.createParallelGroup(Alignment.LEADING);
+        final var horizontalGroup = layout.createParallelGroup(Alignment.LEADING);
         horizontalGroup.addGroup(Alignment.TRAILING, sequentialGroup);
         layout.setHorizontalGroup(horizontalGroup);
     }
 
-    private static void configureVerticalLayout(JScrollPane jScrollPane, GroupLayout layout, JLabel label) {
-        SequentialGroup group = layout.createSequentialGroup();
+    private static void configureVerticalLayout(final JScrollPane jScrollPane, final GroupLayout layout, final JLabel label) {
+        final var group = layout.createSequentialGroup();
         group.addContainerGap();
         group.addComponent(label);
         group.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED);
         group.addComponent(jScrollPane, GroupLayout.DEFAULT_SIZE, 100, Short.MAX_VALUE);
         group.addContainerGap();
 
-        ParallelGroup verticalGroup = layout.createParallelGroup(Alignment.LEADING);
+        final var verticalGroup = layout.createParallelGroup(Alignment.LEADING);
         verticalGroup.addGroup(group);
 
         layout.setVerticalGroup(verticalGroup);
     }
 
-    private void lookForMatchingWordInDictionary(int textCursorPosition) {
+    private void lookForMatchingWordInDictionary(final int textCursorPosition) {
         try {
-            String content = textArea.getText(0, textCursorPosition + 1);
-            int wordStartPosition = startOfWord(textCursorPosition, content);
+            final var content = textArea.getText(0, textCursorPosition + 1);
+            final var wordStartPosition = startOfWord(textCursorPosition, content);
             if (textCursorPosition - wordStartPosition >= MINIMUM_NR_OF_CHARS) {
-                String prefix = content.substring(wordStartPosition + 1).toLowerCase();
+                final var prefix = content.substring(wordStartPosition + 1).toLowerCase();
                 tryToFindMatch(textCursorPosition, wordStartPosition, prefix);
             }
-        } catch (BadLocationException e) {
+        } catch (final BadLocationException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
-    private void tryToFindMatch(int textCursorPosition, int wordStartPosition, String prefix) {
-        int negativeIndex = Collections.binarySearch(dictionaryWords, prefix);
+    private void tryToFindMatch(final int textCursorPosition, final int wordStartPosition, final String prefix) {
+        final var negativeIndex = Collections.binarySearch(dictionaryWords, prefix);
         if (negativeIndex < 0 && -negativeIndex <= dictionaryWords.size()) {
-            String match = dictionaryWords.get(-negativeIndex - 1);
+            final var match = dictionaryWords.get(-negativeIndex - 1);
             if (match.startsWith(prefix)) {
                 // A completion is found
-                String completion = match.substring(textCursorPosition - wordStartPosition);
+                final var completion = match.substring(textCursorPosition - wordStartPosition);
                 // We cannot modify Document from within notification,
                 // so we submit a task that does the change later
-                SwingUtilities.invokeLater(new CompletionTask(completion, ++textCursorPosition));
+                SwingUtilities.invokeLater(() -> complete(completion, textCursorPosition + 1));
             }
         } else {
             mode = Mode.INSERT;
         }
     }
 
-    private static int startOfWord(int textCursorPosition, String content) {
-        int result = textCursorPosition;
+    private void complete(final String completion, final int position) {
+        textArea.insert(completion, position);
+        textArea.setCaretPosition(position + completion.length());
+        textArea.moveCaretPosition(position);
+        mode = Mode.COMPLETION;
+    }
+
+    private static int startOfWord(final int textCursorPosition, final String content) {
+        var result = textCursorPosition;
         while (result >= 0) {
-            if (!Character.isLetter(Objects.requireNonNull(content).charAt(result))) {
+            if (!Character.isLetter(content.charAt(result))) {
                 break;
             }
             result--;
         }
         return result;
-    }
-
-    private class CompletionTask implements Runnable {
-
-        String completion;
-        int position;
-
-        CompletionTask(String completion, int position) {
-            this.completion = completion;
-            this.position = position;
-        }
-
-        public void run() {
-            textArea.insert(completion, position);
-            textArea.setCaretPosition(position + completion.length());
-            textArea.moveCaretPosition(position);
-            mode = Mode.COMPLETION;
-        }
-
-    }
-
-    private class CommitAction extends AbstractAction {
-
-        public void actionPerformed(ActionEvent ev) {
-            if (mode == Mode.COMPLETION) {
-                int pos = textArea.getSelectionEnd();
-                textArea.insert(" ", pos);
-                textArea.setCaretPosition(pos + 1);
-                mode = Mode.INSERT;
-            } else {
-                textArea.replaceSelection(String.format("%n"));
-            }
-        }
     }
 
     private static void run() {
@@ -214,7 +181,7 @@ public class TextAreaDemo {
         textAreaDemo.frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         SwingUtilities.invokeLater(TextAreaDemo::run);
     }
 

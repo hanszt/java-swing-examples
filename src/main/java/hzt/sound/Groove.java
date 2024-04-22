@@ -17,15 +17,7 @@ import javax.sound.midi.Sequence;
 import javax.sound.midi.Sequencer;
 import javax.sound.midi.ShortMessage;
 import javax.sound.midi.Track;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
+import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
@@ -34,13 +26,8 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.TableModelEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -128,7 +115,7 @@ public final class Groove implements ControlContext {
     public Groove() {
         mainPanel = new JPanel();
         mainPanel.setLayout(new BorderLayout(5, 0));
-        EmptyBorder emptyBorder = new EmptyBorder(5, 5, 5, 5);
+        final var emptyBorder = new EmptyBorder(5, 5, 5, 5);
         mainPanel.setBorder(emptyBorder);
 
         for (int i = 0, id = 35; i < instruments.length; i++, id++) {
@@ -137,47 +124,47 @@ public final class Groove implements ControlContext {
 
         dataModel = new DataModel();
 
-        DefaultTableCellRenderer renderer = new DefaultTableCellRenderer() {
+        final var renderer = new DefaultTableCellRenderer() {
             @Override
-            public void setValue(Object value) {
+            public void setValue(final Object value) {
                 setBackground((Color) value);
             }
         };
 
         table = new JTable(dataModel);
         table.getColumn(names[0]).setMinWidth(120);
-        TableColumnModel tcm = table.getColumnModel();
-        for (int i = 1; i < names.length; i++) {
+        final var tcm = table.getColumnModel();
+        for (var i = 1; i < names.length; i++) {
             tcm.getColumn(i).setCellRenderer(renderer);
         }
 
         // Listener for row changes
-        ListSelectionModel listSelectionModel = table.getSelectionModel();
+        var listSelectionModel = table.getSelectionModel();
         listSelectionModel.addListSelectionListener(this::updateRowBySelectionIndex);
         // Listener for column changes
         listSelectionModel = table.getColumnModel().getSelectionModel();
         listSelectionModel.addListSelectionListener(this::updateColor);
 
-        JPanel rightPanel = new JPanel();
+        final var rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        SoftBevelBorder sbb = new SoftBevelBorder(BevelBorder.RAISED);
+        final var sbb = new SoftBevelBorder(BevelBorder.RAISED);
         rightPanel.setBorder(new CompoundBorder(sbb, emptyBorder));
         rightPanel.add(tempoDial);
         rightPanel.add(Box.createVerticalStrut(10));
 
-        JPanel leftPanel = new JPanel(new GridLayout(0, 1, 2, 10));
-        final Color background = mainPanel.getBackground();
+        final var leftPanel = new JPanel(new GridLayout(0, 1, 2, 10));
+        final var background = mainPanel.getBackground();
         startButton = makeButton(START, background);
         startButton.addActionListener(e -> start(startButton));
         loopButton = makeButton("Loop", background);
         loopButton.addActionListener(e -> loop(loopButton));
         leftPanel.add(startButton);
         leftPanel.add(loopButton);
-        final JButton clearButton = makeButton("Clear Table", background);
+        final var clearButton = makeButton("Clear Table", background);
         clearButton.addActionListener(this::clear);
         leftPanel.add(clearButton);
 
-        JComboBox<String> combo = new JComboBox<>();
+        final var combo = new JComboBox<String>();
         combo.addActionListener(e -> selectBeat(combo));
         combo.addItem(ROCK_BEAT_1);
         combo.addItem(ROCK_BEAT_2);
@@ -200,28 +187,28 @@ public final class Groove implements ControlContext {
             return data.size();
         }
 
-        public Object getValueAt(int row, int col) {
-            final Data d = Groove.this.data.get(row);
+        public Object getValueAt(final int row, final int col) {
+            final var d = Groove.this.data.get(row);
             return col == 0 ? d.name : d.staff[col - 1];
         }
 
         @Override
-        public String getColumnName(int col) {
+        public String getColumnName(final int col) {
             return names[col];
         }
 
         @Override
-        public Class<?> getColumnClass(int c) {
+        public Class<?> getColumnClass(final int c) {
             return getValueAt(0, c).getClass();
         }
 
         @Override
-        public boolean isCellEditable(int row, int col) {
+        public boolean isCellEditable(final int row, final int col) {
             return col != 0;
         }
 
         @Override
-        public void setValueAt(Object aValue, int row, int col) {
+        public void setValueAt(final Object aValue, final int row, final int col) {
             if (col == 0) {
                 (data.get(row)).name = (String) aValue;
             } else {
@@ -230,20 +217,20 @@ public final class Groove implements ControlContext {
         }
     }
 
-    private void updateColor(ListSelectionEvent e) {
-        ListSelectionModel sm = (ListSelectionModel) e.getSource();
+    private void updateColor(final ListSelectionEvent e) {
+        final var sm = (ListSelectionModel) e.getSource();
         if (!sm.isSelectionEmpty()) {
             col = sm.getMinSelectionIndex();
         }
         if (col != 0) {
-            final Color[] staff = (data.get(row)).staff;
+            final var staff = (data.get(row)).staff;
             staff[col - 1] = staff[col - 1].equals(Color.white) ? Color.black : Color.white;
             table.tableChanged(new TableModelEvent(dataModel));
         }
     }
 
-    private void updateRowBySelectionIndex(ListSelectionEvent e) {
-        ListSelectionModel sm = (ListSelectionModel) e.getSource();
+    private void updateRowBySelectionIndex(final ListSelectionEvent e) {
+        final var sm = (ListSelectionModel) e.getSource();
         if (!sm.isSelectionEmpty()) {
             row = sm.getMinSelectionIndex();
         }
@@ -254,7 +241,7 @@ public final class Groove implements ControlContext {
         try {
             sequencer = MidiSystem.getSequencer();
             sequencer.open();
-        } catch (MidiUnavailableException e) {
+        } catch (final MidiUnavailableException e) {
             LOGGER.error("Could not open sequencer", e);
         }
         tempoDial.setSequencer(sequencer);
@@ -273,8 +260,8 @@ public final class Groove implements ControlContext {
     }
 
 
-    private static JButton makeButton(String bName, Color c) {
-        JButton button = new JButton(bName);
+    private static JButton makeButton(final String bName, final Color c) {
+        final var button = new JButton(bName);
         button.setBackground(c);
         return button;
     }
@@ -282,7 +269,7 @@ public final class Groove implements ControlContext {
 
     private void buildTrackThenStartSequencer() {
         try {
-            Sequence sequence = new Sequence(Sequence.PPQ, 4);
+            final var sequence = new Sequence(Sequence.PPQ, 4);
             track = sequence.createTrack();
             createEvent(PROGRAM, 1, 0);
             buildTrack();
@@ -291,7 +278,7 @@ public final class Groove implements ControlContext {
 
             // set and start the sequencer.
             sequencer.setSequence(sequence);
-        } catch (InvalidMidiDataException e) {
+        } catch (final InvalidMidiDataException e) {
             LOGGER.error("", e);
         }
         sequencer.start();
@@ -300,9 +287,9 @@ public final class Groove implements ControlContext {
     }
 
     private void buildTrack() {
-        for (Data d : data) {
-            final Color[] staff = d.staff;
-            for (int j = 0; j < staff.length; j++) {
+        for (final var d : data) {
+            final var staff = d.staff;
+            for (var j = 0; j < staff.length; j++) {
                 if (staff[j].equals(Color.black)) {
                     createEvent(NOTE_ON, d.id, j);
                     createEvent(NOTE_OFF, d.id, j + 1L);
@@ -312,7 +299,7 @@ public final class Groove implements ControlContext {
     }
 
 
-    private void presetTracks(String trackType) {
+    private void presetTracks(final String trackType) {
         clearTable();
 
         switch (trackType) {
@@ -325,56 +312,56 @@ public final class Groove implements ControlContext {
     }
 
     private void configureRockBeat3() {
-        final int HAND_CLAP = 39;
-        final int LO_TOM = 45;
-        final int HI_TOM = 50;
-        final int RIDE_BELL = 53;
-        for (int i = 0; i < 16; i += 4) {
+        final var HAND_CLAP = 39;
+        final var LO_TOM = 45;
+        final var HI_TOM = 50;
+        final var RIDE_BELL = 53;
+        for (var i = 0; i < 16; i += 4) {
             setCell(RIDE_BELL, i);
         }
-        for (int i = 2; i < 16; i += 4) {
+        for (var i = 2; i < 16; i += 4) {
             setCell(PEDAL_HIHAT, i);
         }
         setCell(HAND_CLAP, 4);
         setCell(HAND_CLAP, 12);
         setCell(HI_TOM, 13);
         setCell(LO_TOM, 14);
-        int[] bass3 = {0, 3, 6, CHAN, 15};
-        for (int j : bass3) {
+        final var bass3 = new int[]{0, 3, 6, CHAN, 15};
+        for (final var j : bass3) {
             setCell(ACOUSTIC_BASS + 1, j);
         }
     }
 
     private void configureRockBeat2() {
-        final int CRASH_CYMBAL1 = 49;
-        for (int i = 0; i < 16; i += 4) {
+        final var CRASH_CYMBAL1 = 49;
+        for (var i = 0; i < 16; i += 4) {
             setCell(CRASH_CYMBAL1, i);
         }
-        for (int i = 0; i < 16; i += 2) {
+        for (var i = 0; i < 16; i += 2) {
             setCell(PEDAL_HIHAT, i);
         }
         setCell(ACOUSTIC_SNARE, 4);
         setCell(ACOUSTIC_SNARE, 12);
-        int[] bass2 = {0, 2, 3, 7, CHAN, 10, 15};
-        for (int j : bass2) {
+        final var bass2 = new int[]{0, 2, 3, 7, CHAN, 10, 15};
+        for (final var j : bass2) {
             setCell(ACOUSTIC_BASS, j);
         }
     }
 
     private void configureRockBeat1() {
-        for (int i = 0; i < 16; i += 2) {
+        for (var i = 0; i < 16; i += 2) {
             setCell(CLOSED_HIHAT, i);
         }
         setCell(ACOUSTIC_SNARE, 4);
         setCell(ACOUSTIC_SNARE, 12);
-        int[] bass1 = {0, 3, 6, 8};
-        for (int j : bass1) {
+        final var bass1 = new int[]{0, 3, 6, 8};
+        for (final var j : bass1) {
             setCell(ACOUSTIC_BASS, j);
         }
     }
 
 
-    private void setCell(int id, int tick) {
+    private void setCell(final int id, final int tick) {
         data.stream()
                 .filter(d -> d.id == id)
                 .findFirst()
@@ -383,27 +370,27 @@ public final class Groove implements ControlContext {
 
 
     private void clearTable() {
-        for (Data d : data) {
+        for (final var d : data) {
             Arrays.fill(d.staff, Color.white);
         }
     }
 
 
-    private void createEvent(int type, int num, long tick) {
-        ShortMessage message = new ShortMessage();
+    private void createEvent(final int type, final int num, final long tick) {
+        final var message = new ShortMessage();
         try {
-            int velocity = 100;
+            final var velocity = 100;
             message.setMessage(type, Groove.CHAN, num, velocity);
-            MidiEvent event = new MidiEvent(message, tick);
+            final var event = new MidiEvent(message, tick);
             track.add(event);
-        } catch (InvalidMidiDataException e) {
+        } catch (final InvalidMidiDataException e) {
             LOGGER.error("Invalid midi data", e);
         }
     }
 
 
-    public void startSequencerAndSetTempo(MetaMessage message) {
-        final int END_OF_TRACK = 47;
+    public void startSequencerAndSetTempo(final MetaMessage message) {
+        final var END_OF_TRACK = 47;
         if (message.getType() == END_OF_TRACK) {
             if (loopButton.getBackground().equals(Color.gray)) {
                 if (sequencer != null && sequencer.isOpen()) {
@@ -416,7 +403,7 @@ public final class Groove implements ControlContext {
         }
     }
 
-    private void selectBeat(JComboBox<String> beatComboBox) {
+    private void selectBeat(final JComboBox<String> beatComboBox) {
         presetTracks((String) Objects.requireNonNull(beatComboBox.getSelectedItem()));
         if (startButton.getText().startsWith(STOP)) {
             sequencer.stop();
@@ -424,7 +411,7 @@ public final class Groove implements ControlContext {
         }
     }
 
-    private void start(JButton startButton) {
+    private void start(final JButton startButton) {
         if (startButton.getText().startsWith(START)) {
             buildTrackThenStartSequencer();
             startButton.setText(STOP);
@@ -434,7 +421,7 @@ public final class Groove implements ControlContext {
         }
     }
 
-    private void loop(JButton button) {
+    private void loop(final JButton button) {
         button.setSelected(!button.isSelected());
         if (loopButton.getBackground().equals(Color.gray)) {
             loopButton.setBackground(mainPanel.getBackground());
@@ -443,7 +430,7 @@ public final class Groove implements ControlContext {
         }
     }
 
-    private void clear(ActionEvent e) {
+    private void clear(final ActionEvent e) {
         clearTable();
         table.tableChanged(new TableModelEvent(dataModel));
     }
@@ -457,7 +444,7 @@ public final class Groove implements ControlContext {
         private final int id;
         private final Color[] staff = new Color[16];
 
-        public Data(String name, int id) {
+        public Data(final String name, final int id) {
             this.name = name;
             this.id = id;
             Arrays.fill(staff, Color.white);
@@ -465,9 +452,9 @@ public final class Groove implements ControlContext {
     }
 
 
-    public static void main(String[] args) {
-        final Groove groove = new Groove();
-        JFrame frame = new JFrame("Rhythm Groove Box");
+    public static void main(final String[] args) {
+        final var groove = new Groove();
+        final var frame = new JFrame("Rhythm Groove Box");
         frame.addWindowListener(new WindowAdapter() {
             @Override
             @SuppressWarnings("all")
@@ -477,9 +464,9 @@ public final class Groove implements ControlContext {
         });
         frame.getContentPane().add("Center", groove.mainPanel);
         frame.pack();
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        int w = 640;
-        int h = 440;
+        final var screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        final var w = 640;
+        final var h = 440;
         frame.setLocation(screenSize.width / 2 - w / 2, screenSize.height / 2 - h / 2);
         frame.setSize(w, h);
         frame.setVisible(true);

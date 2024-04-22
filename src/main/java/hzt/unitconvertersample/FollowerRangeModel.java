@@ -42,14 +42,14 @@ package hzt.unitconvertersample;
  * from the source model (or set in the follower model) to be in
  * a different unit of measure.
  */
-public class FollowerRangeModel extends ConverterRangeModel {
+public final class FollowerRangeModel extends ConverterRangeModel {
 
     private final ConverterRangeModel sourceModel; //the real model
 
     /**
      * Creates a FollowerRangeModel that gets its state from sourceModel.
      */
-    public FollowerRangeModel(ConverterRangeModel sourceModel) {
+    public FollowerRangeModel(final ConverterRangeModel sourceModel) {
         this.sourceModel = sourceModel;
         sourceModel.addChangeListener(e -> fireStateChanged());
     }
@@ -58,13 +58,13 @@ public class FollowerRangeModel extends ConverterRangeModel {
 
     @Override
     public int getMaximum() {
-        int modelMax = sourceModel.getMaximum();
-        double multiplyBy = sourceModel.getMultiplier() / this.getMultiplier();
+        final var modelMax = sourceModel.getMaximum();
+        final var multiplyBy = sourceModel.getMultiplier() / this.getMultiplier();
         return (int) (modelMax * multiplyBy);
     }
 
     @Override
-    public void setMaximum(int newMaximum) {
+    public void setMaximum(final int newMaximum) {
         sourceModel.setMaximum((int) (newMaximum * (this.getMultiplier() / sourceModel.getMultiplier())));
     }
 
@@ -74,7 +74,7 @@ public class FollowerRangeModel extends ConverterRangeModel {
     }
 
     @Override
-    public void setValue(int newValue) {
+    public void setValue(final int newValue) {
         setDoubleValue(newValue);
     }
 
@@ -86,17 +86,17 @@ public class FollowerRangeModel extends ConverterRangeModel {
     }
 
     @Override
-    public void setDoubleValue(double newValue) {
+    public void setDoubleValue(final double newValue) {
         sourceModel.setDoubleValue(newValue * this.getMultiplier() / sourceModel.getMultiplier());
     }
 
     @Override
-    public void setRangeProperties(int value,
-                                   int extent,
-                                   int min,
-                                   int max,
-                                   boolean adjusting) {
-        double multiplyBy = this.getMultiplier() / sourceModel.getMultiplier();
+    public void setRangeProperties(final int value,
+                                   final int extent,
+                                   final int min,
+                                   final int max,
+                                   final boolean adjusting) {
+        final var multiplyBy = this.getMultiplier() / sourceModel.getMultiplier();
         sourceModel.setRangeProperties(value * multiplyBy, (int) (max * multiplyBy), adjusting);
     }
 }

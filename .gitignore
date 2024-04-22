@@ -47,3 +47,7 @@ Thumbs.db
 ######################
 target
 logs
+
+## Unignored files #
+####################
+!**/_local-mvn-repo/**/*.jar

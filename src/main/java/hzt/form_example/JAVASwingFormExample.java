@@ -3,17 +3,8 @@ package hzt.form_example;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.WindowConstants;
-import java.awt.Color;
-import java.awt.EventQueue;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class JAVASwingFormExample {
@@ -42,16 +33,16 @@ public class JAVASwingFormExample {
 		initialize();
 	}
 
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		EventQueue.invokeLater(JAVASwingFormExample::run);
 	}
 
 	private static void run() {
-			JAVASwingFormExample application = new JAVASwingFormExample();
+        final var application = new JAVASwingFormExample();
 			application.frame.setVisible(true);
 	}
 
-	private static void occupationComboBoxAction(ActionEvent actionEvent) {
+	private static void occupationComboBoxAction(final ActionEvent actionEvent) {
 		LOGGER.info("Occupation combobox action");
 	}
 
@@ -82,8 +73,8 @@ public class JAVASwingFormExample {
 		configureSubmitButton();
 	}
 
-	private void configureLabel(String text, int labelX, int labelY, int labelWidth) {
-		JLabel sexLabel = new JLabel(text);
+	private void configureLabel(final String text, final int labelX, final int labelY, final int labelWidth) {
+        final var sexLabel = new JLabel(text);
 		sexLabel.setBounds(labelX, labelY, labelWidth, LABEL_HEIGHT);
 		frame.getContentPane().add(sexLabel);
 	}
@@ -94,7 +85,7 @@ public class JAVASwingFormExample {
 		frame.getContentPane().add(addressField);
 	}
 
-	private void configureLabeledTextField(String name, JTextField textField, int y, int textFieldWidth) {
+	private void configureLabeledTextField(final String name, final JTextField textField, final int y, final int textFieldWidth) {
 		configureLabel(name, LABEL_X, y, LABEL_WIDTH);
 		textField.setBounds(TEXT_FIELD_X, y, textFieldWidth, TEXT_FIELD_HEIGHT);
 		textField.setColumns(10);
@@ -102,7 +93,7 @@ public class JAVASwingFormExample {
 	}
 
 	private void configureClearButton() {
-		JButton clearButton = new JButton("Clear");
+        final var clearButton = new JButton("Clear");
 		clearButton.setBounds(312, 387, 89, 23);
 		frame.getContentPane().add(clearButton);
 		clearButton.addActionListener(this::clear);
@@ -128,7 +119,7 @@ public class JAVASwingFormExample {
 		frame.getContentPane().add(occupationComboBox);
 	}
 
-	private void submit(ActionEvent e) {
+	private void submit(final ActionEvent e) {
 		final var textFieldsEmpty = nameTextField.getText().isEmpty() || (phoneNumberField.getText().isEmpty())
 				|| (emailIdField.getText().isEmpty()) || (addressField.getText().isEmpty());
 
@@ -146,13 +137,13 @@ public class JAVASwingFormExample {
 	}
 
 	private void displaySubmittedData() {
-		String message = String.format("Data submitted:%n" +
-				"Name: %s%n" +
-				"Phone number: %s%n" +
-				"Email: %s%n" +
-				"Address: %s%n" +
-				"Sex: %s%n" +
-				"Occupation: %s%n",
+        final var message = String.format("Data submitted:%n" +
+                                          "Name: %s%n" +
+                                          "Phone number: %s%n" +
+                                          "Email: %s%n" +
+                                          "Address: %s%n" +
+                                          "Sex: %s%n" +
+                                          "Occupation: %s%n",
 				nameTextField.getText(), phoneNumberField.getText(), emailIdField.getText(), addressField.getText(),
 				getSex(), occupationComboBox.getSelectedItem());
 		JOptionPane.showMessageDialog(null, message);
@@ -168,7 +159,7 @@ public class JAVASwingFormExample {
 		}
 	}
 
-	private void clear(ActionEvent e) {
+	private void clear(final ActionEvent e) {
 		phoneNumberField.setText(null);
 		emailIdField.setText(null);
 		nameTextField.setText(null);

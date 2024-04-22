@@ -4,18 +4,9 @@ import org.hzt.swing_utils.builders.JSliderBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JSlider;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.*;
 import java.awt.geom.Path2D;
 
 public final class PythagorasTree extends JPanel {
@@ -52,36 +43,36 @@ public final class PythagorasTree extends JPanel {
         setBackground(Color.white);
     }
 
-    private void drawTree(Graphics2D graphics2D, float x1, float y1, float x2, float y2, int depth) {
+    private void drawTree(final Graphics2D graphics2D, final float x1, final float y1, final float x2, final float y2, final int depth) {
         if (depth == treeDepthSilder.getValue()) {
             return;
         }
 
-        float dx = x2 - x1;
-        float dy = y1 - y2;
+        final var dx = x2 - x1;
+        final var dy = y1 - y2;
 
-        float x3 = x2 - dy;
-        float y3 = y2 - dx;
-        float x4 = x1 - dy;
-        float y4 = y1 - dx;
-        float x5 = x4 + (dx - dy) / angleSlider1.getValue();
-        float y5 = y4 - (dx + dy) / angleSlider2.getValue();
+        final var x3 = x2 - dy;
+        final var y3 = y2 - dx;
+        final var x4 = x1 - dy;
+        final var y4 = y1 - dx;
+        final var x5 = x4 + (dx - dy) / angleSlider1.getValue();
+        final var y5 = y4 - (dx + dy) / angleSlider2.getValue();
 
-        Path2D square = new Path2D.Float();
+        final Path2D square = new Path2D.Float();
         square.moveTo(x1, y1);
         square.lineTo(x2, y2);
         square.lineTo(x3, y3);
         square.lineTo(x4, y4);
         square.closePath();
 
-        float hue = 0.15F;
+        final var hue = 0.15F;
         final var hsbColor1 = Color.getHSBColor(hue + depth * 0.02F, 1, 1);
         graphics2D.setColor(hsbColor1);
         graphics2D.fill(square);
         graphics2D.setColor(hsbColor1.darker());
         graphics2D.draw(square);
 
-        Path2D triangle = new Path2D.Float();
+        final Path2D triangle = new Path2D.Float();
         triangle.moveTo(x3, y3);
         triangle.lineTo(x4, y4);
         triangle.lineTo(x5, y5);
@@ -98,22 +89,21 @@ public final class PythagorasTree extends JPanel {
     }
 
     @Override
-    public void paintComponent(Graphics graphics) {
+    public void paintComponent(final Graphics graphics) {
         super.paintComponent(graphics);
         drawTree(graphics);
     }
 
     /**
      * Initial square of tree
-     *
-     *    X----------X
-     *    |          |
-     *    |          |
-     *    |          |
-     *    1----------2
-     *
+     * <p>
+     * X----------X
+     * |          |
+     * |          |
+     * |          |
+     * 1----------2
      */
-    private void drawTree(Graphics graphics) {
+    private void drawTree(final Graphics graphics) {
         final var X1 = (WINDOW_WIDTH / 2F) - (INIT_SQUARE_SIDE_LENGTH / 2F);
         final var Y1 = WINDOW_HEIGHT - 20;
         final var X2 = X1 + INIT_SQUARE_SIDE_LENGTH;
@@ -121,13 +111,13 @@ public final class PythagorasTree extends JPanel {
         drawTree((Graphics2D) graphics, X1, Y1, X2, Y1, 0);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         final var pythagorasTree = new PythagorasTree();
         SwingUtilities.invokeLater(pythagorasTree::run);
     }
 
     private void run() {
-        JFrame frame = new JFrame();
+        final var frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setTitle("Pythagoras Tree");
         frame.setResizable(false);
@@ -152,14 +142,14 @@ public final class PythagorasTree extends JPanel {
         frame.setVisible(true);
     }
 
-    private static void configureSlider(JSlider slider, int majorTickSpacing) {
+    private static void configureSlider(final JSlider slider, final int majorTickSpacing) {
         slider.setPaintLabels(true);
         slider.setMajorTickSpacing(majorTickSpacing);
         slider.setMinorTickSpacing(1);
         slider.setSnapToTicks(true);
     }
 
-    private void drawTreeAfterChange(ChangeEvent e) {
+    private void drawTreeAfterChange(final ChangeEvent e) {
         final var slider = (JSlider) e.getSource();
         if (!slider.getValueIsAdjusting()) {
             paintComponent(getGraphics());

@@ -31,17 +31,8 @@
 
 package hzt.splitpanedividersample;
 
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Optional;
 
 /*
@@ -58,15 +49,15 @@ public class SplitPaneDividerDemo {
     public SplitPaneDividerDemo() {
         mainPanel = new JPanel(new BorderLayout());
 
-        Font font = new Font("Serif", Font.ITALIC, 24);
+        final var font = new Font("Serif", Font.ITALIC, 24);
 
-        ImageIcon icon = createImageIcon("images/Cat.gif").orElseThrow();
-        SizeDisplayer sd1 = SizeDisplayer.with("left", icon);
+        var icon = createImageIcon("images/Cat.gif").orElseThrow();
+        final var sd1 = SizeDisplayer.with("left", icon);
         sd1.setMinimumSize(new Dimension(30,30));
         sd1.setFont(font);
         
         icon = createImageIcon("images/Dog.gif").orElseThrow();
-        SizeDisplayer sd2 = SizeDisplayer.with("right", icon);
+        final var sd2 = SizeDisplayer.with("right", icon);
         sd2.setMinimumSize(new Dimension(60,60));
         sd2.setFont(font);
         
@@ -80,15 +71,15 @@ public class SplitPaneDividerDemo {
     }
 
     private JComponent createControlPanel() {
-        JPanel panel = new JPanel();
-        JButton reset = new JButton("Reset");
+        final var panel = new JPanel();
+        final var reset = new JButton("Reset");
         reset.addActionListener(e -> splitPane.resetToPreferredSizes());
         panel.add(reset);
         return panel;
     }
 
     /** Returns an ImageIcon, or null if the path was invalid. */
-    private static Optional<ImageIcon> createImageIcon(String path) {
+    private static Optional<ImageIcon> createImageIcon(final String path) {
         return Optional.ofNullable(SplitPaneDividerDemo.class.getResource(path)).map(ImageIcon::new);
     }
 
@@ -99,12 +90,12 @@ public class SplitPaneDividerDemo {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("SplitPaneDividerDemo");
+        final var frame = new JFrame("SplitPaneDividerDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         final var splitPaneDividerDemo = new SplitPaneDividerDemo();
-        JPanel contentPane = splitPaneDividerDemo.mainPanel;
+        final var contentPane = splitPaneDividerDemo.mainPanel;
         contentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(contentPane);
 
@@ -113,7 +104,7 @@ public class SplitPaneDividerDemo {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(SplitPaneDividerDemo::createAndShowGUI);

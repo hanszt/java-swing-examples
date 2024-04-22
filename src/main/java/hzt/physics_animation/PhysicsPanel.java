@@ -31,8 +31,7 @@ import org.dyn4j.geometry.Geometry;
 import org.dyn4j.geometry.MassType;
 import org.dyn4j.geometry.Vector2;
 
-import java.awt.Graphics2D;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -40,7 +39,7 @@ import static javax.swing.SwingUtilities.isLeftMouseButton;
 import static javax.swing.SwingUtilities.isMiddleMouseButton;
 import static javax.swing.SwingUtilities.isRightMouseButton;
 
-public class PhysicsPanel extends SimulationPanel {
+public final class PhysicsPanel extends SimulationPanel {
 
 	/** A point for tracking the mouse click */
 	private Point point;
@@ -53,7 +52,7 @@ public class PhysicsPanel extends SimulationPanel {
 	 */
 	private final class CustomMouseAdapter extends MouseAdapter {
 		@Override
-		public void mousePressed(MouseEvent e) {
+		public void mousePressed(final MouseEvent e) {
 			// store the mouse click position for use later
 			if (isRightMouseButton(e)) {
 				point = new Point(e.getX(), e.getY());
@@ -61,7 +60,7 @@ public class PhysicsPanel extends SimulationPanel {
 		}
 
 		@Override
-		public void mouseDragged(MouseEvent e) {
+		public void mouseDragged(final MouseEvent e) {
 			if (isLeftMouseButton(e) || isMiddleMouseButton(e)) {
 				point = new Point(e.getX(), e.getY());
 			}
@@ -70,22 +69,22 @@ public class PhysicsPanel extends SimulationPanel {
 
 	public PhysicsPanel() {
 		super(32.0);
-		MouseAdapter mouseAdapter = new CustomMouseAdapter();
+		final MouseAdapter mouseAdapter = new CustomMouseAdapter();
 		this.canvas.addMouseMotionListener(mouseAdapter);
 		this.canvas.addMouseWheelListener(mouseAdapter);
 		this.canvas.addMouseListener(mouseAdapter);
 		initializeWorld();
 	}
 
-	protected final void initializeWorld() {
+	protected void initializeWorld() {
 		add(canvas);
-		SimulationBody anchor = new SimulationBody();
+        final var anchor = new SimulationBody();
 		anchor.addFixture(Geometry.createCircle(.5));
 		anchor.setMass(MassType.INFINITE);
-		SimulationBody floor = new SimulationBody();
+        final var floor = new SimulationBody();
 	    floor.addFixture(Geometry.createRectangle(20, 1));
 	    floor.setMass(MassType.NORMAL);
-		RevoluteJoint<SimulationBody> revoluteJoint = new RevoluteJoint<>(anchor, floor, new Vector2());
+        final var revoluteJoint = new RevoluteJoint<>(anchor, floor, new Vector2());
 		revoluteJoint.setMotorEnabled(true);
 		revoluteJoint.setMotorSpeed(1);
 		revoluteJoint.setMaximumMotorTorque(2500);
@@ -95,11 +94,11 @@ public class PhysicsPanel extends SimulationPanel {
 	}
 
 	@Override
-	protected void update(Graphics2D g, double elapsedTime) {
+	protected void update(final Graphics2D g, final double elapsedTime) {
 
 		if (this.point != null) {
-			Vector2 vector2 = convertFromScreenSpaceToWorldSpaceCoordinates();
-			SimulationBody body = new SimulationBody();
+            final var vector2 = convertFromScreenSpaceToWorldSpaceCoordinates();
+            final var body = new SimulationBody();
 			body.addFixture(Geometry.createRectangle(Math.random(), Math.random()));
 			body.translate(vector2);
 			body.setMass(MassType.NORMAL);
@@ -111,8 +110,8 @@ public class PhysicsPanel extends SimulationPanel {
 	}
 
 	private Vector2 convertFromScreenSpaceToWorldSpaceCoordinates() {
-		double x =  (this.point.getX() - this.canvas.getWidth() / 2.0) / this.scale;
-		double y = -(this.point.getY() - this.canvas.getHeight() / 2.0) / this.scale;
+        final var x = (this.point.getX() - this.canvas.getWidth() / 2.0) / this.scale;
+        final var y = -(this.point.getY() - this.canvas.getHeight() / 2.0) / this.scale;
 		return new Vector2(x, y);
 	}
 

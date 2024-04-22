@@ -34,31 +34,20 @@ package hzt.comboboxsample;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Objects;
 import java.util.Optional;
 
-/*
+/**
  * ComboBoxDemo.java uses these additional files:
- *   images/Bird.gif
- *   images/Cat.gif
- *   images/Dog.gif
- *   images/Rabbit.gif
- *   images/Pig.gif
+ * images/Bird.gif
+ * images/Cat.gif
+ * images/Dog.gif
+ * images/Rabbit.gif
+ * images/Pig.gif
  */
-public class ComboBoxDemo {
+public final class ComboBoxDemo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ComboBoxDemo.class);
 
@@ -68,11 +57,11 @@ public class ComboBoxDemo {
     public ComboBoxDemo() {
         mainPanel = new JPanel(new BorderLayout());
 
-        String[] petStrings = {"Bird", "Cat", "Dog", "Rabbit", "Pig"};
+        final var petStrings = new String[]{"Bird", "Cat", "Dog", "Rabbit", "Pig"};
 
         //Create the combo box, select the item at index 4.
         //Indices start at 0, so 4 specifies the pig.
-        JComboBox<String> petList = new JComboBox<>(petStrings);
+        final var petList = new JComboBox<>(petStrings);
         petList.setSelectedItem("Pig");
         petList.addActionListener(e -> updateLabel(Objects.requireNonNull((String) petList.getSelectedItem())));
 
@@ -95,7 +84,7 @@ public class ComboBoxDemo {
     }
 
 
-    protected final void updateLabel(String name) {
+    private void updateLabel(final String name) {
         final var path = "images/" + name + ".gif";
         Optional.ofNullable(ComboBoxDemo.class.getResource(path))
                 .map(ImageIcon::new)
@@ -103,12 +92,12 @@ public class ComboBoxDemo {
                         () -> logAndDisplayErrorText(path));
     }
 
-    private void logAndDisplayErrorText(String path) {
+    private void logAndDisplayErrorText(final String path) {
         picture.setText("Image not found");
         LOGGER.error("Couldn't find file: {}", path);
     }
 
-    private void setIcon(String name, ImageIcon icon) {
+    private void setIcon(final String name, final ImageIcon icon) {
         picture.setToolTipText("A drawing of a " + name.toLowerCase());
         picture.setIcon(icon);
     }
@@ -120,12 +109,12 @@ public class ComboBoxDemo {
      */
     private static void createAndShowGUI() {
         //Create and set up the window.
-        JFrame frame = new JFrame("ComboBoxDemo");
+        final var frame = new JFrame("ComboBoxDemo");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         //Create and set up the content pane.
         final var comboBoxDemo = new ComboBoxDemo();
-        JComponent newContentPane = comboBoxDemo.mainPanel;
+        final JComponent newContentPane = comboBoxDemo.mainPanel;
         newContentPane.setOpaque(true); //content panes must be opaque
         frame.setContentPane(newContentPane);
 
@@ -134,7 +123,7 @@ public class ComboBoxDemo {
         frame.setVisible(true);
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(ComboBoxDemo::createAndShowGUI);

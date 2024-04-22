@@ -9,7 +9,7 @@ public final class Loggers {
     private Loggers() {
     }
 
-    public static void logIfInfoEnabled(Logger logger, Supplier<String> supplier) {
+    public static void logIfInfoEnabled(final Logger logger, final Supplier<String> supplier) {
         if (logger.isInfoEnabled()) {
             logger.info(supplier.get());
         }
