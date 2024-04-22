@@ -12,14 +12,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
-public class Minesweeper {
+public final class Minesweeper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Minesweeper.class);
     
     record Arguments(int numberOfTiles, double mineProbability, long debugSeed) {
     }
 
-    static Arguments parseArguments(String... args) {
+    static Arguments parseArguments(final String... args) {
+        LOGGER.debug("Parsing arguments...");
         final var arguments = Sequence.of(args);
         if (!IntX.isEven(args.length) || arguments.any("-help".trim()::equals)) {
             displayHelpMessage();
@@ -31,14 +32,15 @@ public class Minesweeper {
         return parseArguments(argumentMap);
     }
 
-    private static Arguments parseArguments(Map<String, String> argumentMap) {
+    private static Arguments parseArguments(final Map<String, String> argumentMap) {
         try {
             final var numberOfTiles = Integer.parseInt(argumentMap.getOrDefault("-numTiles", "0"));
             final var mineProbability  = Double.parseDouble(argumentMap.getOrDefault("-mineProb", "-1.0"));
             final var debugSeed  = Integer.parseInt(argumentMap.getOrDefault("-seed", "-1"));
+            LOGGER.info("Arguments parsed successfully.");
             return new Arguments(numberOfTiles, mineProbability, debugSeed);
-        } catch (NumberFormatException e) {
-            LOGGER.error(e.getClass().getSimpleName());
+        } catch (final NumberFormatException e) {
+            LOGGER.error("Could not parse arguments: {}", argumentMap, e);
             displayHelpMessage();
             return new Arguments(0, -1.0, -1);
         }
@@ -57,7 +59,7 @@ public class Minesweeper {
      * Program entry point.
      *
      */
-    public static void main(String... args) {
+    public static void main(final String... args) {
         final var arguments = parseArguments(args);
         new MinesweeperFrame(arguments);
     }

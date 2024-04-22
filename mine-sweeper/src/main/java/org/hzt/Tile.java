@@ -33,7 +33,7 @@ public final class Tile extends JButton {
      * @param tileIndex        index of corresponding tile in gameState
      * @param minesweeperPanel panel that is running the game.
      */
-    public Tile(int tileIndex, MinesweeperPanel minesweeperPanel) {
+    public Tile(final int tileIndex, final MinesweeperPanel minesweeperPanel) {
         super("");
         this.tileIndex = tileIndex;
         this.panel = minesweeperPanel;
@@ -43,7 +43,7 @@ public final class Tile extends JButton {
         flagImage = getResourceImage("/images/flag.png");
     }
 
-    private static ImageIcon getResourceImage(String fileName) {
+    private static ImageIcon getResourceImage(final String fileName) {
         final var defaultToolkit = Toolkit.getDefaultToolkit();
         final var filePath = Optional.ofNullable(Tile.class.getResource(fileName))
                 .map(URL::getFile)
@@ -51,7 +51,7 @@ public final class Tile extends JButton {
         return new ImageIcon(defaultToolkit.getImage(filePath));
     }
 
-    private static String logAndGetEmptyPath(String fileName) {
+    private static String logAndGetEmptyPath(final String fileName) {
         LOGGER.warn("Could not find resource: {}", fileName);
         return "";
     }
@@ -71,7 +71,7 @@ public final class Tile extends JButton {
      * @param graphics object to draw to
      */
     @Override
-    public void paintComponent(Graphics graphics) {
+    public void paintComponent(final Graphics graphics) {
         super.paintComponent(graphics);
         updateState();
     }
@@ -106,7 +106,7 @@ public final class Tile extends JButton {
         setDisabledIcon(mineImage);
     }
 
-    private void setNeighborCount(int neighborCount) {
+    private void setNeighborCount(final int neighborCount) {
         // This would be much cleaner if Java supported case statements with range
         // Also setting the colour of the number based on how many mines are near was my plan,
         // but disabling the button greys out the contents, and I don't know how to stop that.

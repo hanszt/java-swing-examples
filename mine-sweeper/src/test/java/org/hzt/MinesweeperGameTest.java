@@ -9,12 +9,15 @@ class MinesweeperGameTest {
     @Test
     void testGridAsString() {
         final var defaultProbability = -1;
-        final var minesweeperGame = new MinesweeperGame(4, defaultProbability, 0);
+        final var minesweeperGame = MinesweeperGame.start(4, defaultProbability, 0);
         final var boardAsString = minesweeperGame.boardAsString();
 
-        System.out.println(boardAsString);
-
-        String expected = String.format("0000%n0011%n222*%n**21");
+        final var expected = """
+                0000
+                0011
+                222*
+                **21"""
+                .stripIndent();
 
         assertEquals(expected, boardAsString);
     }

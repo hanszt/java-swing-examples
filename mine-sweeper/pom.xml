@@ -11,17 +11,18 @@
     <packaging>jar</packaging>
 
     <properties>
-        <java.source.version>17</java.source.version>
-        <java.target.version>17</java.target.version>
+        <java.source.version>21</java.source.version>
+        <java.target.version>21</java.target.version>
         <coverage.target>50%</coverage.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--        dependencies-->
-        <junit.jupiter.version>5.8.2</junit.jupiter.version>
-        <logback-classic.version>1.2.11</logback-classic.version>
+        <junit.jupiter.version>5.10.1</junit.jupiter.version>
+        <logback-classic.version>1.5.3</logback-classic.version>
         <!--        plugins-->
-        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0-M5</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
+        <hzt.utils.version>1.0.3.21</hzt.utils.version>
     </properties>
 
     <dependencies>
@@ -40,7 +41,7 @@
         <dependency>
             <groupId>org.hzt.utils</groupId>
             <artifactId>core</artifactId>
-            <version>0.7.5.17</version>
+            <version>${hzt.utils.version}</version>
         </dependency>
     </dependencies>
 
