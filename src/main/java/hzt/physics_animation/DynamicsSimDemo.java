@@ -13,7 +13,6 @@ import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 public final class DynamicsSimDemo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicsSimDemo.class);
-    private final JPanel simulationPanel = new JPanel();
 
     public static void main(final String[] args) {
         new DynamicsSimDemo().start();
@@ -21,7 +20,6 @@ public final class DynamicsSimDemo {
 
     private void start() {
         final var physicsPanel = new PhysicsPanel();
-        simulationPanel.add(physicsPanel);
         buildMainFrame(physicsPanel);
         final var lookAndFeel = UIManager.getSystemLookAndFeelClassName();
         try {
@@ -40,7 +38,7 @@ public final class DynamicsSimDemo {
 
         jFrame.pack();
         jFrame.setSize(new Dimension(800, 600));
-        jFrame.setContentPane(this.simulationPanel);
+        jFrame.setContentPane(simulationPanel);
         jFrame.setLocationRelativeTo(null);
         jFrame.setVisible(true);
     }

@@ -13,9 +13,9 @@ import java.awt.geom.Ellipse2D;
  * @version 3.2.1
  * @since 3.0.0
  */
-public class SimulationBody extends Body {
+public final class SimulationBody extends Body {
 	/** The color of the object */
-	protected Color color;
+    private final Color color;
 	
 	/**
 	 * Default constructor.
@@ -88,13 +88,9 @@ public class SimulationBody extends Body {
 	protected void renderFixture(final Graphics2D g, final double scale, final BodyFixture fixture, Color color) {
 		// get the shape on the fixture
         final var convex = fixture.getShape();
-		
+
 		// brighten the color if asleep
-		if (this.isAtRest()) {
-			color = color.brighter();
-		}
-		
 		// render the fixture
-		Graphics2DRenderer.render(g, convex, scale, color);
+		Graphics2DRenderer.render(g, convex, scale, this.isAtRest() ? color.brighter() : color);
 	}
 }

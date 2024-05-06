@@ -72,22 +72,15 @@ public final class Graphics2DRenderer {
         if (color == null) {
             color = Color.ORANGE;
         }
-        if (shape instanceof final Circle circle) {
-            Graphics2DRenderer.render(graphics, circle, scale, color);
-        } else if (shape instanceof final Polygon polygon) {
-            Graphics2DRenderer.render(graphics, polygon, scale, color);
-        } else if (shape instanceof final Segment segment) {
-            Graphics2DRenderer.render(graphics, segment, scale, color);
-        } else if (shape instanceof final Capsule capsule) {
-            Graphics2DRenderer.render(graphics, capsule, scale, color);
-        } else if (shape instanceof final Ellipse ellipse) {
-            Graphics2DRenderer.render(graphics, ellipse, scale, color);
-        } else if (shape instanceof final Slice slice) {
-            Graphics2DRenderer.render(graphics, slice, scale, color);
-        } else if (shape instanceof final HalfEllipse halfEllipse) {
-            Graphics2DRenderer.render(graphics, halfEllipse, scale, color);
-        } else {
-            LOGGER.error("Shape not known {}", shape);
+        switch (shape) {
+            case final Circle circle -> Graphics2DRenderer.render(graphics, circle, scale, color);
+            case final Polygon polygon -> Graphics2DRenderer.render(graphics, polygon, scale, color);
+            case final Segment segment -> Graphics2DRenderer.render(graphics, segment, scale, color);
+            case final Capsule capsule -> Graphics2DRenderer.render(graphics, capsule, scale, color);
+            case final Ellipse ellipse -> Graphics2DRenderer.render(graphics, ellipse, scale, color);
+            case final Slice slice -> Graphics2DRenderer.render(graphics, slice, scale, color);
+            case final HalfEllipse halfEllipse -> Graphics2DRenderer.render(graphics, halfEllipse, scale, color);
+            default -> LOGGER.error("Shape not known {}", shape);
         }
     }
 

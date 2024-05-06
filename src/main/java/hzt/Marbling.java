@@ -56,7 +56,11 @@ public final class Marbling extends JPanel {
             super.paintComponent(g);
             for (final Drop drop : drops) {
                 g.setColor(drop.color);
-                g.fillPolygon(drop.xPoints(), drop.yPoints(), drop.points.length);
+                final var xPoints = drop.xPoints();
+                final var yPoints = drop.yPoints();
+                g.fillPolygon(xPoints, yPoints, drop.points.length);
+                g.setColor(drop.color.darker());
+                g.drawPolygon(xPoints, yPoints, drop.points.length);
             }
         }
     }
@@ -84,14 +88,14 @@ public final class Marbling extends JPanel {
     }
 
     static final class Drop {
-        private static final int RESOLUTION = 500;
+        private static final int DETAIL = 100;
         private final double radius;
 
         private final Color color;
         private final Point2D center;
         private final Point2D[] points;
 
-        Drop(double radius, Point2D center, java.awt.Color color) {
+        Drop(double radius, Point2D center, Color color) {
             this.radius = radius;
             this.center = center;
             this.color = color;
@@ -100,25 +104,21 @@ public final class Marbling extends JPanel {
 
         private Point2D[] createCircle(double radius, Point2D position) {
             return DoubleStream.iterate(0, d -> d + 1.0)
-                    .limit(RESOLUTION)
-                    .map(d -> 2 * PI * (d / RESOLUTION))
+                    .limit(DETAIL)
+                    .map(d -> 2 * PI * (d / DETAIL))
                     .mapToObj(angle -> new Point2D(cos(angle) * radius + position.x(), sin(angle) * radius + position.y()))
                     .toArray(Point2D[]::new);
         }
 
         public void marbledBy(Drop other) {
             for (int i = 0; i < points.length; i++) {
-                points[i] = marble(other, points[i]);
+                var c = other.center;
+                var r = other.radius;
+                final var diff = points[i].subtract(c);
+                var mSquared = diff.magnitudeSquared();
+                var root = Math.sqrt(1 + ((r * r) / mSquared));
+                points[i] = c.add(diff.multiply(root));
             }
-        }
-
-        private static Point2D marble(Drop other, Point2D p) {
-            var c = other.center;
-            var r = other.radius;
-            final var diff = p.subtract(c);
-            var mSquared = diff.magnitudeSquared();
-            var root = Math.sqrt(1 + ((r * r) / mSquared));
-            return c.add(diff.multiply(root));
         }
 
         public int[] xPoints() {

@@ -25,6 +25,8 @@
 package hzt.physics_animation.framework;
 
 import org.dyn4j.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -38,6 +40,8 @@ import java.awt.geom.AffineTransform;
  */
 @SuppressWarnings("unused")
 public abstract class SimulationPanel extends JPanel {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimulationPanel.class);
 
     public static final double NANO_TO_BASE = 1.0e9;
 
@@ -76,12 +80,9 @@ public abstract class SimulationPanel extends JPanel {
         this.canvas.createBufferStrategy(2);
         // run a separate thread to do active rendering
         // because we don't want to do it on the EDT
-        final var thread = new Thread(this::startGameLoop);
         // set the game loop thread to a daemon thread so that
         // it cannot stop the JVM from exiting
-        thread.setDaemon(true);
-        // start the game loop
-        thread.start();
+        Thread.ofVirtual().start(this::startGameLoop);
     }
 
     private void startGameLoop() {
@@ -96,7 +97,7 @@ public abstract class SimulationPanel extends JPanel {
                 //noinspection BusyWait
                 Thread.sleep(5);
             } catch (final InterruptedException e) {
-                e.printStackTrace();
+                LOGGER.error("An interrupted exception was thrown", e);
                 Thread.currentThread().interrupt();
             }
         }
@@ -232,7 +233,7 @@ public abstract class SimulationPanel extends JPanel {
     }
 
     /**
-     * Pauses the simulation.
+     * Resumes the simulation.
      */
     public synchronized void resume() {
         this.paused = false;
