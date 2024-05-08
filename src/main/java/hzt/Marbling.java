@@ -19,11 +19,12 @@ import static java.lang.Math.sin;
 /**
  * <a href="https://www.youtube.com/watch?v=p7IGZTjC008">Coding Challenge 183: Paper Marbling Algorithm</a>
  */
-public final class Marbling extends JPanel {
+public final class Marbling {
 
     private static final Random RANDOM = new Random();
+    private static final Dimension preferredSize = new Dimension(800, 1100);
 
-    private final CanvasMouseListener mouseListener = new CanvasMouseListener();
+    private final Canvas canvas = new Canvas();
     private final List<Drop> drops = new ArrayList<>();
 
 
@@ -36,70 +37,84 @@ public final class Marbling extends JPanel {
         final JFrame frame = new JFrame("Marbling");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);
-        setPreferredSize(new Dimension(800, 1100));
-        addMouseListener(mouseListener);
-        frame.add(this, BorderLayout.CENTER);
+        final var panel = new JPanel();
+        panel.setPreferredSize(preferredSize);
+        canvas.setPreferredSize(preferredSize);
+        panel.add(canvas);
+        frame.add(panel, BorderLayout.CENTER);
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
+        canvas.createBufferStrategy(2);
+        canvas.addMouseListener((new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent event) {
+                updateCanvas(new Point2D(event.getX(), event.getY()), getDrawGraphics());
+            }
+        }));
+        canvas.setIgnoreRepaint(true);
+        drawBackground(getDrawGraphics());
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        if (mouseListener.isPressed) {
-            final var newDrop = createDrop();
-            for (final var drop : drops) {
-                drop.marbledBy(newDrop);
-            }
-            drops.add(newDrop);
-
-            super.paintComponent(g);
-            for (final Drop drop : drops) {
-                g.setColor(drop.color);
-                final var xPoints = drop.xPoints();
-                final var yPoints = drop.yPoints();
-                g.fillPolygon(xPoints, yPoints, drop.points.length);
-                g.setColor(drop.color.darker());
-                g.drawPolygon(xPoints, yPoints, drop.points.length);
-            }
+    private void updateCanvas(Point2D mousePosition, Graphics2D g) {
+        drawBackground(g);
+        final var newDrop = createDrop(mousePosition);
+        for (final var drop : drops) {
+            drop.marbledBy(newDrop);
         }
+        drops.add(newDrop);
+
+        for (final Drop drop : drops) {
+            g.setColor(drop.color);
+            final var xPoints = drop.xPoints();
+            final var yPoints = drop.yPoints();
+            g.fillPolygon(xPoints, yPoints, drop.vertices.length);
+            g.setColor(drop.color.darker());
+            g.drawPolygon(xPoints, yPoints, drop.vertices.length);
+        }
+        cleanup(g);
     }
 
-    private @NotNull Drop createDrop() {
+    private void cleanup(Graphics2D g) {
+        g.dispose();
+        // blit/flip the buffer
+        final var strategy = this.canvas.getBufferStrategy();
+        if (!strategy.contentsLost()) {
+            strategy.show();
+        }
+        // Sync the display on some systems.
+        // (on Linux, this fixes event queue problems)
+        Toolkit.getDefaultToolkit().sync();
+    }
+
+    private void drawBackground(final Graphics2D graphics) {
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, preferredSize.width, preferredSize.height);
+    }
+
+    private @NotNull Drop createDrop(Point2D mousePosition) {
         final var color = new Color(RANDOM.nextInt(255), RANDOM.nextInt(255), RANDOM.nextInt(255));
         final var radius = RANDOM.nextInt(20, 100);
-        final var center = new Point2D(mouseListener.x, mouseListener.y);
-        return new Drop(radius, center, color);
+        return new Drop(radius, mousePosition, color);
     }
 
-    private final class CanvasMouseListener extends MouseAdapter {
-
-        boolean isPressed = false;
-        int x = 0;
-        int y = 0;
-
-        @Override
-        public void mousePressed(MouseEvent event) {
-            isPressed = true;
-            x = event.getX();
-            y = event.getY();
-            paintComponent(getGraphics());
-        }
+    private Graphics2D getDrawGraphics() {
+        return (Graphics2D) canvas.getBufferStrategy().getDrawGraphics();
     }
 
     static final class Drop {
-        private static final int DETAIL = 100;
+        private static final int DETAIL = 500;
         private final double radius;
 
         private final Color color;
         private final Point2D center;
-        private final Point2D[] points;
+        private final Point2D[] vertices;
 
         Drop(double radius, Point2D center, Color color) {
             this.radius = radius;
             this.center = center;
             this.color = color;
-            points = createCircle(radius, center);
+            vertices = createCircle(radius, center);
         }
 
         private Point2D[] createCircle(double radius, Point2D position) {
@@ -111,27 +126,26 @@ public final class Marbling extends JPanel {
         }
 
         public void marbledBy(Drop other) {
-            for (int i = 0; i < points.length; i++) {
+            for (int i = 0; i < vertices.length; i++) {
                 var c = other.center;
                 var r = other.radius;
-                final var diff = points[i].subtract(c);
+                final var diff = vertices[i].subtract(c);
                 var mSquared = diff.magnitudeSquared();
                 var root = Math.sqrt(1 + ((r * r) / mSquared));
-                points[i] = c.add(diff.multiply(root));
+                vertices[i] = c.add(diff.multiply(root));
             }
         }
 
         public int[] xPoints() {
-            return Arrays.stream(points).mapToInt(p -> (int) p.x).toArray();
+            return Arrays.stream(vertices).mapToInt(p -> (int) p.x).toArray();
         }
 
         public int[] yPoints() {
-            return Arrays.stream(points).mapToInt(p -> (int) p.y).toArray();
+            return Arrays.stream(vertices).mapToInt(p -> (int) p.y).toArray();
         }
     }
 
     record Point2D(double x, double y) {
-
 
         public Point2D add(Point2D other) {
             return new Point2D(x + other.x, y + other.y);
