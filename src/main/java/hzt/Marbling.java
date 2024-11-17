@@ -21,15 +21,18 @@ import static java.lang.Math.sin;
  */
 public final class Marbling {
 
-    private static final Random RANDOM = new Random();
     private static final Dimension preferredSize = new Dimension(800, 1100);
 
     private final Canvas canvas = new Canvas();
     private final List<Drop> drops = new ArrayList<>();
+    private final Random random;
 
+    public Marbling(Random random) {
+        this.random = random;
+    }
 
-    public static void main(String[] args) {
-        final var marbling = new Marbling();
+    public static void main() {
+        final var marbling = new Marbling(new Random());
         SwingUtilities.invokeLater(marbling::start);
     }
 
@@ -93,8 +96,8 @@ public final class Marbling {
     }
 
     private @NotNull Drop createDrop(Point2D mousePosition) {
-        final var color = new Color(RANDOM.nextInt(255), RANDOM.nextInt(255), RANDOM.nextInt(255));
-        final var radius = RANDOM.nextInt(20, 100);
+        final var color = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255));
+        final var radius = random.nextInt(20, 100);
         return new Drop(radius, mousePosition, color);
     }
 

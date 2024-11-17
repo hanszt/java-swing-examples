@@ -73,7 +73,7 @@ public final class MinesweeperGame {
                 System.currentTimeMillis(),
                 -1L,
                 GameState.PLAYING,
-                new ArrayList<Integer>(),
+                new ArrayList<>(),
                 new int[numberOfTiles],
                 new boolean[numberOfTiles]
         );

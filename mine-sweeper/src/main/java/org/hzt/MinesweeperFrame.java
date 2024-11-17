@@ -128,19 +128,19 @@ public final class MinesweeperFrame extends JFrame {
         final var menuBar = new JMenuBar();
 
         final var newMenuItem = new JMenuItem("New");
-        newMenuItem.addActionListener(e -> newGame());
+        newMenuItem.addActionListener(_ -> newGame());
         menuBar.add(newMenuItem);
 
         final var loadMenuItem = new JMenuItem("Load");
-        loadMenuItem.addActionListener(e -> loadGame());
+        loadMenuItem.addActionListener(_ -> loadGame());
         menuBar.add(loadMenuItem);
 
         final var saveMenuItem = new JMenuItem("Save");
-        saveMenuItem.addActionListener(e -> saveGame());
+        saveMenuItem.addActionListener(_ -> saveGame());
         menuBar.add(saveMenuItem);
 
         final var quitMenuItem = new JMenuItem("Quit");
-        quitMenuItem.addActionListener(e -> System.exit(0));
+        quitMenuItem.addActionListener(_ -> System.exit(0));
         menuBar.add(quitMenuItem);
 
         return menuBar;
