@@ -29,7 +29,10 @@ public final class Demo3DRendering {
         bottomControlPanel.add(headingSlider, BorderLayout.NORTH);
 
         // slider to control inflation
-        final var inflationSlider = new JSlider(0, 6, 4);
+        final var inflationSlider = new JSlider(1, 8, 5);
+        inflationSlider.setMinorTickSpacing(1);
+        inflationSlider.setPaintTicks(true);
+        inflationSlider.setPaintLabels(true);
         bottomControlPanel.add(inflationSlider, BorderLayout.SOUTH);
         enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
         final var modeButton = new Button() {
@@ -64,16 +67,20 @@ public final class Demo3DRendering {
 
         // panel to display render results
         final var renderPanel = new JPanel() {
+
+            private static final double sqrt30000 = Math.sqrt(30_000);
+
             @Override
             public void paintComponent(final Graphics g) {
                 g.setColor(Color.BLACK);
                 g.fillRect(0, 0, getWidth(), getHeight());
-                var mode = switch (modeButton.mode) {
+
+                final var mode = switch (modeButton.mode) {
                     case Mode.WIRE_FRAME -> drawWireframe(g);
                     case Mode.FILLED_SHADED -> drawFilledShaded(g);
                     case Mode.FILLED_UNSHADED -> drawFilledUnShaded(g);
                 };
-                logger.trace("Mode: {}", mode);
+                logger.trace("Painting with mode: {}", mode);
             }
 
             private Mode drawWireframe(final Graphics graphics) {
@@ -83,11 +90,11 @@ public final class Demo3DRendering {
                 final var g2d = (Graphics2D) graphics;
                 g2d.translate(getWidth() / 2, getHeight() / 2);
                 g2d.setColor(Color.WHITE);
-                for (Triangle t : tris) {
-                    Vertex v1 = rotationMatrix.apply(t.v1());
-                    Vertex v2 = rotationMatrix.apply(t.v2());
-                    Vertex v3 = rotationMatrix.apply(t.v3());
-                    Path2D path = new Path2D.Double();
+                for (final var t : tris) {
+                    final var v1 = rotationMatrix.apply(t.v1());
+                    final var v2 = rotationMatrix.apply(t.v2());
+                    final var v3 = rotationMatrix.apply(t.v3());
+                    final Path2D path = new Path2D.Double();
                     path.moveTo(v1.x(), v1.y());
                     path.lineTo(v2.x(), v2.y());
                     path.lineTo(v3.x(), v3.y());
@@ -107,7 +114,7 @@ public final class Demo3DRendering {
                 return Mode.FILLED_UNSHADED;
             }
 
-            private void drawFilled(final Graphics g, Shader shader) {
+            private void drawFilled(final Graphics g, final Shader shader) {
                 final var rotationMatrix = buildRotationMatrix();
                 final var tris = inflate(buildTetrahedron());
                 final var img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
@@ -162,54 +169,16 @@ public final class Demo3DRendering {
             }
 
             private List<Triangle> inflate(final List<Triangle> initTris) {
-                var tris = initTris;
-                for (var i = 0; i < inflationSlider.getValue(); i++) {
-                    tris = tris.stream()
-                            .flatMap(Triangle::inflate)
-                            .map(t -> t.resizeBy(sqrt30000))
-                            .toList();
+                final var triangles = Stream.iterate(initTris, s -> s.stream()
+                                .flatMap(Triangle::inflate)
+                                .map(t -> t.resizeBy(sqrt30000))
+                                .toList())
+                        .limit(inflationSlider.getValue())
+                        .reduce(initTris, (_, tris) -> tris);
+                if (inflationSlider.getValueIsAdjusting()) {
+                    logger.info("Nr of triangles: {}", triangles.size());
                 }
-                return tris;
-            }
-
-            private static Matrix3 pitchTransform(final double pitch) {
-                return new Matrix3(
-                        1, 0, 0,
-                        0, Math.cos(pitch), Math.sin(pitch),
-                        0, -Math.sin(pitch), Math.cos(pitch)
-                );
-            }
-
-            private static Matrix3 headingTransform(final double heading) {
-                return new Matrix3(
-                        Math.cos(heading), 0, -Math.sin(heading),
-                        0, 1, 0,
-                        Math.sin(heading), 0, Math.cos(heading)
-                );
-            }
-
-            private static List<Triangle> buildTetrahedron() {
-                return List.of(
-                        new Triangle(
-                                new Vertex(100, 100, 100),
-                                new Vertex(-100, -100, 100),
-                                new Vertex(-100, 100, -100),
-                                Color.WHITE),
-                        new Triangle(
-                                new Vertex(100, 100, 100),
-                                new Vertex(-100, -100, 100),
-                                new Vertex(100, -100, -100),
-                                Color.RED),
-                        new Triangle(
-                                new Vertex(-100, 100, -100),
-                                new Vertex(100, -100, -100),
-                                new Vertex(100, 100, 100),
-                                Color.GREEN),
-                        new Triangle(
-                                new Vertex(-100, 100, -100),
-                                new Vertex(100, -100, -100),
-                                new Vertex(-100, -100, 100),
-                                Color.BLUE));
+                return triangles;
             }
         };
         pane.add(renderPanel, BorderLayout.CENTER);
@@ -223,7 +192,7 @@ public final class Demo3DRendering {
         frame.setVisible(true);
     }
 
-    static Color shade(final Color color, final double shade) {
+    private static Color shade(final Color color, final double shade) {
         final var exponent = 2.4;
         final var redLinear = Math.pow(color.getRed(), exponent) * shade;
         final var greenLinear = Math.pow(color.getGreen(), exponent) * shade;
@@ -236,18 +205,56 @@ public final class Demo3DRendering {
         return new Color(red, green, blue);
     }
 
-    final double sqrt30000 = Math.sqrt(30_000);
+    private static Matrix3 pitchTransform(final double pitch) {
+        return new Matrix3(
+                1, 0, 0,
+                0, Math.cos(pitch), Math.sin(pitch),
+                0, -Math.sin(pitch), Math.cos(pitch)
+        );
+    }
+
+    private static Matrix3 headingTransform(final double heading) {
+        return new Matrix3(
+                Math.cos(heading), 0, -Math.sin(heading),
+                0, 1, 0,
+                Math.sin(heading), 0, Math.cos(heading)
+        );
+    }
+
+    private static List<Triangle> buildTetrahedron() {
+        return List.of(
+                new Triangle(
+                        new Vertex(100, 100, 100),
+                        new Vertex(-100, -100, 100),
+                        new Vertex(-100, 100, -100),
+                        Color.WHITE),
+                new Triangle(
+                        new Vertex(100, 100, 100),
+                        new Vertex(-100, -100, 100),
+                        new Vertex(100, -100, -100),
+                        Color.RED),
+                new Triangle(
+                        new Vertex(-100, 100, -100),
+                        new Vertex(100, -100, -100),
+                        new Vertex(100, 100, 100),
+                        Color.GREEN),
+                new Triangle(
+                        new Vertex(-100, 100, -100),
+                        new Vertex(100, -100, -100),
+                        new Vertex(-100, -100, 100),
+                        Color.BLUE));
+    }
 }
 
 record Vertex(double x, double y, double z) {
 
     static final Vertex ZERO = new Vertex(0, 0, 0);
 
-    Vertex plus(double x, double y, double z) {
+    Vertex plus(final double x, final double y, final double z) {
         return new Vertex(this.x + x, this.y + y, this.z + z);
     }
 
-    Vertex divided(double n) {
+    Vertex divided(final double n) {
         return Double.compare(n, 0.0) == 0 ? ZERO : new Vertex(x / n, y / n, z / n);
     }
 
@@ -255,7 +262,7 @@ record Vertex(double x, double y, double z) {
         return new Vertex(x * factor, y * factor, z * factor);
     }
 
-    Vertex crossProduct(Vertex other) {
+    Vertex crossProduct(final Vertex other) {
         return new Vertex(
                 y * other.z - z * other.y,
                 z * other.x - x * other.z,
@@ -275,10 +282,10 @@ record Vertex(double x, double y, double z) {
 
 record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
 
-    Triangle resizeBy(double factor) {
-        final var v1n = v1.divided(v1.magnitude()).multiplied(factor);
-        final var v2n = v2.divided(v2.magnitude()).multiplied(factor);
-        final var v3n = v3.divided(v3.magnitude()).multiplied(factor);
+    Triangle resizeBy(final double factor) {
+        final var v1n = v1.normalized().multiplied(factor);
+        final var v2n = v2.normalized().multiplied(factor);
+        final var v3n = v3.normalized().multiplied(factor);
         return new Triangle(v1n, v2n, v3n, color);
     }
 
