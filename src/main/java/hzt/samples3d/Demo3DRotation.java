@@ -1,5 +1,6 @@
-package hzt;
+package hzt.samples3d;
 
+import org.hzt.utils.sequences.Sequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,32 +9,33 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Stream;
+import java.util.function.Consumer;
+
+import static java.lang.Math.*;
 
 /**
  * See <a href="http://blog.rogach.org/2015/08/how-to-create-your-own-simple-3d-render.html">How to create your own simple 3D render engine in pure Java</a>
  */
-public final class Demo3DRendering {
+public final class Demo3DRotation {
 
-    private static final Logger logger = LoggerFactory.getLogger(Demo3DRendering.class);
+    private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
 
     void main() {
         final var frame = new JFrame();
         final var pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
-        final var bottomControlPanel = new JPanel(new GridLayout(3, 1));
+        final var bottomControlPanel = new JPanel(new BorderLayout());
 
         // slider to control horizontal rotation
         final var headingSlider = new JSlider(-180, 180, 0);
-        bottomControlPanel.add(headingSlider, BorderLayout.NORTH);
 
         // slider to control inflation
         final var inflationSlider = new JSlider(1, 8, 5);
         inflationSlider.setMinorTickSpacing(1);
         inflationSlider.setPaintTicks(true);
         inflationSlider.setPaintLabels(true);
-        bottomControlPanel.add(inflationSlider, BorderLayout.SOUTH);
+        final var zoomSlider = new JSlider(1, 1_000, 200);
+
         enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
         final var modeButton = new Button() {
             Mode mode = Mode.FILLED_SHADED;
@@ -57,7 +59,12 @@ public final class Demo3DRendering {
                 return name.charAt(0) + name.substring(1).replace("_", " ").toLowerCase();
             }
         };
-        bottomControlPanel.add(modeButton, BorderLayout.CENTER);
+        final var sliderPanel = new JPanel(new BorderLayout());
+        sliderPanel.add(headingSlider, BorderLayout.NORTH);
+        sliderPanel.add(zoomSlider, BorderLayout.CENTER);
+        sliderPanel.add(inflationSlider, BorderLayout.SOUTH);
+        bottomControlPanel.add(sliderPanel, BorderLayout.NORTH);
+        bottomControlPanel.add(modeButton, BorderLayout.SOUTH);
 
         pane.add(bottomControlPanel, BorderLayout.SOUTH);
 
@@ -67,8 +74,6 @@ public final class Demo3DRendering {
 
         // panel to display render results
         final var renderPanel = new JPanel() {
-
-            private static final double sqrt30000 = Math.sqrt(30_000);
 
             @Override
             public void paintComponent(final Graphics g) {
@@ -85,12 +90,11 @@ public final class Demo3DRendering {
 
             private Mode drawWireframe(final Graphics graphics) {
                 final var rotationMatrix = buildRotationMatrix();
-                final var tris = inflate(buildTetrahedron());
 
                 final var g2d = (Graphics2D) graphics;
                 g2d.translate(getWidth() / 2, getHeight() / 2);
                 g2d.setColor(Color.WHITE);
-                for (final var t : tris) {
+                useTriangles(t -> {
                     final var v1 = rotationMatrix.apply(t.v1());
                     final var v2 = rotationMatrix.apply(t.v2());
                     final var v3 = rotationMatrix.apply(t.v3());
@@ -100,44 +104,43 @@ public final class Demo3DRendering {
                     path.lineTo(v3.x(), v3.y());
                     path.closePath();
                     g2d.draw(path);
-                }
+                });
                 return Mode.WIRE_FRAME;
             }
 
             private Mode drawFilledShaded(final Graphics graphics) {
-                drawFilled(graphics, Demo3DRendering::shade);
+                final var image = build3DShapeImage(Demo3DRotation::shade);
+                graphics.drawImage(image, 0, 0, null);
                 return Mode.FILLED_SHADED;
             }
 
             private Mode drawFilledUnShaded(final Graphics graphics) {
-                drawFilled(graphics, (color, _) -> color);
+                graphics.drawImage(build3DShapeImage((color, _) -> color), 0, 0, null);
                 return Mode.FILLED_UNSHADED;
             }
 
-            private void drawFilled(final Graphics g, final Shader shader) {
+            private Image build3DShapeImage(final Shader shader) {
+                final var width = getWidth();
+                final var height = getHeight();
+                final var img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
                 final var rotationMatrix = buildRotationMatrix();
-                final var tris = inflate(buildTetrahedron());
-                final var img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
                 // initialize array with extremely far away depths
-                final var zBuffer = new double[img.getWidth() * img.getHeight()];
+                final var zBuffer = new double[width * height];
                 Arrays.fill(zBuffer, Double.NEGATIVE_INFINITY);
 
-                for (final var t : tris) {
-                    final var v1 = rotationMatrix.apply(t.v1()).plus(getWidth() / 2.0, getHeight() / 2.0, 0);
-                    final var v2 = rotationMatrix.apply(t.v2()).plus(getWidth() / 2.0, getHeight() / 2.0, 0);
-                    final var v3 = rotationMatrix.apply(t.v3()).plus(getWidth() / 2.0, getHeight() / 2.0, 0);
+                useTriangles(t -> {
+                    final var v1 = rotationMatrix.apply(t.v1()).plus(width / 2.0, height / 2.0, 0);
+                    final var v2 = rotationMatrix.apply(t.v2()).plus(width / 2.0, height / 2.0, 0);
+                    final var v3 = rotationMatrix.apply(t.v3()).plus(width / 2.0, height / 2.0, 0);
 
-                    final var ab = new Vertex(v2.x() - v1.x(), v2.y() - v1.y(), v2.z() - v1.z());
-                    final var ac = new Vertex(v3.x() - v1.x(), v3.y() - v1.y(), v3.z() - v1.z());
-                    final var norm = ab.crossProduct(ac).normalized();
-
+                    final var norm = v2.minus(v1).crossProduct(v3.minus(v1)).normalized();
                     final var angleCos = Math.abs(norm.z());
 
-                    final var minX = (int) Math.max(0, Math.ceil(Math.min(v1.x(), Math.min(v2.x(), v3.x()))));
-                    final var maxX = (int) Math.min(img.getWidth() - 1, Math.floor(Math.max(v1.x(), Math.max(v2.x(), v3.x()))));
-                    final var minY = (int) Math.max(0, Math.ceil(Math.min(v1.y(), Math.min(v2.y(), v3.y()))));
-                    final var maxY = (int) Math.min(img.getHeight() - 1, Math.floor(Math.max(v1.y(), Math.max(v2.y(), v3.y()))));
+                    final var minX = (int) max(0, ceil(min(v1.x(), min(v2.x(), v3.x()))));
+                    final var maxX = (int) min(width - 1, floor(max(v1.x(), max(v2.x(), v3.x()))));
+                    final var minY = (int) max(0, ceil(min(v1.y(), min(v2.y(), v3.y()))));
+                    final var maxY = (int) min(height - 1, floor(max(v1.y(), max(v2.y(), v3.y()))));
 
                     final var triangleArea = (v1.y() - v3.y()) * (v2.x() - v3.x()) + (v2.y() - v3.y()) * (v3.x() - v1.x());
 
@@ -148,7 +151,7 @@ public final class Demo3DRendering {
                             final var b3 = ((y - v2.y()) * (v1.x() - v2.x()) + (v1.y() - v2.y()) * (v2.x() - x)) / triangleArea;
                             if (b1 >= 0 && b1 <= 1 && b2 >= 0 && b2 <= 1 && b3 >= 0 && b3 <= 1) {
                                 final var depth = b1 * v1.z() + b2 * v2.z() + b3 * v3.z();
-                                final var zIndex = y * img.getWidth() + x;
+                                final var zIndex = y * width + x;
                                 if (zBuffer[zIndex] < depth) {
                                     img.setRGB(x, y, shader.shade(t.color(), angleCos).getRGB());
                                     zBuffer[zIndex] = depth;
@@ -156,35 +159,35 @@ public final class Demo3DRendering {
                             }
                         }
                     }
-                }
-                g.drawImage(img, 0, 0, null);
+                });
+                return img;
             }
 
             private Matrix3 buildRotationMatrix() {
                 final var heading = Math.toRadians(headingSlider.getValue());
-                final var headingTransform = headingTransform(heading);
                 final var pitch = Math.toRadians(pitchSlider.getValue());
-                final var pitchTransform = pitchTransform(pitch);
-                return headingTransform.multiply(pitchTransform);
+                return headingTransform(heading).multiply(pitchTransform(pitch));
             }
 
-            private List<Triangle> inflate(final List<Triangle> initTris) {
-                final var triangles = Stream.iterate(initTris, s -> s.stream()
-                                .flatMap(Triangle::inflate)
-                                .map(t -> t.resizeBy(sqrt30000))
-                                .toList())
-                        .limit(inflationSlider.getValue())
-                        .reduce(initTris, (_, tris) -> tris);
+            private Sequence<Triangle> inflate() {
+                return Sequence.iterate(tetrahedronTriangles, s -> s.flatMap(Triangle::midPointTriangles))
+                        .take(inflationSlider.getValue())
+                        .last()
+                        .map(t -> t.normalizeAndResizeBy(zoomSlider.getValue()));
+            }
+
+            private void useTriangles(Consumer<Triangle> consumer) {
+                final var count = inflate().onEach(consumer).count();
                 if (inflationSlider.getValueIsAdjusting()) {
-                    logger.info("Nr of triangles: {}", triangles.size());
+                    logger.info("Nr of triangles: {}", count);
                 }
-                return triangles;
             }
         };
         pane.add(renderPanel, BorderLayout.CENTER);
 
         headingSlider.addChangeListener(_ -> renderPanel.repaint());
         pitchSlider.addChangeListener(_ -> renderPanel.repaint());
+        zoomSlider.addChangeListener(_ -> renderPanel.repaint());
         inflationSlider.addChangeListener(_ -> renderPanel.repaint());
         modeButton.addActionListener(_ -> renderPanel.repaint());
 
@@ -207,99 +210,44 @@ public final class Demo3DRendering {
 
     private static Matrix3 pitchTransform(final double pitch) {
         return new Matrix3(
-                1, 0, 0,
-                0, Math.cos(pitch), Math.sin(pitch),
-                0, -Math.sin(pitch), Math.cos(pitch)
+                1.0, 0.0, 0.0,
+                0.0, Math.cos(pitch), Math.sin(pitch),
+                0.0, -Math.sin(pitch), Math.cos(pitch)
         );
     }
 
     private static Matrix3 headingTransform(final double heading) {
         return new Matrix3(
-                Math.cos(heading), 0, -Math.sin(heading),
-                0, 1, 0,
-                Math.sin(heading), 0, Math.cos(heading)
+                Math.cos(heading), 0.0, -Math.sin(heading),
+                0.0, 1.0, 0.0,
+                Math.sin(heading), 0.0, Math.cos(heading)
         );
     }
 
-    private static List<Triangle> buildTetrahedron() {
-        return List.of(
-                new Triangle(
-                        new Vertex(100, 100, 100),
-                        new Vertex(-100, -100, 100),
-                        new Vertex(-100, 100, -100),
-                        Color.WHITE),
-                new Triangle(
-                        new Vertex(100, 100, 100),
-                        new Vertex(-100, -100, 100),
-                        new Vertex(100, -100, -100),
-                        Color.RED),
-                new Triangle(
-                        new Vertex(-100, 100, -100),
-                        new Vertex(100, -100, -100),
-                        new Vertex(100, 100, 100),
-                        Color.GREEN),
-                new Triangle(
-                        new Vertex(-100, 100, -100),
-                        new Vertex(100, -100, -100),
-                        new Vertex(-100, -100, 100),
-                        Color.BLUE));
-    }
-}
-
-record Vertex(double x, double y, double z) {
-
-    static final Vertex ZERO = new Vertex(0, 0, 0);
-
-    Vertex plus(final double x, final double y, final double z) {
-        return new Vertex(this.x + x, this.y + y, this.z + z);
-    }
-
-    Vertex divided(final double n) {
-        return Double.compare(n, 0.0) == 0 ? ZERO : new Vertex(x / n, y / n, z / n);
-    }
-
-    Vertex multiplied(final double factor) {
-        return new Vertex(x * factor, y * factor, z * factor);
-    }
-
-    Vertex crossProduct(final Vertex other) {
-        return new Vertex(
-                y * other.z - z * other.y,
-                z * other.x - x * other.z,
-                x * other.y - y * other.x
-        );
-    }
-
-    Vertex normalized() {
-        final var mag = magnitude();
-        return Double.compare(mag, 0.0) == 0 ? ZERO : divided(mag);
-    }
-
-    double magnitude() {
-        return Math.sqrt(x * x + y * y + z * z);
-    }
-}
-
-record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
-
-    Triangle resizeBy(final double factor) {
-        final var v1n = v1.normalized().multiplied(factor);
-        final var v2n = v2.normalized().multiplied(factor);
-        final var v3n = v3.normalized().multiplied(factor);
-        return new Triangle(v1n, v2n, v3n, color);
-    }
-
-    Stream<Triangle> inflate() {
-        final var m1 = new Vertex((v1.x() + v2.x()) / 2, (v1.y() + v2.y()) / 2, (v1.z() + v2.z()) / 2);
-        final var m2 = new Vertex((v2.x() + v3.x()) / 2, (v2.y() + v3.y()) / 2, (v2.z() + v3.z()) / 2);
-        final var m3 = new Vertex((v1.x() + v3.x()) / 2, (v1.y() + v3.y()) / 2, (v1.z() + v3.z()) / 2);
-        return Stream.of(
-                new Triangle(v1, m1, m3, color),
-                new Triangle(v2, m1, m2, color),
-                new Triangle(v3, m2, m3, color),
-                new Triangle(m1, m2, m3, color)
-        );
-    }
+    /**
+     * A tetrahedron generating sequence with the center around 0,0,0
+     */
+    private static final Sequence<Triangle> tetrahedronTriangles = Sequence.of(
+            new Triangle(
+                    new Vertex(100, 100, 100),
+                    new Vertex(-100, -100, 100),
+                    new Vertex(-100, 100, -100),
+                    Color.WHITE),
+            new Triangle(
+                    new Vertex(100, 100, 100),
+                    new Vertex(-100, -100, 100),
+                    new Vertex(100, -100, -100),
+                    Color.RED),
+            new Triangle(
+                    new Vertex(-100, 100, -100),
+                    new Vertex(100, -100, -100),
+                    new Vertex(100, 100, 100),
+                    Color.GREEN),
+            new Triangle(
+                    new Vertex(-1, 1, -1),
+                    new Vertex(1, -1, -1),
+                    new Vertex(-1, -1, 1),
+                    Color.BLUE));
 }
 
 /**
@@ -337,7 +285,3 @@ record Matrix3(double... values) {
     }
 }
 
-@FunctionalInterface
-interface Shader {
-    Color shade(Color color, double factor);
-}
