@@ -5,13 +5,21 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
+    <groupId>org.hzt.animations</groupId>
     <artifactId>java-swing-examples</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>samples</module>
+        <module>dashboard-sample</module>
+        <module>mine-sweeper</module>
+        <module>rubiks-cube-solver</module>
+    </modules>
 
     <properties>
-        <maven.compiler.source>23</maven.compiler.source>
-        <maven.compiler.target>23</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--dependencies-->
         <dyn4j.version>4.2.1</dyn4j.version>
@@ -22,9 +30,41 @@
         <!--test dependencies-->
         <junit.jupiter.version>5.11.3</junit.jupiter.version>
         <!--plugins-->
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.5.1</maven-surefire-plugin.version>
+        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!--other-->
+            <dependency>
+                <groupId>org.dyn4j</groupId>
+                <artifactId>dyn4j</artifactId>
+                <version>${dyn4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>es.usc.citius.hipster</groupId>
+                <artifactId>hipster-core</artifactId>
+                <version>${hipster-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hzt.utils</groupId>
+                <artifactId>core</artifactId>
+                <version>${hzt.utils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.hzt.utils</groupId>
+                <artifactId>swing-utils</artifactId>
+                <version>${hzt.utils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${annotations.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- TEST SCOPE DEPENDENCIES -->
@@ -40,32 +80,7 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
         </dependency>
-        <!--other-->
-        <dependency>
-            <groupId>org.dyn4j</groupId>
-            <artifactId>dyn4j</artifactId>
-            <version>${dyn4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>es.usc.citius.hipster</groupId>
-            <artifactId>hipster-core</artifactId>
-            <version>${hipster-core.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hzt.utils</groupId>
-            <artifactId>core</artifactId>
-            <version>${hzt.utils.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.hzt.utils</groupId>
-            <artifactId>swing-utils</artifactId>
-            <version>${hzt.utils.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>${annotations.version}</version>
-        </dependency>
+
     </dependencies>
 
     <repositories>
@@ -86,7 +101,6 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>
 
@@ -94,9 +108,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <argLine>--enable-preview</argLine>
-                </configuration>
             </plugin>
         </plugins>
     </build>

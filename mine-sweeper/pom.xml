@@ -5,43 +5,19 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>hzt-animations</groupId>
-    <artifactId>mine-sweeper</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <parent>
+        <groupId>org.hzt.animations</groupId>
+        <artifactId>java-swing-examples</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
-    <properties>
-        <java.source.version>23</java.source.version>
-        <java.target.version>23</java.target.version>
-        <coverage.target>50%</coverage.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--        dependencies-->
-        <junit.jupiter.version>5.10.1</junit.jupiter.version>
-        <logback-classic.version>1.5.3</logback-classic.version>
-        <!--        plugins-->
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
-        <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
-        <hzt.utils.version>1.0.3.22</hzt.utils.version>
-    </properties>
+    <artifactId>mine-sweeper</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <!--logging-->
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback-classic.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.hzt.utils</groupId>
             <artifactId>core</artifactId>
-            <version>${hzt.utils.version}</version>
         </dependency>
     </dependencies>
 
@@ -77,24 +53,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <argLine>--enable-preview</argLine>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${maven-compiler-plugin.version}</version>
-                <configuration>
-                    <source>${java.source.version}</source>
-                    <target>${java.target.version}</target>
-                    <compilerArgs>--enable-preview</compilerArgs>
-                </configuration>
             </plugin>
         </plugins>
     </build>

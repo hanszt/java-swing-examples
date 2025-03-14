@@ -20,7 +20,7 @@ public final class Demo3DRotation {
 
     private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
 
-    void main() {
+    public static void main(String[] args) {
         final var frame = new JFrame();
         final var pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
@@ -42,7 +42,7 @@ public final class Demo3DRotation {
 
             {
                 setLabel(getLabel(mode));
-                addActionListener(_ -> {
+                addActionListener(unused -> {
                     final var newMode = switch (mode) {
                         case WIRE_FRAME -> Mode.FILLED_UNSHADED;
                         case FILLED_SHADED -> Mode.WIRE_FRAME;
@@ -115,7 +115,7 @@ public final class Demo3DRotation {
             }
 
             private Mode drawFilledUnShaded(final Graphics graphics) {
-                graphics.drawImage(build3DShapeImage((color, _) -> color), 0, 0, null);
+                graphics.drawImage(build3DShapeImage((color, unused) -> color), 0, 0, null);
                 return Mode.FILLED_UNSHADED;
             }
 
@@ -185,11 +185,11 @@ public final class Demo3DRotation {
         };
         pane.add(renderPanel, BorderLayout.CENTER);
 
-        headingSlider.addChangeListener(_ -> renderPanel.repaint());
-        pitchSlider.addChangeListener(_ -> renderPanel.repaint());
-        zoomSlider.addChangeListener(_ -> renderPanel.repaint());
-        inflationSlider.addChangeListener(_ -> renderPanel.repaint());
-        modeButton.addActionListener(_ -> renderPanel.repaint());
+        headingSlider.addChangeListener(unused -> renderPanel.repaint());
+        pitchSlider.addChangeListener(unused -> renderPanel.repaint());
+        zoomSlider.addChangeListener(unused -> renderPanel.repaint());
+        inflationSlider.addChangeListener(unused -> renderPanel.repaint());
+        modeButton.addActionListener(unused -> renderPanel.repaint());
 
         frame.setSize(600, 600);
         frame.setVisible(true);

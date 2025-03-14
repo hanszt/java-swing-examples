@@ -31,7 +31,7 @@ public final class Marbling {
         this.random = random;
     }
 
-    public static void main() {
+    public static void main(String[] args) {
         final var marbling = new Marbling(new Random());
         SwingUtilities.invokeLater(marbling::start);
     }
@@ -130,8 +130,8 @@ public final class Marbling {
 
         public void marbledBy(Drop other) {
             for (int i = 0; i < vertices.length; i++) {
-                var c = other.center;
-                var r = other.radius;
+                final var c = other.center;
+                final var r = other.radius;
                 final var diff = vertices[i].subtract(c);
                 var mSquared = diff.magnitudeSquared();
                 var root = Math.sqrt(1 + ((r * r) / mSquared));

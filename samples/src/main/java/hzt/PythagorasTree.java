@@ -137,14 +137,14 @@ public final class PythagorasTree extends JPanel {
         drawTree(g);
     }
 
-    public void main() {
-        SwingUtilities.invokeLater(this::run);
+    public static void main(String... args) {
+        SwingUtilities.invokeLater(new PythagorasTree()::run);
     }
 
     private void run() {
         final var controlPanel = new JPanel();
         final var resetAll = new JButton("Reset all");
-        resetAll.addActionListener(_ -> {
+        resetAll.addActionListener(unused -> {
             treeDepthSilder.setValue(INIT_DEPTH);
             angleSlider1.setValue(INIT_ANGLE_1);
             angleSlider2.setValue(INIT_ANGLE_2);
@@ -202,7 +202,7 @@ public final class PythagorasTree extends JPanel {
             super();
             final var initValue = slider.getValue();
             final var resetButton = new JButton("Reset");
-            resetButton.addActionListener(_ -> slider.setValue(initValue));
+            resetButton.addActionListener(unused -> slider.setValue(initValue));
             add(slider);
             add(resetButton);
         }

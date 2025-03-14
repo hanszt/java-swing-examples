@@ -60,6 +60,7 @@ public final class Minesweeper {
      *
      */
     public static void main(final String... args) {
+        LOGGER.info("Starting Minesweeper ...");
         final var arguments = parseArguments(args);
         new MinesweeperFrame(arguments);
     }

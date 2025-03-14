@@ -11,13 +11,9 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>hzt-swing</groupId>
-    <artifactId>dashboard-sample</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <artifactId>rubiks-cube-solver</artifactId>
 
     <dependencies>
-        <!--logging-->
         <dependency>
             <groupId>org.hzt.utils</groupId>
             <artifactId>core</artifactId>
