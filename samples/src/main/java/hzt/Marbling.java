@@ -7,14 +7,12 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.random.RandomGenerator;
 import java.util.stream.DoubleStream;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
+import static java.lang.Math.*;
 
 /**
  * <a href="https://www.youtube.com/watch?v=p7IGZTjC008">Coding Challenge 183: Paper Marbling Algorithm</a>
@@ -25,19 +23,19 @@ public final class Marbling {
 
     private final Canvas canvas = new Canvas();
     private final List<Drop> drops = new ArrayList<>();
-    private final Random random;
+    private final RandomGenerator random;
 
-    public Marbling(Random random) {
+    public Marbling(final RandomGenerator random) {
         this.random = random;
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         final var marbling = new Marbling(new Random());
         SwingUtilities.invokeLater(marbling::start);
     }
 
     private void start() {
-        final JFrame frame = new JFrame("Marbling");
+        final var frame = new JFrame("Marbling");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);
         final var panel = new JPanel();
@@ -51,7 +49,7 @@ public final class Marbling {
         canvas.createBufferStrategy(2);
         canvas.addMouseListener((new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent event) {
+            public void mousePressed(final MouseEvent event) {
                 updateCanvas(new Point2D(event.getX(), event.getY()), getDrawGraphics());
             }
         }));
@@ -59,26 +57,31 @@ public final class Marbling {
         drawBackground(getDrawGraphics());
     }
 
-    private void updateCanvas(Point2D mousePosition, Graphics2D g) {
+    private void updateCanvas(final Point2D mousePosition, final Graphics2D g) {
         drawBackground(g);
         final var newDrop = createDrop(mousePosition);
-        for (final var drop : drops) {
-            drop.marbledBy(newDrop);
-        }
         drops.add(newDrop);
 
-        for (final Drop drop : drops) {
+        for (final var drop : drops) {
+            if (!drop.equals(newDrop)) {
+                drop.marbledBy(newDrop);
+            }
             g.setColor(drop.color);
-            final var xPoints = drop.xPoints();
-            final var yPoints = drop.yPoints();
-            g.fillPolygon(xPoints, yPoints, drop.vertices.length);
+            final var vertices = drop.vertices;
+            final var xPoints = new int[vertices.length];
+            final var yPoints = new int[vertices.length];
+            for (var i = 0; i < vertices.length; i++) {
+                xPoints[i] = (int) vertices[i].x;
+                yPoints[i] = (int) vertices[i].y;
+            }
+            g.fillPolygon(xPoints, yPoints, xPoints.length);
             g.setColor(drop.color.darker());
-            g.drawPolygon(xPoints, yPoints, drop.vertices.length);
+            g.drawPolygon(xPoints, yPoints, yPoints.length);
         }
         cleanup(g);
     }
 
-    private void cleanup(Graphics2D g) {
+    private void cleanup(final Graphics2D g) {
         g.dispose();
         // blit/flip the buffer
         final var strategy = this.canvas.getBufferStrategy();
@@ -95,7 +98,7 @@ public final class Marbling {
         graphics.fillRect(0, 0, preferredSize.width, preferredSize.height);
     }
 
-    private @NotNull Drop createDrop(Point2D mousePosition) {
+    private @NotNull Drop createDrop(final Point2D mousePosition) {
         final var color = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255));
         final var radius = random.nextInt(20, 100);
         return new Drop(radius, mousePosition, color);
@@ -113,52 +116,48 @@ public final class Marbling {
         private final Point2D center;
         private final Point2D[] vertices;
 
-        Drop(double radius, Point2D center, Color color) {
+        Drop(final double radius, final Point2D center, final Color color) {
             this.radius = radius;
             this.center = center;
             this.color = color;
             vertices = createCircle(radius, center);
         }
 
-        private Point2D[] createCircle(double radius, Point2D position) {
-            return DoubleStream.iterate(0, d -> d + 1.0)
+        private Point2D[] createCircle(final double radius, final Point2D position) {
+            return DoubleStream.iterate(0.0, d -> d + 1.0)
                     .limit(DETAIL)
                     .map(d -> 2 * PI * (d / DETAIL))
-                    .mapToObj(angle -> new Point2D(cos(angle) * radius + position.x(), sin(angle) * radius + position.y()))
+                    .mapToObj(angle -> position.add(cos(angle) * radius, sin(angle) * radius))
                     .toArray(Point2D[]::new);
         }
 
-        public void marbledBy(Drop other) {
-            for (int i = 0; i < vertices.length; i++) {
+        public void marbledBy(final Drop other) {
+            for (var i = 0; i < vertices.length; i++) {
                 final var c = other.center;
                 final var r = other.radius;
                 final var diff = vertices[i].subtract(c);
-                var mSquared = diff.magnitudeSquared();
-                var root = Math.sqrt(1 + ((r * r) / mSquared));
+                final var mSquared = diff.magnitudeSquared();
+                final var root = Math.sqrt(1 + ((r * r) / mSquared));
                 vertices[i] = c.add(diff.multiply(root));
             }
-        }
-
-        public int[] xPoints() {
-            return Arrays.stream(vertices).mapToInt(p -> (int) p.x).toArray();
-        }
-
-        public int[] yPoints() {
-            return Arrays.stream(vertices).mapToInt(p -> (int) p.y).toArray();
         }
     }
 
     record Point2D(double x, double y) {
 
-        public Point2D add(Point2D other) {
-            return new Point2D(x + other.x, y + other.y);
+        public Point2D add(final Point2D other) {
+            return add(other.x, other.y);
         }
 
-        public Point2D subtract(Point2D other) {
+        private Point2D add(final double x, final double y) {
+            return new Point2D(this.x + x, this.y + y);
+        }
+
+        public Point2D subtract(final Point2D other) {
             return new Point2D(x - other.x, y - other.y);
         }
 
-        public Point2D multiply(double factor) {
+        public Point2D multiply(final double factor) {
             return new Point2D(x * factor, y * factor);
         }
 
