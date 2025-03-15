@@ -78,7 +78,7 @@ public final class Cubie {
      * @return the direction of the color on the corresponding cubie ('A' if color is not on cubie)
      */
     public char getDirOfColor(final char color) {
-        for (final CubieColor cubieColor : colors) {
+        for (final var cubieColor : colors) {
             if (cubieColor.getColor() == color)
                 return cubieColor.getDir();
         }
@@ -92,7 +92,7 @@ public final class Cubie {
      * @return the direction of the color on the corresponding cubie ('A' if cubie does not have a color in direction dir)
      */
     public char getColorOfDir(final char dir) {
-        for (final CubieColor color : colors) {
+        for (final var color : colors) {
             if (color.getDir() == dir)
                 return color.getColor();
         }
@@ -122,7 +122,7 @@ public final class Cubie {
      * @param ncolor: new color
      */
     public void setColorOfDir(final char dir, final char ncolor) {
-        for (int i = 0; i < colors.length; i++) {
+        for (var i = 0; i < colors.length; i++) {
             if (colors[i].getDir() == dir)
                 colors[i].setColor(ncolor);
         }

@@ -2,8 +2,7 @@ package org.hzt;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Random;
 
 /**
  * Copyright 2017, Shoumyo Chakravorti, All rights reserved.
@@ -16,7 +15,7 @@ import java.awt.event.ActionListener;
  * @author Shoumyo Chakravorti
  * @version 2.0
  */
-public final class CubeDisplayer extends JFrame implements ActionListener {
+public final class CubeDisplayer extends JFrame {
     //Auto-generated ID
     private static final long serialVersionUID = -3198702237161500498L;
     CubePainter cubePainter; //The JPanel that will handle painting and user input
@@ -48,13 +47,19 @@ public final class CubeDisplayer extends JFrame implements ActionListener {
         scramble = new JMenuItem("Text Scramble Mode");
         modes.add(colorSelection);
         modes.add(scramble);
-        colorSelection.addActionListener(this);
-        scramble.addActionListener(this);
+        colorSelection.addActionListener(unused -> {
+            cubePainter.setInSolution(false);
+            cubePainter.updateMode(CubePainter.COLOR_SELECTION);
+        });
+        scramble.addActionListener(unused -> {
+            cubePainter.setInSolution(true);
+            cubePainter.updateMode(CubePainter.TEXT_SCRAMBLE);
+        });
         menuBar.add(modes);
         setJMenuBar(menuBar);
 
         //Create a new CubePainter JPanel
-        cubePainter = new CubePainter();
+        cubePainter = new CubePainter(new Random());
         add(cubePainter);
         cubePainter.setVisible(true);
         cubePainter.setEnabled(true);
@@ -62,19 +67,6 @@ public final class CubeDisplayer extends JFrame implements ActionListener {
         menuBar.setVisible(true);
         setVisible(true);
         this.repaint();
-    }
-
-    /**
-     * Toggles between color selection mode and text scramble mode in the cubePainter instance.
-     */
-    public void actionPerformed(final ActionEvent e) {
-        if (e.getSource() == colorSelection) {
-            cubePainter.setInSolution(false);
-            cubePainter.updateMode(CubePainter.COLOR_SELECTION);
-        } else if (e.getSource() == scramble) {
-            cubePainter.setInSolution(true);
-            cubePainter.updateMode(CubePainter.TEXT_SCRAMBLE);
-        }
     }
 }
 

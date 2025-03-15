@@ -18,51 +18,51 @@ public class SolutionFinder {
 	public static void main(final String[] args) {
 		double sum = 0;
 		
-		final long startTime = System.nanoTime();
+		final var startTime = System.nanoTime();
 		System.out.println("Initializing...");
 		cube = new Cube();
 		//Scramble it up
-		final String scramble = "L R' U2 B2 L2 U2 B2 L D2 R' F2 D B F2 L' D U2 B R' U' L'";
+		final var scramble = "L R' U2 B2 L2 U2 B2 L D2 R' F2 D B F2 L' D U2 B R' U' L'";
 		System.out.println("Scramble: " + scramble + "\n");
 		cube.scramble(scramble);
 		
-		final String sunflower = cube.makeSunflower();
+		final var sunflower = cube.makeSunflower();
 		System.out.println("Making the sunflower:");
 		System.out.println(sunflower);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(sunflower) + "\n");
 		
-		final String whiteCross = cube.makeWhiteCross();
+		final var whiteCross = cube.makeWhiteCross();
 		System.out.println("Making the white cross:");
 		System.out.println(whiteCross);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(whiteCross) + "\n");
 		
-		final String whiteCorners = cube.finishWhiteLayer();
+		final var whiteCorners = cube.finishWhiteLayer();
 		System.out.println("Inserting the white corners:");
 		System.out.println(whiteCorners);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(whiteCorners) + "\n");
 		
-		final String edges = cube.insertAllEdges();
+		final var edges = cube.insertAllEdges();
 		System.out.println("Finishing second layer:");
 		System.out.println(edges);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(edges) + "\n");
 		
-		final String yellowCross = cube.makeYellowCross();
+		final var yellowCross = cube.makeYellowCross();
 		System.out.println("Making the yellow cross:");
 		System.out.println(yellowCross);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(yellowCross) + "\n");
 		
-		final String OLL = cube.orientLastLayer();
+		final var OLL = cube.orientLastLayer();
 		System.out.println("Orienting the last layer:");
 		System.out.println(OLL);
 		System.out.println("Optimized: \n" + cube.optimizeMoves(OLL) + "\n");
 		
-		final String PLL = cube.permuteLastLayer();
+		final var PLL = cube.permuteLastLayer();
 		System.out.println("Permuting the last layer:");
 		System.out.println(PLL);
 		System.out.println("Optimized: " + cube.optimizeMoves(PLL) + "\n");
 		
-		final long endTime = System.nanoTime();
-		final long runtime = endTime - startTime;
+		final var endTime = System.nanoTime();
+		final var runtime = endTime - startTime;
 		sum+=runtime;
 		System.out.println("Done in " + (sum/1000000) + " milliseconds" + "\n\n\n\n");
 		

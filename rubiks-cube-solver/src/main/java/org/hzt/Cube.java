@@ -1,6 +1,8 @@
 package org.hzt;
 
 import java.awt.*;
+import java.util.List;
+import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
 /**
@@ -118,23 +120,23 @@ public final class Cube {
         //See the first case (B) to understand how all cases work
         final char[] preChange; //Directions prior to turning
         final char[] postChange; //What the directions change to after the turn
-        Cubie[][] matrix = new Cubie[3][3]; //matrix to be rotated
+        var matrix = new Cubie[3][3]; //matrix to be rotated
 
         switch (turn) {
             case "B":
                 preChange = new char[]{'B', 'U', 'R', 'D', 'L'};
                 postChange = new char[]{'B', 'L', 'U', 'R', 'D'};
                 //Transfer cubie data into matrix to be rotated
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[Math.abs(j - 2)][2][i];
                     }
                 }
                 //Rotate the matrix
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
                 //Reset the actual cube's cubies to those of the rotated matrix
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[Math.abs(j - 2)][2][i] = matrix[i][j];
                     }
                 }
@@ -143,15 +145,15 @@ public final class Cube {
             case "B'":
                 preChange = new char[]{'B', 'U', 'R', 'D', 'L'};
                 postChange = new char[]{'B', 'R', 'D', 'L', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[Math.abs(j - 2)][2][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[Math.abs(j - 2)][2][i] = matrix[i][j];
                     }
                 }
@@ -160,15 +162,15 @@ public final class Cube {
             case "D":
                 preChange = new char[]{'D', 'L', 'B', 'R', 'F'};
                 postChange = new char[]{'D', 'F', 'L', 'B', 'R'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][i][2];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][i][2] = matrix[i][j];
                     }
                 }
@@ -177,15 +179,15 @@ public final class Cube {
             case "D'":
                 preChange = new char[]{'D', 'F', 'L', 'B', 'R'};
                 postChange = new char[]{'D', 'L', 'B', 'R', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][i][2];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][i][2] = matrix[i][j];
                     }
                 }
@@ -194,15 +196,15 @@ public final class Cube {
             case "E":
                 preChange = new char[]{'L', 'B', 'R', 'F'};
                 postChange = new char[]{'F', 'L', 'B', 'R'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][i][1];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][i][1] = matrix[i][j];
                     }
                 }
@@ -211,15 +213,15 @@ public final class Cube {
             case "E'":
                 preChange = new char[]{'F', 'L', 'B', 'R'};
                 postChange = new char[]{'L', 'B', 'R', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][i][1];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][i][1] = matrix[i][j];
                     }
                 }
@@ -228,15 +230,15 @@ public final class Cube {
             case "F":
                 preChange = new char[]{'F', 'U', 'R', 'D', 'L'};
                 postChange = new char[]{'F', 'R', 'D', 'L', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][0][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][0][i] = matrix[i][j];
                     }
                 }
@@ -245,15 +247,15 @@ public final class Cube {
             case "F'":
                 preChange = new char[]{'F', 'U', 'R', 'D', 'L'};
                 postChange = new char[]{'F', 'L', 'U', 'R', 'D'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][0][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][0][i] = matrix[i][j];
                     }
                 }
@@ -262,15 +264,15 @@ public final class Cube {
             case "L":
                 preChange = new char[]{'L', 'B', 'D', 'F', 'U'};
                 postChange = new char[]{'L', 'U', 'B', 'D', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[0][Math.abs(j - 2)][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[0][Math.abs(j - 2)][i] = matrix[i][j];
                     }
                 }
@@ -279,15 +281,15 @@ public final class Cube {
             case "L'":
                 preChange = new char[]{'L', 'U', 'B', 'D', 'F'};
                 postChange = new char[]{'L', 'B', 'D', 'F', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[0][Math.abs(j - 2)][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[0][Math.abs(j - 2)][i] = matrix[i][j];
                     }
                 }
@@ -296,15 +298,15 @@ public final class Cube {
             case "M":
                 preChange = new char[]{'B', 'D', 'F', 'U'};
                 postChange = new char[]{'U', 'B', 'D', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[1][Math.abs(j - 2)][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[1][Math.abs(j - 2)][i] = matrix[i][j];
                     }
                 }
@@ -313,15 +315,15 @@ public final class Cube {
             case "M'":
                 preChange = new char[]{'U', 'B', 'D', 'F'};
                 postChange = new char[]{'B', 'D', 'F', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[1][Math.abs(j - 2)][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[1][Math.abs(j - 2)][i] = matrix[i][j];
                     }
                 }
@@ -330,15 +332,15 @@ public final class Cube {
             case "R":
                 preChange = new char[]{'R', 'U', 'B', 'D', 'F'};
                 postChange = new char[]{'R', 'B', 'D', 'F', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[2][j][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[2][j][i] = matrix[i][j];
                     }
                 }
@@ -347,15 +349,15 @@ public final class Cube {
             case "R'":
                 preChange = new char[]{'R', 'B', 'D', 'F', 'U'};
                 postChange = new char[]{'R', 'U', 'B', 'D', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[2][j][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[2][j][i] = matrix[i][j];
                     }
                 }
@@ -364,15 +366,15 @@ public final class Cube {
             case "S":
                 preChange = new char[]{'U', 'R', 'D', 'L'};
                 postChange = new char[]{'R', 'D', 'L', 'U'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][1][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][1][i] = matrix[i][j];
                     }
                 }
@@ -381,15 +383,15 @@ public final class Cube {
             case "S'":
                 preChange = new char[]{'U', 'R', 'D', 'L'};
                 postChange = new char[]{'L', 'U', 'R', 'D'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][1][i];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][1][i] = matrix[i][j];
                     }
                 }
@@ -398,15 +400,15 @@ public final class Cube {
             case "U":
                 preChange = new char[]{'U', 'F', 'L', 'B', 'R'};
                 postChange = new char[]{'U', 'L', 'B', 'R', 'F'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][Math.abs(i - 2)][0];
                     }
                 }
                 matrix = rotateMatrix(matrix, 90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][Math.abs(i - 2)][0] = matrix[i][j];
                     }
                 }
@@ -415,15 +417,15 @@ public final class Cube {
             case "U'":
                 preChange = new char[]{'U', 'L', 'B', 'R', 'F'};
                 postChange = new char[]{'U', 'F', 'L', 'B', 'R'};
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         matrix[i][j] = cubiePos[j][Math.abs(i - 2)][0];
                     }
                 }
                 matrix = rotateMatrix(matrix, -90, preChange, postChange);
 
-                for (int i = 0; i < 3; i++) {
-                    for (int j = 0; j < 3; j++) {
+                for (var i = 0; i < 3; i++) {
+                    for (var j = 0; j < 3; j++) {
                         cubiePos[j][Math.abs(i - 2)][0] = matrix[i][j];
                     }
                 }
@@ -478,34 +480,34 @@ public final class Cube {
      */
     private Cubie[][] rotateMatrix(final Cubie[][] orig, final int degrees, final char[] preChange,
                                    final char[] postChange) {
-        final Cubie[][] rotated = new Cubie[3][3];
+        final var rotated = new Cubie[3][3];
         if (degrees == 90) {
             //Transpose the matrix
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     rotated[i][j] = orig[j][i];
                 }
             }
             //Reverse all the rows
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < rotated[0].length / 2; j++) {
-                    final Cubie tempCubie = rotated[i][3 - j - 1];
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < rotated[0].length / 2; j++) {
+                    final var tempCubie = rotated[i][3 - j - 1];
                     rotated[i][3 - j - 1] = rotated[i][j];
                     rotated[i][j] = tempCubie;
                 }
             }
         } else if (degrees == -90) {
             //Transpose the matrix
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     rotated[i][j] = orig[j][i];
                 }
             }
 
             //Reverse all the columns
-            for (int i = 0; i < rotated[0].length / 2; i++) {
-                for (int j = 0; j < 3; j++) {
-                    final Cubie tempCubie = rotated[3 - i - 1][j];
+            for (var i = 0; i < rotated[0].length / 2; i++) {
+                for (var j = 0; j < 3; j++) {
+                    final var tempCubie = rotated[3 - i - 1][j];
                     rotated[3 - i - 1][j] = rotated[i][j];
                     rotated[i][j] = tempCubie;
                 }
@@ -513,12 +515,12 @@ public final class Cube {
         }
 
         //Change the direction of all colors appropriately as well before returning the array
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
-                final CubieColor[] tempColors = rotated[i][j].getColors();
-                for (final CubieColor tempColor : tempColors) {
-                    int index = 6;
-                    for (int x = 0; x < preChange.length; x++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
+                final var tempColors = rotated[i][j].getColors();
+                for (final var tempColor : tempColors) {
+                    var index = 6;
+                    for (var x = 0; x < preChange.length; x++) {
                         if (tempColor.getDir() == preChange[x]) {
                             index = x;
                         }
@@ -540,7 +542,7 @@ public final class Cube {
      * @return the moves performed on the cube (same as {@code moves})
      */
     public String performMoves(final String moves) {
-        for (int i = 0; i < moves.length(); i++) {
+        for (var i = 0; i < moves.length(); i++) {
             if (moves.charAt(i) != ' ') { //Only check if there is a meaningful character
                 if (i != moves.length() - 1) {
                     if (moves.substring(i + 1, i + 2).compareTo("2") == 0) {
@@ -573,7 +575,7 @@ public final class Cube {
      * @param moves the moves to be reversed
      */
     public void reverseMoves(final String moves) {
-        for (int i = 0; i < moves.length(); i++) {
+        for (var i = 0; i < moves.length(); i++) {
             if (moves.charAt(i) != ' ') { //Only check if there is a meaningful character
                 if (i != moves.length() - 1) {
                     if (moves.substring(i + 1, i + 2).compareTo("2") == 0) {
@@ -606,8 +608,8 @@ public final class Cube {
      * @return the optimized set of moves
      */
     public String optimizeMoves(String moves) {
-        for (int i = 0; i < moves.length(); i++) {
-            final String move = moves.substring(i, i + 1);
+        for (var i = 0; i < moves.length(); i++) {
+            final var move = moves.substring(i, i + 1);
             if (!move.equals(" ") && !move.equals("'") && !move.equals("2")) { //Only check if there is a meaningful turn/rotation
                 if (i <= moves.length() - 3) {
                     if (moves.substring(i + 1, i + 2).compareTo("2") == 0) { //Double turn
@@ -702,24 +704,19 @@ public final class Cube {
      *
      * @return a random scramble
      */
-    public String randScramble() {
-        StringBuilder scramble = new StringBuilder();
-        final char[] possMoves = new char[]{'U', 'D', 'R', 'L', 'F', 'B'}; //The allowed set of moves
-        char prevMove = possMoves[(int) (Math.random() * 6)]; //Pick random moves as prevMove and secondLastMove for now
-        char secondLastMove = possMoves[(int) (Math.random() * 6)];
-        for (int numMoves = 0; numMoves < 20; ) {
-            final char move = possMoves[(int) (Math.random() * 6)]; //Pick a random move
+    public String randScramble(final RandomGenerator random) {
+        final var scramble = new StringBuilder();
+        final var possMoves = "UDRLFB"; //The allowed set of moves
+        final var additionEnd = List.of("2 ", "' ", " ");
+        var prevMove = possMoves.charAt(random.nextInt(possMoves.length())); //Pick random moves as prevMove and secondLastMove for n)w
+        var secondLastMove = possMoves.charAt(random.nextInt(possMoves.length()));
+        for (var numMoves = 0; numMoves < 20; ) {
+            final var move = possMoves.charAt(random.nextInt(possMoves.length())); //Pick a random move
             //Only proceed if the random move is different from the last two
             if (move != prevMove && move != secondLastMove) {
                 //Decide whether to add something onto the end of the move
-                final int rand = (int) (Math.random() * 100);
-                if (rand < 33) {
-                    scramble.append(move).append("2 ");
-                } else if (rand < 67) {
-                    scramble.append(move).append("' ");
-                } else {
-                    scramble.append(move).append(" ");
-                }
+                final var extra = additionEnd.get(random.nextInt(additionEnd.size()));
+                scramble.append(move).append(extra);
                 secondLastMove = prevMove;
                 prevMove = move;
                 numMoves++;
@@ -748,15 +745,15 @@ public final class Cube {
      * @return the moves used to create the white cross
      */
     public String makeWhiteCross() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
 
         while (numWhiteEdgesOriented() != 0) { //Turn sunflower into cross until no white edges remain in the U layer
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][0].isEdgeCubie()) {
-                        final CubieColor[] tempColors = cubiePos[i][j][0].getColors();
+                        final var tempColors = cubiePos[i][j][0].getColors();
                         if (tempColors[0].getColor() == 'W' || tempColors[1].getColor() == 'W') {
-                            for (int k = 0; k < 2; k++) {
+                            for (var k = 0; k < 2; k++) {
                                 //Check for when the white edge is matched up with the respective face and turn it down
                                 if ((tempColors[k].getColor() == 'R' && tempColors[k].getDir() == 'L') ||
                                         (tempColors[k].getColor() == 'G' && tempColors[k].getDir() == 'F') ||
@@ -782,17 +779,17 @@ public final class Cube {
      * @return moves used to make sunflower
      */
     public String makeSunflower() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
 
         //Brings up white edges in D Layer with white facing down
         if (numWhiteEdgesOriented() < 5) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][2].isEdgeCubie()) {
                         if (cubiePos[i][j][2].getDirOfColor('W') == 'D') {
                             moves.append(prepareSlot(i, j, 0, 'W'));
                             //Get the vertical plane in which the cubie lies
-                            final char turnToMake = cubiePos[i][j][2].verticalFace(i, j);
+                            final var turnToMake = cubiePos[i][j][2].verticalFace(i, j);
                             moves.append(performMoves(turnToMake + "2 "));
                         }
                     }
@@ -802,11 +799,11 @@ public final class Cube {
 
         //Orients white edges in D Layer with white NOT facing down
         if (numWhiteEdgesOriented() < 5) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][2].isEdgeCubie()) {
                         if (cubiePos[i][j][2].getDirOfColor('W') != 'A' && cubiePos[i][j][2].getDirOfColor('W') != 'D') {
-                            final char vert = cubiePos[i][j][2].verticalFace(i, j);
+                            final var vert = cubiePos[i][j][2].verticalFace(i, j);
                             moves.append(prepareSlot(i, j, 0, 'W'));
                             if (vert == 'F') {
                                 moves.append(performMoves("F' U' R "));
@@ -828,11 +825,11 @@ public final class Cube {
         //This one is filled with many if blocks because there are eight different possible orientations for
         //white edges in the E Layer, with none sharing a common move to bring it into the U layer.
         if (numWhiteEdgesOriented() < 5) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][1].isEdgeCubie()) {
-                        final CubieColor[] tempColors = cubiePos[i][j][1].getColors();
-                        for (int k = 0; k < 2; k++) {
+                        final var tempColors = cubiePos[i][j][1].getColors();
+                        for (var k = 0; k < 2; k++) {
                             if (tempColors[k].getColor() == 'W') {
                                 /* Depending on the position of the edge, one of the vertical planes it lies
                                  * in must be cleared of white edges before bringing it up */
@@ -873,11 +870,11 @@ public final class Cube {
         //For the sake of reducing movecount, I assigned a set of moves for each position,
         //but a solver may simply make U turns to bring the edge in front and perform "F U' R"
         if (numWhiteEdgesOriented() < 5) {
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][0].isEdgeCubie()) {
                         if (cubiePos[i][j][0].getDirOfColor('W') != 'A' && cubiePos[i][j][0].getDirOfColor('W') != 'U') {
-                            final char vert = cubiePos[i][j][0].verticalFace(i, j);
+                            final var vert = cubiePos[i][j][0].verticalFace(i, j);
                             if (vert == 'F') {
                                 moves.append(performMoves("F U' R "));
                             } else if (vert == 'R') {
@@ -917,8 +914,8 @@ public final class Cube {
      * @return moves used to prepare the edge slot
      */
     public String prepareSlot(final int x, final int y, final int z, final char color) {
-        int numUTurns = 0;
-        CubieColor[] tempColor = cubiePos[x][y][z].getColors();
+        var numUTurns = 0;
+        var tempColor = cubiePos[x][y][z].getColors();
         while ((tempColor[0].getColor() == color || tempColor[1].getColor() == color) && numUTurns < 5) {
             //Keep turning U until the position (x, y, z) is not occupied by a white edge
             performMoves("U");
@@ -942,9 +939,9 @@ public final class Cube {
      * @return the number of white edges that are currently in the U layer
      */
     public int numWhiteEdgesOriented() {
-        int numOriented = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        var numOriented = 0;
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isEdgeCubie()) {
                     if (cubiePos[i][j][0].getDirOfColor('W') == 'U') {
                         numOriented++;
@@ -962,18 +959,14 @@ public final class Cube {
      * @return the moves used to complete the white layer
      */
     public String finishWhiteLayer() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
         //At least check once for corners to be inserted/fixed, and repeat as necessary
-        moves.append(insertCornersInU());
-        moves.append("\n");
-        moves.append(insertMisorientedCorners());
-        moves.append("\n");
-        while (whiteCornerinU()) {
+        do {
             moves.append(insertCornersInU());
             moves.append("\n");
-            moves.append(insertMisorientedCorners());
+            moves.append(insertMisOrientedCorners());
             moves.append("\n");
-        }
+        } while (whiteCornerinU());
         return optimizeMoves(moves.toString());
     }
 
@@ -983,8 +976,8 @@ public final class Cube {
      * @return if there are any white corners in the U layer
      */
     public boolean whiteCornerinU() {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isCornerCubie()) {
                     //If a cubie does not have a color, getDirOfColor returns 'A'
                     if (cubiePos[i][j][0].getDirOfColor('W') != 'A')
@@ -1003,10 +996,10 @@ public final class Cube {
      * @return moves used to insert white corners that are in the U layer
      */
     public String insertCornersInU() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
 
-        for (int y = 0; y < 3; y++) {
-            for (int x = 0; x < 3; x++) {
+        for (var y = 0; y < 3; y++) {
+            for (var x = 0; x < 3; x++) {
                 if (cubiePos[x][y][0].isCornerCubie() && cubiePos[x][y][0].isWhiteCorner()) {
                     //Make U turns until cubie is at (2, 0, 0)
                     if (x == 0) {
@@ -1025,8 +1018,8 @@ public final class Cube {
                     x = 0;
 
                     //Get cubie above respective slot in first layer
-                    int numUTurns = 0;
-                    int yRotations = 0;
+                    var numUTurns = 0;
+                    var yRotations = 0;
                     while (!whiteCornerPrepared()) {
                         performMoves("U y'");
                         numUTurns++;
@@ -1048,7 +1041,7 @@ public final class Cube {
                     }
 
                     //Insert the cubie
-                    int numSexyMoves = 0;
+                    var numSexyMoves = 0;
                     //Don't worry, the algorithm "R U R' U'" is commonly referred to as the sexy move in the cubing community
                     while (!cornerInserted(2, 0, 2)) {
                         performMoves("R U R' U'");
@@ -1062,18 +1055,17 @@ public final class Cube {
                 }
             }
         }
-
         return moves.toString();
     }
 
     /**
      * Properly inserts white corners that are in the first layer but not oriented correctly
      *
-     * @return moves used to properly orient misoriented white corners
+     * @return moves used to properly orient mis oriented white corners
      */
-    public String insertMisorientedCorners() {
-        StringBuilder moves = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
+    public String insertMisOrientedCorners() {
+        final var moves = new StringBuilder();
+        for (var i = 0; i < 4; i++) {
             moves.append(performMoves("y "));
             if (!cornerInserted(2, 0, 2)) {
                 if (cubiePos[2][0][2].isWhiteCorner()) {
@@ -1095,7 +1087,7 @@ public final class Cube {
      * @return true if cubie at (2, 0, 0) belongs in (2, 0, 2), else false
      */
     public boolean whiteCornerPrepared() {
-        boolean whiteUp = false;
+        var whiteUp = false;
 
         //Figure out whether the corner cubie is even a white corner
         if (cubiePos[2][0][0].isCornerCubie() && cubiePos[2][0][0].getDirOfColor('W') == 'A') {
@@ -1143,12 +1135,12 @@ public final class Cube {
      * @return A String for the moves used to complete the second layer
      */
     public String insertAllEdges() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
         //At least check once for edges to be inserted/fixed, and repeat as necessary
         do {
             moves.append(insertEdgesInU());
             moves.append("\n");
-            moves.append(insertMisorientedEdges());
+            moves.append(insertMisOrientedEdges());
             moves.append("\n");
         } while (nonYellowEdgesInU());
         return optimizeMoves(moves.toString());
@@ -1161,8 +1153,8 @@ public final class Cube {
      * @return whether there is/are non-yellow edges in the U layer
      */
     public boolean nonYellowEdgesInU() {
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isEdgeCubie()) {
                     //If a cubie does not have a color, getDirOfColor returns 'A'
                     if (cubiePos[i][j][0].getDirOfColor('Y') == 'A')
@@ -1180,9 +1172,9 @@ public final class Cube {
      * @return moves used to insert non-yellow edges in the U layer
      */
     public String insertEdgesInU() {
-        StringBuilder moves = new StringBuilder();
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        final var moves = new StringBuilder();
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isEdgeCubie() && cubiePos[i][j][0].getDirOfColor('Y') == 'A') {
                     //Make U turns to get cubie to (1, 0, 0)
                     if (j == 1) {
@@ -1196,8 +1188,8 @@ public final class Cube {
                     }
 
                     //Get cubie above respective slot in second layer
-                    int numUTurns = 0;
-                    int yRotations = 0;
+                    var numUTurns = 0;
+                    var yRotations = 0;
                     while (cubiePos[1][0][0].getColorOfDir('F') != cubiePos[1][0][1].getColors()[0].getColor()) {
                         performMoves("U y' ");
                         numUTurns++;
@@ -1241,9 +1233,9 @@ public final class Cube {
      *
      * @return moves used to fix edge orientations in second layer
      */
-    public String insertMisorientedEdges() {
-        StringBuilder moves = new StringBuilder();
-        for (int i = 0; i < 4; i++) {
+    public String insertMisOrientedEdges() {
+        final var moves = new StringBuilder();
+        for (var i = 0; i < 4; i++) {
             moves.append(performMoves("y "));
             if (cubiePos[2][0][1].getDirOfColor('Y') == 'A' &&
                     cubiePos[2][0][1].getColorOfDir('F') != cubiePos[1][0][1].getColors()[0].getColor()) {
@@ -1267,9 +1259,9 @@ public final class Cube {
      * @return the number of yellow edges that are already oriented in the U layer
      */
     public int numYellowEdgesOriented() {
-        int numOriented = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        var numOriented = 0;
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isEdgeCubie() && cubiePos[i][j][0].getDirOfColor('Y') == 'U')
                     numOriented++;
             }
@@ -1283,9 +1275,9 @@ public final class Cube {
      * @return the number of yellow corners that are already oriented in the U layer
      */
     public int numYellowCornersOriented() {
-        int numOriented = 0;
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        var numOriented = 0;
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 if (cubiePos[i][j][0].isCornerCubie() && cubiePos[i][j][0].getDirOfColor('Y') == 'U')
                     numOriented++;
             }
@@ -1300,8 +1292,8 @@ public final class Cube {
      * @return Dot, L, Bar, or Cross
      */
     public String yellowEdgeOrientation() {
-        String status = "";
-        final int numOriented = numYellowEdgesOriented();
+        var status = "";
+        final var numOriented = numYellowEdgesOriented();
 
         if (numOriented == 4) { //The cross has already been made
             status = "Cross";
@@ -1309,10 +1301,10 @@ public final class Cube {
             status = "Dot";
         } else if (numOriented == 2) {
             //If two edges are oriented, they either form an L-shape or a Bar
-            final int[] xValues = new int[2];
-            int index = 0;
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            final var xValues = new int[2];
+            var index = 0;
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     if (cubiePos[i][j][0].isEdgeCubie() && cubiePos[i][j][0].getDirOfColor('Y') == 'U') {
                         xValues[index] = i;
                         index++;
@@ -1335,8 +1327,8 @@ public final class Cube {
      * @return moves used to make the yellow cross
      */
     public String makeYellowCross() {
-        StringBuilder moves = new StringBuilder();
-        final String status = yellowEdgeOrientation();
+        final var moves = new StringBuilder();
+        final var status = yellowEdgeOrientation();
 
         if (status.compareTo("Dot") == 0) {
             //Make an L and then subsequently use the algorithm to orient the edges
@@ -1365,8 +1357,8 @@ public final class Cube {
      * @return moves used to orient last layer pieces
      */
     public String orientLastLayer() {
-        StringBuilder moves = new StringBuilder();
-        int numOriented = numYellowCornersOriented();
+        final var moves = new StringBuilder();
+        var numOriented = numYellowCornersOriented();
         //Used while loop since Antisune case requires Sune algorithm to be perform twice for proper orientation
         while (numOriented != 4) {
             if (numOriented == 0) {
@@ -1403,11 +1395,11 @@ public final class Cube {
      * @return the moves used to permute the last layer
      */
     public String permuteLastLayer() {
-        StringBuilder moves = new StringBuilder();
+        final var moves = new StringBuilder();
         //Check the number of "headlights" that exist, i.e. adjacent corners with the same color facing one direction
         //If there are 4 headlights, the corners are already permuted
-        int numHeadlights = 0;
-        for (int i = 0; i < 4; i++) {
+        var numHeadlights = 0;
+        for (var i = 0; i < 4; i++) {
             turn("y"); //Since we are rotating 4 times, the cube is unaffected in the end
             if (cubiePos[0][0][0].getColorOfDir('F') == cubiePos[2][0][0].getColorOfDir('F'))
                 numHeadlights++;
@@ -1426,8 +1418,8 @@ public final class Cube {
         }
 
         //Now permute the edges after finding out how many edges are already solved
-        int numSolved = 0;
-        for (int i = 0; i < 4; i++) {
+        var numSolved = 0;
+        for (var i = 0; i < 4; i++) {
             turn("y");
             if (cubiePos[0][0][0].getColorOfDir('F') == cubiePos[1][0][0].getColorOfDir('F'))
                 numSolved++;
@@ -1457,98 +1449,15 @@ public final class Cube {
     }
 
     /**
-     * This method allows for the painting of the cube in the GUI.
-     * All 6 faces' colors are stored in 2D arrays as character values, then all 2D arrays
-     * are inserted into a 3D array so that all faces' colors can be accessed in one method call
-     * instead of having to call 6 different methods.
-     * NOTE: This method was used prior to the paintComponent() method was implemented in this class.
-     *
-     * @return the set of all colors that define the state of the cube
-     */
-    public char[][][] getColors() {
-        final char[][][] allSets = new char[6][3][3];
-        //All 2D arrays are row-major
-        final char[][] left = new char[3][3];
-        final char[][] up = new char[3][3];
-        final char[][] front = new char[3][3];
-        final char[][] back = new char[3][3];
-        final char[][] right = new char[3][3];
-        final char[][] down = new char[3][3];
-
-        //NOTE: the logic following may seem confusing because we need to store the colors as *they will be displayed*.
-        //This means, for example, that the left side of the cube will be rotated 90 degrees clockwise such that
-        //when displayed, it looks as if it is directly "connected" to the yellow (U) face.
-
-        //Populate left colors, constant x
-        for (int y = 2; y >= 0; y--) {
-            for (int z = 2; z >= 0; z--) {
-                left[Math.abs(y - 2)][Math.abs(z - 2)] = cubiePos[0][y][z].getColorOfDir('L');
-            }
-        }
-        //Up colors, constant z
-        for (int x = 0; x <= 2; x++) {
-            for (int y = 2; y >= 0; y--) {
-                up[Math.abs(y - 2)][x] = cubiePos[x][y][0].getColorOfDir('U');
-            }
-        }
-        //Front colors, constant y
-        for (int z = 0; z <= 2; z++) {
-            for (int x = 0; x <= 2; x++) {
-                front[z][x] = cubiePos[x][0][z].getColorOfDir('F');
-            }
-        }
-        //Back colors, constant y
-        for (int x = 0; x <= 2; x++) {
-            for (int z = 2; z >= 0; z--) {
-                back[Math.abs(z - 2)][x] = cubiePos[x][2][z].getColorOfDir('B');
-            }
-        }
-        //Right colors, constant x
-        for (int y = 2; y >= 0; y--) {
-            for (int z = 0; z <= 2; z++) {
-                right[Math.abs(y - 2)][z] = cubiePos[2][y][z].getColorOfDir('R');
-            }
-        }
-        //Down colors, constant z
-        for (int x = 2; x >= 0; x--) {
-            for (int y = 2; y >= 0; y--) {
-                down[Math.abs(y - 2)][Math.abs(x - 2)] = cubiePos[x][y][2].getColorOfDir('D');
-            }
-        }
-
-        allSets[0] = left;
-        allSets[1] = up;
-        allSets[2] = front;
-        allSets[3] = back;
-        allSets[4] = right;
-        allSets[5] = down;
-
-        return allSets;
-    }
-
-    /**
-     * Changes a single color of a cubie to a new color in the given direction
-     *
-     * @param x      the x position of the cubie
-     * @param y      y position
-     * @param z      z position
-     * @param dir    the direction
-     * @param ncolor the new color
-     */
-    public void setCubieColor(final int x, final int y, final int z, final char dir, final char ncolor) {
-        cubiePos[x][y][z].setColorOfDir(dir, ncolor);
-    }
-
-    /**
      * Outputs the position, colors, and respective directions of colors of every cubie making up the cube.
      * Used for debugging purposes prior to GUI development.
      * Outputs in the format: x, y, z, color1, dir1, color2, dir2, color3, dir3 (number of colors and directions dependent on cubie type)
      */
     public Stream<String> testTurning() {
         final var builder = Stream.<String>builder();
-        for (int i = 0; i < cubiePos.length; i++) {
-            for (int j = 0; j < cubiePos[0].length; j++) {
-                for (int k = 0; k < cubiePos[0][0].length; k++) {
+        for (var i = 0; i < cubiePos.length; i++) {
+            for (var j = 0; j < cubiePos[0].length; j++) {
+                for (var k = 0; k < cubiePos[0][0].length; k++) {
                     final var sb = new StringBuilder();
                     sb.append(i).append(", ").append(j).append(", ").append(k).append(", ");
                     final var tempColor = cubiePos[i][j][k].getColors();
@@ -1575,39 +1484,39 @@ public final class Cube {
      */
     public void setAllColors(final char[][][] colors) {
         //Set Left colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[0][Math.abs(j - 2)][i].setColorOfDir('L', colors[0][i][j]);
             }
         }
         //Set Up colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[j][Math.abs(i - 2)][0].setColorOfDir('U', colors[1][i][j]);
             }
         }
         //Set Front colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[j][0][i].setColorOfDir('F', colors[2][i][j]);
             }
         }
         //Set Back colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[Math.abs(j - 2)][2][i].setColorOfDir('B', colors[3][i][j]);
             }
         }
         //Set Right colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[2][j][i].setColorOfDir('R', colors[4][i][j]);
                 colors[4][i][j] = cubiePos[2][j][i].getColorOfDir('R');
             }
         }
         //Set Down colors
-        for (int i = 0; i < 3; i++) {
-            for (int j = 0; j < 3; j++) {
+        for (var i = 0; i < 3; i++) {
+            for (var j = 0; j < 3; j++) {
                 cubiePos[j][i][2].setColorOfDir('D', colors[5][i][j]);
             }
         }
@@ -1623,12 +1532,12 @@ public final class Cube {
         //This means, for example, that the left side of the cube will be rotated 90 degrees clockwise such that
         //when displayed, it looks as if it is directly "connected" to the yellow (U) face.
 
-        int xVal = 50;
-        int yVal = 300;
-        final int size = CubePainter.CUBIE_SIZE;
+        var xVal = 50;
+        var yVal = 300;
+        final var size = CubePainter.CUBIE_SIZE;
         //Populate left colors, constant x
-        for (int y = 2; y >= 0; y--) {
-            for (int z = 2; z >= 0; z--) {
+        for (var y = 2; y >= 0; y--) {
+            for (var z = 2; z >= 0; z--) {
                 g.setColor(getColor(cubiePos[0][y][z].getColorOfDir('L')));
                 g.fillRect(xVal + Math.abs(z - 2) * size, yVal + Math.abs(y - 2) * size, size, size);
                 //left[Math.abs(y-2)][Math.abs(z-2)] = cubiePos[0][y][z].getColorOfDir('L');
@@ -1637,8 +1546,8 @@ public final class Cube {
 
         //Up colors, constant z
         xVal += size * 3;
-        for (int x = 0; x <= 2; x++) {
-            for (int y = 2; y >= 0; y--) {
+        for (var x = 0; x <= 2; x++) {
+            for (var y = 2; y >= 0; y--) {
                 g.setColor(getColor(cubiePos[x][y][0].getColorOfDir('U')));
                 g.fillRect(xVal + x * size, yVal + Math.abs(y - 2) * size, size, size);
                 //up[Math.abs(y-2)][x] = cubiePos[x][y][0].getColorOfDir('U');
@@ -1647,8 +1556,8 @@ public final class Cube {
 
         //Front colors, constant y
         yVal += size * 3;
-        for (int z = 0; z <= 2; z++) {
-            for (int x = 0; x <= 2; x++) {
+        for (var z = 0; z <= 2; z++) {
+            for (var x = 0; x <= 2; x++) {
                 g.setColor(getColor(cubiePos[x][0][z].getColorOfDir('F')));
                 g.fillRect(xVal + x * size, yVal + z * size, size, size);
                 //front[z][x] = cubiePos[x][0][z].getColorOfDir('F');
@@ -1657,8 +1566,8 @@ public final class Cube {
 
         //Back colors, constant y
         yVal -= size * 6;
-        for (int x = 0; x <= 2; x++) {
-            for (int z = 2; z >= 0; z--) {
+        for (var x = 0; x <= 2; x++) {
+            for (var z = 2; z >= 0; z--) {
                 g.setColor(getColor(cubiePos[x][2][z].getColorOfDir('B')));
                 g.fillRect(xVal + x * size, yVal + Math.abs(z - 2) * size, size, size);
                 //back[Math.abs(z-2)][x] = cubiePos[x][2][z].getColorOfDir('B');
@@ -1668,8 +1577,8 @@ public final class Cube {
         //Right colors, constant x
         xVal += size * 3;
         yVal += size * 3;
-        for (int y = 2; y >= 0; y--) {
-            for (int z = 0; z <= 2; z++) {
+        for (var y = 2; y >= 0; y--) {
+            for (var z = 0; z <= 2; z++) {
                 g.setColor(getColor(cubiePos[2][y][z].getColorOfDir('R')));
                 g.fillRect(xVal + z * size, yVal + Math.abs(y - 2) * size, size, size);
                 //right[Math.abs(y-2)][z] = cubiePos[2][y][z].getColorOfDir('R');
@@ -1678,8 +1587,8 @@ public final class Cube {
 
         //Down colors, constant z
         xVal += size * 3;
-        for (int x = 2; x >= 0; x--) {
-            for (int y = 2; y >= 0; y--) {
+        for (var x = 2; x >= 0; x--) {
+            for (var y = 2; y >= 0; y--) {
                 g.setColor(getColor(cubiePos[x][y][2].getColorOfDir('D')));
                 g.fillRect(xVal + Math.abs(x - 2) * size, yVal + Math.abs(y - 2) * size, size, size);
                 //down[Math.abs(y-2)][Math.abs(x-2)] = cubiePos[x][y][2].getColorOfDir('D');
@@ -1688,7 +1597,7 @@ public final class Cube {
 
         ((Graphics2D) g).setStroke(CubePainter.s);
         g.setColor(Color.BLACK);
-        for (int k = 0; k < 6; k++) {
+        for (var k = 0; k < 6; k++) {
             switch (k) {
                 case (0):
                     xVal = 50;
@@ -1711,8 +1620,8 @@ public final class Cube {
                     xVal += size * 3;
                     break;
             }
-            for (int i = 0; i < 3; i++) {
-                for (int j = 0; j < 3; j++) {
+            for (var i = 0; i < 3; i++) {
+                for (var j = 0; j < 3; j++) {
                     g.drawRect(xVal + j * size, yVal + i * size, size, size);
                 }
             }

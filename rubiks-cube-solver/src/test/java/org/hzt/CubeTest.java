@@ -15,7 +15,7 @@ class CubeTest {
      */
     @Test
     void testTurning() {
-        final Cube cube = new Cube();
+        final var cube = new Cube();
         cube.turn("U");
         final var turning1 = cube.testTurning().toList();
         cube.turn("U'");
