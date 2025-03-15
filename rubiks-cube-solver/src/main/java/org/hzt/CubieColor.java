@@ -22,7 +22,7 @@ public class CubieColor {
 	 * @param ncolor, Color of the cubie
 	 * @param ndir, direction of the associated color
 	 */
-	public CubieColor(char ncolor, char ndir) {
+	public CubieColor(final char ncolor, final char ndir) {
 		color = ncolor;
 		dir = ndir;
 	}
@@ -45,7 +45,7 @@ public class CubieColor {
 	 * Changes the direction of the color to the parameter
 	 * @param ndir the new direction
 	 */
-	public void setDir(char ndir) {
+	public void setDir(final char ndir) {
 		dir = ndir;
 	}
 	
@@ -53,7 +53,7 @@ public class CubieColor {
 	 * Sets the color to the parameter
 	 * @param ncolor the new color
 	 */
-	public void setColor(char ncolor) {
+	public void setColor(final char ncolor) {
 		color = ncolor;
 	}
 	
