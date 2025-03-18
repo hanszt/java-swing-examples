@@ -318,7 +318,7 @@ public final class CapturePlaybackPanel extends JPanel implements ControlContext
 
     private void reportStatus(final String msg) {
         if ((errStr = msg) != null) {
-            System.out.println(errStr);
+            LOGGER.error(errStr);
             samplingGraph.repaint();
         }
     }
