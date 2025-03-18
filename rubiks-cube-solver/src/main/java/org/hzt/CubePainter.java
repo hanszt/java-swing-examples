@@ -1,5 +1,8 @@
 package org.hzt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -10,6 +13,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.random.RandomGenerator;
+
+import static org.hzt.CubePainter.Mode.TEXT_SCRAMBLE;
 
 /**
  * Copyright 2017, Shoumyo Chakravorti, All rights reserved.
@@ -23,39 +28,51 @@ import java.util.random.RandomGenerator;
  * @version 2.0
  */
 public final class CubePainter extends JPanel {
+
     //Auto-generated ID
     private static final long serialVersionUID = -8879300942801280752L;
 
-    private final RandomGenerator random;
-    //Buttons to start and stop animation; to reset the scramble based on text field
-    private JButton start, stop, applyScramble, randomize;
-    private JButton skip, rewind;
-    //Buttons used during the color input phase to either reset the colors or proceed with the inputed colors
-    //to the solution
-    private JButton resetCubeInputs, setInputs;
-    //Slider to control animation speed
-    private JSlider animSpeed;
-    //Allows User to choose which side's colors to enter during color input mode
-    private JComboBox<String> sideChooser;
-    private String[] instructions; //Colors for instructions to display during color input mode
-    //Text field to allow user to input a custom scramble different from the default scramble
-    private JTextField inputScramble;
-    //Timer to control delay between animation of moves
-    private final Timer frameTimer;
+    private static final Logger LOGGER = LoggerFactory.getLogger(CubePainter.class);
+    private static final String DEFAULT_SCRAMBLE = "F2 D' B U' D L2 B2 R B L' B2 L2 B2 D' R2 F2 D' R2 U' ";
     //Stroke for bold outline along edges of cubie colors
     final static BasicStroke s = new BasicStroke(5.0f, BasicStroke.CAP_BUTT,
             BasicStroke.JOIN_MITER, 10.0f);
-    private final static Font font = new Font("Monospace", Font.BOLD, 35);
+    private static final Font font = new Font("Monospace", Font.BOLD, 35);
     //Standard frame rate delay
-    public final static int DELAY = 1500;
-    final static int CUBIE_SIZE = 50;
+    public static final int DELAY = 1500;
+    static final int CUBIE_SIZE = 50;
+
+    private final RandomGenerator random;
+    //Buttons to start and stop animation; to reset the scramble based on text field
+    private final JButton startButton;
+    private final JButton stopButton;
+    private final JButton applyScrambleButton;
+    private final JButton randomizeButton;
+    private final JButton skipButton;
+    private final JButton rewindButton;
+    //Buttons used during the color input phase to either reset the colors or proceed with the inputed colors
+    //to the solution
+    private final JButton resetCubeInputsButton;
+    private final JButton proceedButton;
+    //Slider to control animation speed
+    private final JSlider animSpeedSlider;
+    //Allows User to choose which side's colors to enter during color input mode
+    private final JComboBox<Side> sideChooser;
+    //Text field to allow user to input a custom scramble different from the default scramble
+    private final JTextField scrambleTextField;
+    //Timer to control delay between animation of moves
+    private final Timer frameTimer;
+
+
+    private String[] instructions; //Colors for instructions to display during color input mode
 
     //Allows for toggling between modes when updateMode() is invoked
-    private String mode = "";
-    public final static String TEXT_SCRAMBLE = "Text Scramble";
-    public final static String COLOR_SELECTION = "Color Selection";
+    private Mode mode = TEXT_SCRAMBLE;
     private char colorSelected; //The color selected while in color input mode
-    private char sideChosen; //The side for which the user is entering colors
+
+    enum Side {Left, Up, Front, Back, Right, Down}
+
+    private Side sideChosen; //The side for which the user is entering colors
     /*
      * colorsInputed[0] = left colors
      * colorsInputed[1] = up colors
@@ -69,13 +86,17 @@ public final class CubePainter extends JPanel {
     private boolean inSolution;
 
     private Cube cube = new Cube();
-    //Default scramble
-    private final String DEFAULT_SCRAMBLE = "F2 D' B U' D L2 B2 R B L' B2 L2 B2 D' R2 F2 D' R2 U' ";
-    private String scramble = DEFAULT_SCRAMBLE,
-            sunflower = "", whiteCross = "",
-            whiteCorners = "", secondLayer = "",
-            yellowCross = "", OLL = "", PLL = "";
-    private String movesToPerform = "", movesPerformed = "";
+
+    private String scramble = DEFAULT_SCRAMBLE;
+    private String sunflower = "";
+    private String whiteCross = "";
+    private String whiteCorners = "";
+    private String secondLayer = "";
+    private String yellowCross = "";
+    private String OLL = "";
+    private String PLL = "";
+    private String movesToPerform = "";
+    private String movesPerformed = "";
 
     /*
      * Respective stages of the solution w.r.t the phase variable
@@ -93,6 +114,8 @@ public final class CubePainter extends JPanel {
     //Helps keep track of moves to perform, and allows for painting of moves
     private int movesIndex = 0;
 
+    enum Mode {TEXT_SCRAMBLE, COLOR_SELECTION}
+
     /**
      * Initializes all elements of the CubePainter JPanel with which the user can interact.
      * This includes all buttons, sliders, and text fields.
@@ -108,7 +131,7 @@ public final class CubePainter extends JPanel {
         phaseString = "Sunflower";
         colorSelected = 'R';
         instructions = new String[]{"Red", "Yellow", "White"};
-        sideChosen = 'L';
+        sideChosen = Side.Left;
         colorsInputed = new char[6][3][3];
         resetCubeInputs();
         addMouseListener(new MouseAdapter() {
@@ -122,10 +145,6 @@ public final class CubePainter extends JPanel {
                 CubePainter.this.selectColor(e);
             }
         });
-
-        //Initialize all buttons, sliders and text fields
-        initializeComponents();
-        resetScramble(inputScramble.getText());
         //Initialize the frame timer
         frameTimer = new Timer(CubePainter.DELAY, e -> {
             if (inSolution) {
@@ -133,6 +152,113 @@ public final class CubePainter extends JPanel {
                 repaint();
             }
         });
+
+        //Initialize all buttons, sliders and text fields
+        startButton = new JButton("Start");
+        startButton.setLocation(50, 10);
+        startButton.setSize(60, 20);
+        add(startButton);
+        startButton.addActionListener(unused -> frameTimer.start());
+
+        stopButton = new JButton("Stop");
+        stopButton.setLocation(130, 10);
+        stopButton.setSize(60, 20);
+        add(stopButton);
+        stopButton.addActionListener(unused -> frameTimer.stop());
+
+        final ImageIcon icon1, icon2;
+        try {
+            Image img1 = ImageIO.read(IO.resourceUrl("/images/Skip.png"));
+            Image img2 = ImageIO.read(IO.resourceUrl("/images/Rewind.png"));
+            img1 = img1.getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+            img2 = img2.getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+            icon1 = new ImageIcon(img1);
+            icon2 = new ImageIcon(img2);
+        } catch (final IOException ex) {
+            throw new IllegalStateException(ex);
+        }
+
+        skipButton = new JButton(icon1);
+        skipButton.setLocation(240, 8);
+        skipButton.setSize(icon1.getIconWidth(), icon1.getIconHeight());
+        skipButton.setBackground(this.getBackground());
+        skipButton.setBorder(null);
+        skipButton.addActionListener(unused -> {
+            performNextMove();
+            repaint();
+        });
+        add(skipButton);
+
+        rewindButton = new JButton(icon2);
+        rewindButton.setLocation(210, 8);
+        rewindButton.setSize(icon2.getIconWidth(), icon2.getIconHeight());
+        rewindButton.setBackground(this.getBackground());
+        rewindButton.setBorder(null);
+        rewindButton.addActionListener(unused -> rewind());
+        add(rewindButton);
+
+        animSpeedSlider = new JSlider(1, 20);
+        animSpeedSlider.setValue(10); //Slider values range from 1 to 10
+        animSpeedSlider.setMinorTickSpacing(1);
+        animSpeedSlider.setPaintTicks(true);
+        animSpeedSlider.setSnapToTicks(true);
+        animSpeedSlider.setLocation(500, 0);
+        animSpeedSlider.setSize(200, 40);
+        add(animSpeedSlider);
+        animSpeedSlider.addChangeListener(unused -> frameTimer.setDelay(DELAY / animSpeedSlider.getValue()));
+        frameTimer.setDelay(DELAY / animSpeedSlider.getValue());
+
+        scrambleTextField = new JTextField(scramble);
+        scrambleTextField.setLocation(170, 40);
+        scrambleTextField.setSize(400, 40);
+        scrambleTextField.setFocusable(true);
+        scrambleTextField.setBorder(BorderFactory.createLineBorder(Color.black));
+        scrambleTextField.setFont(new Font("Monospace", Font.BOLD, 15));
+        add(scrambleTextField);
+
+        applyScrambleButton = new JButton("APPLY");
+        applyScrambleButton.setLocation(590, 40);
+        applyScrambleButton.setSize(100, 20);
+        add(applyScrambleButton);
+        applyScrambleButton.addActionListener(unused -> applyScramble());
+
+        randomizeButton = new JButton("RANDOM");
+        randomizeButton.setLocation(590, 70);
+        randomizeButton.setSize(100, 20);
+        add(randomizeButton);
+        randomizeButton.addActionListener(unused -> randomize());
+
+        sideChooser = new JComboBox<>(new Side[]{Side.Left, Side.Up, Side.Front, Side.Back, Side.Right, Side.Down});
+        sideChooser.setLocation(270, 50);
+        sideChooser.setSize(100, 30);
+        add(sideChooser);
+        sideChooser.addActionListener(unused -> {
+            sideChosen = ((Side) Objects.requireNonNull(sideChooser.getSelectedItem()));
+            instructions = getInstructions();
+            repaint();
+        });
+        sideChooser.setVisible(false);
+        sideChooser.setEnabled(false);
+
+        resetCubeInputsButton = new JButton("RESET");
+        resetCubeInputsButton.setLocation(200, 650);
+        resetCubeInputsButton.setSize(100, 30);
+        add(resetCubeInputsButton);
+        resetCubeInputsButton.addActionListener(unused -> {
+            resetCubeInputs();
+            repaint();
+        });
+        resetCubeInputsButton.setVisible(false);
+        resetCubeInputsButton.setEnabled(false);
+
+        proceedButton = new JButton("PROCEED");
+        proceedButton.setLocation(300, 650);
+        proceedButton.setSize(100, 30);
+        add(proceedButton);
+        proceedButton.addActionListener(unused -> proceed());
+        proceedButton.setVisible(false);
+        proceedButton.setEnabled(false);
+        resetScramble(scrambleTextField.getText());
     }
 
     /**
@@ -149,125 +275,11 @@ public final class CubePainter extends JPanel {
         }
     }
 
-    /**
-     * Initializes all the buttons, sliders, combo boxes, and text fields for the user to interact with.
-     * Helper methods for constructor.
-     */
-    public void initializeComponents() {
-        start = new JButton("Start");
-        start.setLocation(50, 10);
-        start.setSize(60, 20);
-        add(start);
-        start.addActionListener(unused -> frameTimer.start());
-
-        stop = new JButton("Stop");
-        stop.setLocation(130, 10);
-        stop.setSize(60, 20);
-        add(stop);
-        stop.addActionListener(unused -> frameTimer.stop());
-
-        final ImageIcon icon1, icon2;
-        try {
-            Image img1 = ImageIO.read(IO.resourceUrl("/images/Skip.png"));
-            Image img2 = ImageIO.read(IO.resourceUrl("/images/Rewind.png"));
-            img1 = img1.getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-            img2 = img2.getScaledInstance(25, 25, Image.SCALE_SMOOTH);
-            icon1 = new ImageIcon(img1);
-            icon2 = new ImageIcon(img2);
-        } catch (final IOException ex) {
-            throw new IllegalStateException(ex);
-        }
-
-        skip = new JButton(icon1);
-        skip.setLocation(240, 8);
-        skip.setSize(icon1.getIconWidth(), icon1.getIconHeight());
-        skip.setBackground(this.getBackground());
-        skip.setBorder(null);
-        skip.addActionListener(unused -> {
-            performNextMove();
-            repaint();
-        });
-        add(skip);
-
-        rewind = new JButton(icon2);
-        rewind.setLocation(210, 8);
-        rewind.setSize(icon2.getIconWidth(), icon2.getIconHeight());
-        rewind.setBackground(this.getBackground());
-        rewind.setBorder(null);
-        rewind.addActionListener(unused -> rewind());
-        add(rewind);
-
-        animSpeed = new JSlider(1, 20);
-        animSpeed.setValue(10); //Slider values range from 1 to 10
-        animSpeed.setMinorTickSpacing(1);
-        animSpeed.setPaintTicks(true);
-        animSpeed.setSnapToTicks(true);
-        animSpeed.setLocation(500, 0);
-        animSpeed.setSize(200, 40);
-        add(animSpeed);
-        animSpeed.addChangeListener(e -> {
-            if (e.getSource() == animSpeed) {
-                frameTimer.setDelay(DELAY / animSpeed.getValue());
-            }
-        });
-
-        inputScramble = new JTextField(scramble);
-        inputScramble.setLocation(170, 40);
-        inputScramble.setSize(400, 40);
-        inputScramble.setFocusable(true);
-        inputScramble.setBorder(BorderFactory.createLineBorder(Color.black));
-        inputScramble.setFont(new Font("Monospace", Font.BOLD, 15));
-        add(inputScramble);
-
-        applyScramble = new JButton("APPLY");
-        applyScramble.setLocation(590, 40);
-        applyScramble.setSize(100, 20);
-        add(applyScramble);
-        applyScramble.addActionListener(unused -> applyScramble());
-
-        randomize = new JButton("RANDOM");
-        randomize.setLocation(590, 70);
-        randomize.setSize(100, 20);
-        add(randomize);
-        randomize.addActionListener(unused -> randomize());
-
-        sideChooser = new JComboBox<>(new String[]{"Left", "Up", "Back", "Front", "Right", "Down"});
-        sideChooser.setLocation(270, 50);
-        sideChooser.setSize(100, 30);
-        add(sideChooser);
-        sideChooser.addActionListener(unused -> {
-            sideChosen = ((String) Objects.requireNonNull(sideChooser.getSelectedItem())).charAt(0);
-            instructions = getInstructions();
-            repaint();
-        });
-        sideChooser.setVisible(false);
-        sideChooser.setEnabled(false);
-
-        resetCubeInputs = new JButton("RESET");
-        resetCubeInputs.setLocation(200, 650);
-        resetCubeInputs.setSize(100, 30);
-        add(resetCubeInputs);
-        resetCubeInputs.addActionListener(unused -> {
-            resetCubeInputs();
-            repaint();
-        });
-        resetCubeInputs.setVisible(false);
-        resetCubeInputs.setEnabled(false);
-
-        setInputs = new JButton("PROCEED");
-        setInputs.setLocation(300, 650);
-        setInputs.setSize(100, 30);
-        add(setInputs);
-        setInputs.addActionListener(unused -> setInputs());
-        setInputs.setVisible(false);
-        setInputs.setEnabled(false);
-    }
-
     private void applyScramble() {
         frameTimer.stop();
         //While the cube is being scrambled, screen will show nonsensical colors, such as black, so set as invisible
         setVisible(false);
-        resetScramble(inputScramble.getText());
+        resetScramble(scrambleTextField.getText());
         inSolution = true;
         updateElements();
         repaint();
@@ -276,17 +288,18 @@ public final class CubePainter extends JPanel {
 
     private void randomize() {
         cube = new Cube();
-        inputScramble.setText(cube.randScramble(random));
-        scramble = inputScramble.getText();
+        scrambleTextField.setText(cube.randScramble(random));
+        scramble = scrambleTextField.getText();
         setVisible(false);
-        resetScramble(inputScramble.getText());
+        resetScramble(scrambleTextField.getText());
         inSolution = true;
         updateElements();
         repaint();
         setVisible(true);
     }
 
-    private void setInputs() {
+    private void proceed() {
+        LOGGER.info("Proceeding...");
         frameTimer.stop();
         //While the cube is being scrambled, screen will show nonsensical colors, such as black, so set as invisible
         setVisible(false);
@@ -306,7 +319,7 @@ public final class CubePainter extends JPanel {
             if (movesToPerform.charAt(movesIndex - 1) == ' ') {
                 flag = !flag;
             }
-            System.out.println(movesIndex);
+            LOGGER.info("Moves index {}", movesIndex);
         }
         if (movesIndex == 1) {
             movesIndex = 0;
@@ -338,7 +351,7 @@ public final class CubePainter extends JPanel {
     public void paintComponent(final Graphics g) {
         super.paintComponent(g);
 
-        if (mode.equals(TEXT_SCRAMBLE)) {
+        if (mode == TEXT_SCRAMBLE) {
             g.setFont(new Font("Monospace", Font.BOLD, 25));
             g.drawString("Scramble: ", 30, 70);
         }
@@ -372,17 +385,17 @@ public final class CubePainter extends JPanel {
             var yVal = 450;
             for (var i = 0; i < 6; i++) {
                 switch (i) {
-                    case (0) -> g.setColor(Color.RED);
-                    case (1) -> g.setColor(Color.GREEN);
-                    case (2) -> g.setColor(Color.BLUE);
-                    case (3) -> g.setColor(Color.YELLOW);
-                    case (4) -> g.setColor(Color.ORANGE);
-                    case (5) -> g.setColor(Color.WHITE);
+                    case 0 -> g.setColor(Color.RED);
+                    case 1 -> g.setColor(Color.GREEN);
+                    case 2 -> g.setColor(Color.BLUE);
+                    case 3 -> g.setColor(Color.YELLOW);
+                    case 4 -> g.setColor(Color.ORANGE);
+                    case 5 -> g.setColor(Color.WHITE);
                 }
                 g.fillRect(xVal, yVal, CUBIE_SIZE, CUBIE_SIZE);
                 g.setColor(Color.BLACK);
                 g.drawRect(xVal, yVal, CUBIE_SIZE, CUBIE_SIZE);
-                xVal += CUBIE_SIZE * 1.5;
+                xVal += (int) (CUBIE_SIZE * 1.5);
             }
 
             //Paint the chosen cube side
@@ -441,15 +454,14 @@ public final class CubePainter extends JPanel {
      *
      * @param side the side as character
      */
-    private int getIndexOfSide(final char side) {
+    private int getIndexOfSide(final Side side) {
         return switch (side) {
-            case 'L' -> 0;
-            case 'U' -> 1;
-            case 'F' -> 2;
-            case 'B' -> 3;
-            case 'R' -> 4;
-            case 'D' -> 5;
-            default -> 6;
+            case Left -> 0;
+            case Up -> 1;
+            case Front -> 2;
+            case Back -> 3;
+            case Right -> 4;
+            case Down -> 5;
         };
     }
 
@@ -458,43 +470,17 @@ public final class CubePainter extends JPanel {
      * If String[] colors = getInstructions(), color[0] is the color to hold on top, colors[1] is the color
      * to hold in the back, and colors[2] is the color to hold in front.
      *
-     * @return
+     * @return The colors of that side
      */
     private String[] getInstructions() {
-        final var colors = new String[3];
-        switch (sideChosen) {
-            case ('L') -> {
-                colors[0] = "Red";
-                colors[1] = "Yellow";
-                colors[2] = "White";
-            }
-            case ('U') -> {
-                colors[0] = "Yellow";
-                colors[1] = "Blue";
-                colors[2] = "Green";
-            }
-            case ('F') -> {
-                colors[0] = "Green";
-                colors[1] = "Yellow";
-                colors[2] = "White";
-            }
-            case ('B') -> {
-                colors[0] = "Blue";
-                colors[1] = "Yellow";
-                colors[2] = "White";
-            }
-            case ('R') -> {
-                colors[0] = "Orange";
-                colors[1] = "Yellow";
-                colors[2] = "White";
-            }
-            case ('D') -> {
-                colors[0] = "White";
-                colors[1] = "Green";
-                colors[2] = "Blue";
-            }
-        }
-        return colors;
+        return switch (sideChosen) {
+            case Left -> new String[] {"Red", "Yellow", "White"};
+            case Up -> new String[] {"Yellow", "Blue", "Green"};
+            case Front -> new String[] {"Green", "Yellow", "White"};
+            case Back -> new String[] {"Blue", "Yellow", "White"};
+            case Right -> new String[] {"Orange", "Yellow", "White"};
+            case Down -> new String[] {"White", "Green", "Blue"};
+        };
     }
 
     /**
@@ -559,6 +545,7 @@ public final class CubePainter extends JPanel {
      * and updates movesPerformed.
      */
     public void performNextMove() {
+        LOGGER.info("Performing next move...");
         updatePhase();
 
         //Get to a character that is not a space
@@ -603,91 +590,94 @@ public final class CubePainter extends JPanel {
      * a solution is being played.
      */
     public void updateElements() {
-        if (mode.equals(TEXT_SCRAMBLE)) {
-            start.setEnabled(true);
-            start.setVisible(true);
-            stop.setEnabled(true);
-            stop.setVisible(true);
-            animSpeed.setEnabled(true);
-            animSpeed.setVisible(true);
-            inputScramble.setEnabled(true);
-            inputScramble.setVisible(true);
-            applyScramble.setEnabled(true);
-            applyScramble.setVisible(true);
-            skip.setEnabled(true);
-            skip.setVisible(true);
-            rewind.setEnabled(true);
-            rewind.setVisible(true);
-            randomize.setEnabled(true);
-            randomize.setVisible(true);
+        switch (mode) {
+            case Mode.TEXT_SCRAMBLE -> {
+                startButton.setEnabled(true);
+                startButton.setVisible(true);
+                stopButton.setEnabled(true);
+                stopButton.setVisible(true);
+                animSpeedSlider.setEnabled(true);
+                animSpeedSlider.setVisible(true);
+                scrambleTextField.setEnabled(true);
+                scrambleTextField.setVisible(true);
+                applyScrambleButton.setEnabled(true);
+                applyScrambleButton.setVisible(true);
+                skipButton.setEnabled(true);
+                skipButton.setVisible(true);
+                rewindButton.setEnabled(true);
+                rewindButton.setVisible(true);
+                randomizeButton.setEnabled(true);
+                randomizeButton.setVisible(true);
 
-            //Disable all components specific to color selection mode
-            sideChooser.setVisible(false);
-            sideChooser.setEnabled(false);
-            resetCubeInputs.setVisible(false);
-            resetCubeInputs.setEnabled(false);
-            setInputs.setVisible(false);
-            setInputs.setEnabled(false);
-        } else if (mode.equals(COLOR_SELECTION)) {
-            if (inSolution) {
-                start.setEnabled(true);
-                start.setVisible(true);
-                stop.setEnabled(true);
-                stop.setVisible(true);
-                animSpeed.setEnabled(true);
-                animSpeed.setVisible(true);
-                skip.setEnabled(true);
-                skip.setVisible(true);
-                rewind.setEnabled(true);
-                rewind.setVisible(true);
-
-                randomize.setEnabled(false);
-                randomize.setVisible(false);
+                //Disable all components specific to color selection mode
                 sideChooser.setVisible(false);
                 sideChooser.setEnabled(false);
-                resetCubeInputs.setVisible(false);
-                resetCubeInputs.setEnabled(false);
-                setInputs.setVisible(false);
-                setInputs.setEnabled(false);
-            } else if (!inSolution) {
-                start.setEnabled(false);
-                start.setVisible(false);
-                stop.setEnabled(false);
-                stop.setVisible(false);
-                animSpeed.setEnabled(false);
-                animSpeed.setVisible(false);
-                randomize.setEnabled(false);
-                randomize.setVisible(false);
-
-                skip.setEnabled(false);
-                skip.setVisible(false);
-                rewind.setEnabled(false);
-                rewind.setVisible(false);
-                sideChooser.setVisible(true);
-                sideChooser.setEnabled(true);
-                resetCubeInputs.setVisible(true);
-                resetCubeInputs.setEnabled(true);
-                setInputs.setVisible(true);
-                setInputs.setEnabled(true);
+                resetCubeInputsButton.setVisible(false);
+                resetCubeInputsButton.setEnabled(false);
+                proceedButton.setVisible(false);
+                proceedButton.setEnabled(false);
             }
-            //Disable all components specific to text scramble mode
-            inputScramble.setEnabled(false);
-            inputScramble.setVisible(false);
-            applyScramble.setEnabled(false);
-            applyScramble.setVisible(false);
+            case COLOR_SELECTION -> {
+                if (inSolution) {
+                    startButton.setEnabled(true);
+                    startButton.setVisible(true);
+                    stopButton.setEnabled(true);
+                    stopButton.setVisible(true);
+                    animSpeedSlider.setEnabled(true);
+                    animSpeedSlider.setVisible(true);
+                    skipButton.setEnabled(true);
+                    skipButton.setVisible(true);
+                    rewindButton.setEnabled(true);
+                    rewindButton.setVisible(true);
+
+                    randomizeButton.setEnabled(false);
+                    randomizeButton.setVisible(false);
+                    sideChooser.setVisible(false);
+                    sideChooser.setEnabled(false);
+                    resetCubeInputsButton.setVisible(false);
+                    resetCubeInputsButton.setEnabled(false);
+                    proceedButton.setVisible(false);
+                    proceedButton.setEnabled(false);
+                } else {
+                    startButton.setEnabled(false);
+                    startButton.setVisible(false);
+                    stopButton.setEnabled(false);
+                    stopButton.setVisible(false);
+                    animSpeedSlider.setEnabled(false);
+                    animSpeedSlider.setVisible(false);
+                    randomizeButton.setEnabled(false);
+                    randomizeButton.setVisible(false);
+
+                    skipButton.setEnabled(false);
+                    skipButton.setVisible(false);
+                    rewindButton.setEnabled(false);
+                    rewindButton.setVisible(false);
+                    sideChooser.setVisible(true);
+                    sideChooser.setEnabled(true);
+                    resetCubeInputsButton.setVisible(true);
+                    resetCubeInputsButton.setEnabled(true);
+                    proceedButton.setVisible(true);
+                    proceedButton.setEnabled(true);
+                }
+                //Disable all components specific to text scramble mode
+                scrambleTextField.setEnabled(false);
+                scrambleTextField.setVisible(false);
+                applyScrambleButton.setEnabled(false);
+                applyScrambleButton.setVisible(false);
+            }
         }
     }
 
     /**
      * Updates the mode to either text scramble or color selection mode based on the parameter.
      *
-     * @param str the mode to change to
+     * @param mode the mode to change to
      */
-    public void updateMode(final String str) {
-        if (!mode.equals(str)) {
-            mode = str;
+    void updateMode(final Mode mode) {
+        if (!this.mode.equals(mode)) {
+            this.mode = mode;
             cube = new Cube();
-            if (mode.equals(TEXT_SCRAMBLE)) {
+            if (this.mode.equals(TEXT_SCRAMBLE)) {
                 scramble = DEFAULT_SCRAMBLE;
                 resetScramble(scramble);
                 inSolution = true;
@@ -755,7 +745,7 @@ public final class CubePainter extends JPanel {
      * Takes in mouse inputs during color selection mode for selecting and inputting colors
      */
     private void selectColor(final MouseEvent e) {
-        if (mode.equals(COLOR_SELECTION) && !inSolution) {
+        if (mode == Mode.COLOR_SELECTION && !inSolution) {
             if (e.getY() > 200 && e.getY() < 200 + CUBIE_SIZE * 3) {
                 final var i = (e.getY() - 200) / CUBIE_SIZE;
                 final var j = (e.getX() - 250) / CUBIE_SIZE;

@@ -18,16 +18,10 @@ import java.util.Random;
 public final class CubeDisplayer extends JFrame {
     //Auto-generated ID
     private static final long serialVersionUID = -3198702237161500498L;
-    CubePainter cubePainter; //The JPanel that will handle painting and user input
-    JMenuBar menuBar;
-    JMenu modes;
-    JMenuItem colorSelection, scramble;
-    //JMenuItem colorSelection, scramble;
 
     public static void main(final String[] args) {
         EventQueue.invokeLater(CubeDisplayer::new);
     }
-
 
     /**
      * Creates a new CubeDisplayer and initializes it with a new CubePainter for the user
@@ -41,25 +35,25 @@ public final class CubeDisplayer extends JFrame {
         setResizable(false);
         setIgnoreRepaint(true);
 
-        menuBar = new JMenuBar();
-        modes = new JMenu("Mode Selection");
-        colorSelection = new JMenuItem("Color Selection Mode");
-        scramble = new JMenuItem("Text Scramble Mode");
+        final var menuBar = new JMenuBar();
+        final var modes = new JMenu("Mode Selection");
+        final var colorSelection = new JMenuItem("Color Selection Mode");
+        final var scramble = new JMenuItem("Text Scramble Mode");
         modes.add(colorSelection);
         modes.add(scramble);
+        //Create a new CubePainter JPanel
+        final var cubePainter = new CubePainter(new Random());
         colorSelection.addActionListener(unused -> {
             cubePainter.setInSolution(false);
-            cubePainter.updateMode(CubePainter.COLOR_SELECTION);
+            cubePainter.updateMode(CubePainter.Mode.COLOR_SELECTION);
         });
         scramble.addActionListener(unused -> {
             cubePainter.setInSolution(true);
-            cubePainter.updateMode(CubePainter.TEXT_SCRAMBLE);
+            cubePainter.updateMode(CubePainter.Mode.TEXT_SCRAMBLE);
         });
         menuBar.add(modes);
         setJMenuBar(menuBar);
 
-        //Create a new CubePainter JPanel
-        cubePainter = new CubePainter(new Random());
         add(cubePainter);
         cubePainter.setVisible(true);
         cubePainter.setEnabled(true);

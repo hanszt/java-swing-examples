@@ -1,5 +1,8 @@
 package org.hzt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Copyright 2017, Shoumyo Chakravorti, All rights reserved.
  * <p>
@@ -11,62 +14,62 @@ package org.hzt;
  * @author Shoumyo Chakravorti
  * @version 2.0
  */
-public class SolutionFinder {
-
-	private static Cube cube;
+public final class SolutionFinder {
 	
+	private static final Logger LOGGER = LoggerFactory.getLogger(SolutionFinder.class);
+
 	public static void main(final String[] args) {
 		double sum = 0;
 		
 		final var startTime = System.nanoTime();
-		System.out.println("Initializing...");
-		cube = new Cube();
+		LOGGER.info("Initializing...");
+		final var cube = new Cube();
 		//Scramble it up
 		final var scramble = "L R' U2 B2 L2 U2 B2 L D2 R' F2 D B F2 L' D U2 B R' U' L'";
-		System.out.println("Scramble: " + scramble + "\n");
+		LOGGER.info("Scramble: " + scramble + "\n");
 		cube.scramble(scramble);
 		
 		final var sunflower = cube.makeSunflower();
-		System.out.println("Making the sunflower:");
-		System.out.println(sunflower);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(sunflower) + "\n");
+		LOGGER.info("Making the sunflower:");
+		LOGGER.info(sunflower);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(sunflower));
 		
 		final var whiteCross = cube.makeWhiteCross();
-		System.out.println("Making the white cross:");
-		System.out.println(whiteCross);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(whiteCross) + "\n");
+		LOGGER.info("Making the white cross:");
+		LOGGER.info(whiteCross);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(whiteCross));
 		
 		final var whiteCorners = cube.finishWhiteLayer();
-		System.out.println("Inserting the white corners:");
-		System.out.println(whiteCorners);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(whiteCorners) + "\n");
+		LOGGER.info("Inserting the white corners:");
+		LOGGER.info(whiteCorners);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(whiteCorners));
 		
 		final var edges = cube.insertAllEdges();
-		System.out.println("Finishing second layer:");
-		System.out.println(edges);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(edges) + "\n");
+		LOGGER.info("Finishing second layer:");
+		LOGGER.info(edges);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(edges));
 		
 		final var yellowCross = cube.makeYellowCross();
-		System.out.println("Making the yellow cross:");
-		System.out.println(yellowCross);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(yellowCross) + "\n");
+		LOGGER.info("Making the yellow cross:");
+		LOGGER.info(yellowCross);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(yellowCross));
 		
 		final var OLL = cube.orientLastLayer();
-		System.out.println("Orienting the last layer:");
-		System.out.println(OLL);
-		System.out.println("Optimized: \n" + cube.optimizeMoves(OLL) + "\n");
+		LOGGER.info("Orienting the last layer:");
+		LOGGER.info(OLL);
+        LOGGER.info("Optimized: \n{}\n", cube.optimizeMoves(OLL));
 		
 		final var PLL = cube.permuteLastLayer();
-		System.out.println("Permuting the last layer:");
-		System.out.println(PLL);
-		System.out.println("Optimized: " + cube.optimizeMoves(PLL) + "\n");
+		LOGGER.info("Permuting the last layer:");
+		LOGGER.info(PLL);
+        LOGGER.info("Optimized: {}\n", cube.optimizeMoves(PLL));
 		
 		final var endTime = System.nanoTime();
 		final var runtime = endTime - startTime;
 		sum+=runtime;
-		System.out.println("Done in " + (sum/1000000) + " milliseconds" + "\n\n\n\n");
-		
-		System.out.println("Here" + "Hello".substring(5));
+        LOGGER.info("Done in {} milliseconds\n\n\n\n", sum / 1000000);
+
+        LOGGER.info("Here{}", "Hello".substring(5));
 		
 	}
 }

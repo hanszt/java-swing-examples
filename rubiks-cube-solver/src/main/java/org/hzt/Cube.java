@@ -1,5 +1,8 @@
 package org.hzt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.awt.*;
 import java.util.List;
 import java.util.random.RandomGenerator;
@@ -19,6 +22,8 @@ import java.util.stream.Stream;
  */
 public final class Cube {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Cube.class);
+
     //Stores the state of the cube as an object of 26 cubies
     private final Cubie[][][] cubiePos = new Cubie[3][3][3];
 
@@ -32,68 +37,115 @@ public final class Cube {
     public Cube() {
         //Up, Front Row
         cubiePos[0][0][0] = new Cubie(0, 0, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('R', 'L'), new CubieColor('G', 'F')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('R', 'L'),
+                        new CubieColor('G', 'F')}, true, false);
         cubiePos[1][0][0] = new Cubie(1, 0, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('G', 'F')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('G', 'F')}, false, true);
         cubiePos[2][0][0] = new Cubie(2, 0, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('G', 'F'), new CubieColor('O', 'R')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('G', 'F'),
+                        new CubieColor('O', 'R')}, true, false);
 
         //Front, E Row
         cubiePos[0][0][1] = new Cubie(0, 0, 1,
-                new CubieColor[]{new CubieColor('R', 'L'), new CubieColor('G', 'F')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('R', 'L'),
+                        new CubieColor('G', 'F')}, false, true);
         cubiePos[1][0][1] = new Cubie(1, 0, 1,
-                new CubieColor[]{new CubieColor('G', 'F')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('G', 'F')}, false, false);
         cubiePos[2][0][1] = new Cubie(2, 0, 1,
-                new CubieColor[]{new CubieColor('G', 'F'), new CubieColor('O', 'R')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('G', 'F'),
+                        new CubieColor('O', 'R')}, false, true);
 
         //Down, Front Row
         cubiePos[0][0][2] = new Cubie(0, 0, 2,
-                new CubieColor[]{new CubieColor('W', 'D'), new CubieColor('R', 'L'), new CubieColor('G', 'F')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('W', 'D'),
+                        new CubieColor('R', 'L'),
+                        new CubieColor('G', 'F')}, true, false);
         cubiePos[1][0][2] = new Cubie(1, 0, 2,
-                new CubieColor[]{new CubieColor('W', 'D'), new CubieColor('G', 'F')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('W', 'D'),
+                        new CubieColor('G', 'F')}, false, true);
         cubiePos[2][0][2] = new Cubie(2, 0, 2,
-                new CubieColor[]{new CubieColor('W', 'D'), new CubieColor('G', 'F'), new CubieColor('O', 'R')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('W', 'D'),
+                        new CubieColor('G', 'F'),
+                        new CubieColor('O', 'R')}, true, false);
 
         //Up, S Row
         cubiePos[0][1][0] = new Cubie(0, 1, 0,
-                new CubieColor[]{new CubieColor('R', 'L'), new CubieColor('Y', 'U')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('R', 'L'),
+                        new CubieColor('Y', 'U')}, false, true);
         cubiePos[1][1][0] = new Cubie(1, 1, 0,
-                new CubieColor[]{new CubieColor('Y', 'U')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U')}, false, false);
         cubiePos[2][1][0] = new Cubie(2, 1, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('O', 'R')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('O', 'R')}, false, true);
 
         //E, S Row
         cubiePos[0][1][1] = new Cubie(0, 1, 1,
-                new CubieColor[]{new CubieColor('R', 'L')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('R', 'L')}, false, false);
         cubiePos[1][1][1] = new Cubie(1, 1, 1,
-                new CubieColor[]{new CubieColor('A', 'A')}, //Just giving random, non-legitimate values for color and direction
+                new CubieColor[]{
+                        new CubieColor('A', 'A')}, //Just giving random, non-legitimate values for color and direction
                 false, false);
         cubiePos[2][1][1] = new Cubie(2, 1, 1,
-                new CubieColor[]{new CubieColor('O', 'R')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('O', 'R')}, false, false);
 
         //Down, S Row
         cubiePos[0][1][2] = new Cubie(0, 1, 2,
-                new CubieColor[]{new CubieColor('R', 'L'), new CubieColor('W', 'D')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('R', 'L'),
+                        new CubieColor('W', 'D')}, false, true);
         cubiePos[1][1][2] = new Cubie(1, 1, 2,
-                new CubieColor[]{new CubieColor('W', 'D')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('W', 'D')}, false, false);
         cubiePos[2][1][2] = new Cubie(2, 1, 2,
-                new CubieColor[]{new CubieColor('W', 'D'), new CubieColor('O', 'R')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('W', 'D'),
+                        new CubieColor('O', 'R')}, false, true);
 
         //Up, Back Row
         cubiePos[0][2][0] = new Cubie(0, 2, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('R', 'L'), new CubieColor('B', 'B')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('R', 'L'),
+                        new CubieColor('B', 'B')}, true, false);
         cubiePos[1][2][0] = new Cubie(1, 2, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('B', 'B')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('B', 'B')}, false, true);
         cubiePos[2][2][0] = new Cubie(2, 2, 0,
-                new CubieColor[]{new CubieColor('Y', 'U'), new CubieColor('B', 'B'), new CubieColor('O', 'R')}, true, false);
+                new CubieColor[]{
+                        new CubieColor('Y', 'U'),
+                        new CubieColor('B', 'B'),
+                        new CubieColor('O', 'R')}, true, false);
 
         //E, Back Row
         cubiePos[0][2][1] = new Cubie(0, 2, 1,
-                new CubieColor[]{new CubieColor('R', 'L'), new CubieColor('B', 'B')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('R', 'L'),
+                        new CubieColor('B', 'B')}, false, true);
         cubiePos[1][2][1] = new Cubie(1, 2, 1,
-                new CubieColor[]{new CubieColor('B', 'B')}, false, false);
+                new CubieColor[]{
+                        new CubieColor('B', 'B')}, false, false);
         cubiePos[2][2][1] = new Cubie(2, 2, 1,
-                new CubieColor[]{new CubieColor('B', 'B'), new CubieColor('O', 'R')}, false, true);
+                new CubieColor[]{
+                        new CubieColor('B', 'B'),
+                        new CubieColor('O', 'R')}, false, true);
 
         //Down, Back Row
         cubiePos[0][2][2] = new Cubie(0, 2, 2,
@@ -103,9 +155,12 @@ public final class Cube {
                         new CubieColor('B', 'B')}, true, false);
         cubiePos[1][2][2] = new Cubie(1, 2, 2,
                 new CubieColor[]{
-                        new CubieColor('W', 'D'), new CubieColor('B', 'B')}, false, true);
+                        new CubieColor('W', 'D'),
+                        new CubieColor('B', 'B')}, false, true);
         cubiePos[2][2][2] = new Cubie(2, 2, 2,
-                new CubieColor[]{new CubieColor('W', 'D'), new CubieColor('B', 'B'), new CubieColor('O', 'R')}, true, false);
+                new CubieColor[]{new CubieColor('W', 'D'),
+                        new CubieColor('B', 'B'),
+                        new CubieColor('O', 'R')}, true, false);
 
     }
 
@@ -478,8 +533,12 @@ public final class Cube {
      * @param postChange the corresponding set of direction to change the {@code preChange} directions to
      * @return the rotated matrix
      */
-    private Cubie[][] rotateMatrix(final Cubie[][] orig, final int degrees, final char[] preChange,
-                                   final char[] postChange) {
+    private Cubie[][] rotateMatrix(
+            final Cubie[][] orig,
+            final int degrees, final
+            char[] preChange,
+            final char[] postChange
+    ) {
         final var rotated = new Cubie[3][3];
         if (degrees == 90) {
             //Transpose the matrix
@@ -745,6 +804,7 @@ public final class Cube {
      * @return the moves used to create the white cross
      */
     public String makeWhiteCross() {
+        LOGGER.debug("Making white cross...");
         final var moves = new StringBuilder();
 
         while (numWhiteEdgesOriented() != 0) { //Turn sunflower into cross until no white edges remain in the U layer
@@ -779,6 +839,7 @@ public final class Cube {
      * @return moves used to make sunflower
      */
     public String makeSunflower() {
+        LOGGER.debug("Making sunflower...");
         final var moves = new StringBuilder();
 
         //Brings up white edges in D Layer with white facing down
@@ -899,7 +960,9 @@ public final class Cube {
             moves.append(makeSunflower());
         }
 
-        return optimizeMoves(moves.toString());
+        final var optimized = optimizeMoves(moves.toString());
+        LOGGER.debug("Done making sunflower");
+        return optimized;
     }
 
     /**
@@ -959,6 +1022,7 @@ public final class Cube {
      * @return the moves used to complete the white layer
      */
     public String finishWhiteLayer() {
+        LOGGER.debug("Finishing white layer...");
         final var moves = new StringBuilder();
         //At least check once for corners to be inserted/fixed, and repeat as necessary
         do {
@@ -1135,6 +1199,7 @@ public final class Cube {
      * @return A String for the moves used to complete the second layer
      */
     public String insertAllEdges() {
+        LOGGER.debug("Inserting all edges...");
         final var moves = new StringBuilder();
         //At least check once for edges to be inserted/fixed, and repeat as necessary
         do {
@@ -1327,6 +1392,7 @@ public final class Cube {
      * @return moves used to make the yellow cross
      */
     public String makeYellowCross() {
+        LOGGER.debug("Making yellow cross...");
         final var moves = new StringBuilder();
         final var status = yellowEdgeOrientation();
 
@@ -1357,6 +1423,7 @@ public final class Cube {
      * @return moves used to orient last layer pieces
      */
     public String orientLastLayer() {
+        LOGGER.debug("Orienting last layer...");
         final var moves = new StringBuilder();
         var numOriented = numYellowCornersOriented();
         //Used while loop since Antisune case requires Sune algorithm to be perform twice for proper orientation
@@ -1395,6 +1462,7 @@ public final class Cube {
      * @return the moves used to permute the last layer
      */
     public String permuteLastLayer() {
+        LOGGER.debug("Permuting last layer...");
         final var moves = new StringBuilder();
         //Check the number of "headlights" that exist, i.e. adjacent corners with the same color facing one direction
         //If there are 4 headlights, the corners are already permuted
