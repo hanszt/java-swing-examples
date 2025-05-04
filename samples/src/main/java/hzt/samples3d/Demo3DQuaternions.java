@@ -15,11 +15,12 @@ import java.util.function.Consumer;
 import static java.lang.Math.*;
 
 /**
+ * See <a href="https://www.youtube.com/watch?v=d4EgbgTm0Bg">Visualizing quaternions (4d numbers) with stereographic projection</a>
  * See <a href="http://blog.rogach.org/2015/08/how-to-create-your-own-simple-3d-render.html">How to create your own simple 3D render engine in pure Java</a>
  */
-public final class Demo3DRotation {
+public final class Demo3DQuaternions {
 
-    private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
+    private static final Logger logger = LoggerFactory.getLogger(Demo3DQuaternions.class);
 
     public static void main(String[] args) {
         enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
@@ -187,7 +188,7 @@ public final class Demo3DRotation {
                 return img;
             }
 
-            private Matrix3 buildRotationMatrix() {
+            private Matrix4 buildRotationMatrix() {
                 final var heading = Math.toRadians(headingSlider.getValue());
                 final var pitch = Math.toRadians(pitchSlider.getValue());
                 return headingTransform(heading).multiply(pitchTransform(pitch));
@@ -223,24 +224,26 @@ public final class Demo3DRotation {
             shadingSlider.setVisible(modeButton.mode == Mode.FILLED_SHADED);
             renderPanel.repaint();
         });
-        frame.setTitle("3D Rotation");
+        frame.setTitle("3D Quaternions");
         frame.setSize(600, 600);
         frame.setVisible(true);
     }
 
-    private static Matrix3 pitchTransform(final double pitch) {
-        return new Matrix3(
-                1.0, 0.0, 0.0,
-                0.0, Math.cos(pitch), Math.sin(pitch),
-                0.0, -Math.sin(pitch), Math.cos(pitch)
+    private static Matrix4 pitchTransform(final double pitch) {
+        return new Matrix4(
+                1.0, 0.0, 0.0, 0.0,
+                0.0, Math.cos(pitch), Math.sin(pitch), 0.0,
+                0.0, -Math.sin(pitch), Math.cos(pitch), 0.0,
+                0.0, 0.0, 0.0, 1.0
         );
     }
 
-    private static Matrix3 headingTransform(final double heading) {
-        return new Matrix3(
-                Math.cos(heading), 0.0, -Math.sin(heading),
-                0.0, 1.0, 0.0,
-                Math.sin(heading), 0.0, Math.cos(heading)
+    private static Matrix4 headingTransform(final double heading) {
+        return new Matrix4(
+                Math.cos(heading), 0.0, -Math.sin(heading), 0.0,
+                0.0, 1.0, 0.0, 0.0,
+                Math.sin(heading), 0.0, Math.cos(heading), 0.0,
+                0.0, 0.0, 0.0, 1.0
         );
     }
 
@@ -271,36 +274,38 @@ public final class Demo3DRotation {
 }
 
 /**
- * Using a 3 by 3 matrix allows rotation. Adding translation requires a 4 by 4 matrix. Related: Quaternions.
+ * Using a 4 by 4 matrix allows rotation without gimble lock. Related: Quaternions.
  *
- * @param values the values of the 3 by 3 matrix.
+ * @param values the values of the 4 by 4 matrix.
  */
-record Matrix3(double... values) {
+record Matrix4(double... values) {
 
-    Matrix3 {
-        if (values.length != 9) {
-            throw new IllegalArgumentException("Must have 9 values!");
+    private static final int SLOT_COUNT = 16;
+
+    Matrix4 {
+        if (values.length != SLOT_COUNT) {
+            throw new IllegalArgumentException("Must have " + SLOT_COUNT + " values! (Had " + values.length + ")");
         }
         values = Arrays.copyOf(values, values.length);
     }
 
-    Matrix3 multiply(final Matrix3 other) {
-        final var result = new double[9];
-        for (var row = 0; row < 3; row++) {
-            for (var col = 0; col < 3; col++) {
-                for (var i = 0; i < 3; i++) {
-                    result[row * 3 + col] += this.values[row * 3 + i] * other.values[i * 3 + col];
+    Matrix4 multiply(final Matrix4 other) {
+        final var result = new double[SLOT_COUNT];
+        for (var row = 0; row < 4; row++) {
+            for (var col = 0; col < 4; col++) {
+                for (var i = 0; i < 4; i++) {
+                    result[row * 4 + col] += this.values[row * 4 + i] * other.values[i * 4 + col];
                 }
             }
         }
-        return new Matrix3(result);
+        return new Matrix4(result);
     }
 
     Vertex apply(final Vertex v) {
         return new Vertex(
-                v.x() * values[0] + v.y() * values[3] + v.z() * values[6],
-                v.x() * values[1] + v.y() * values[4] + v.z() * values[7],
-                v.x() * values[2] + v.y() * values[5] + v.z() * values[8]
+                v.x() * values[0] + v.y() * values[4] + v.z() * values[8],
+                v.x() * values[1] + v.y() * values[5] + v.z() * values[9],
+                v.x() * values[3] + v.y() * values[6] + v.z() * values[10]
         );
     }
 }
