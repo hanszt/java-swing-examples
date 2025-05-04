@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 
 import static java.lang.Math.*;
@@ -77,6 +78,13 @@ public final class Demo3DRotation {
         // panel to display render results
         final var renderPanel = new JPanel() {
 
+            private List<Triangle> shape = createShape();
+
+            /**
+             * Called when repaint is called
+             *
+             * @param g the <code>Graphics</code> object to protect
+             */
             @Override
             public void paintComponent(final Graphics g) {
                 g.setColor(Color.BLACK);
@@ -185,18 +193,23 @@ public final class Demo3DRotation {
                 return headingTransform(heading).multiply(pitchTransform(pitch));
             }
 
-            private Sequence<Triangle> inflate() {
-                return Sequence.iterate(tetrahedronTriangles, s -> s.flatMap(Triangle::midPointTriangles))
+            private List<Triangle> createShape() {
+                final var shape = Sequence.iterate(tetrahedronTriangles, s -> s.flatMap(Triangle::midPointTriangles))
                         .take(inflationSlider.getValue())
                         .last()
-                        .map(t -> t.normalizeAndResizeBy(zoomSlider.getValue()));
+                        .map(Triangle::inflate)
+                        .toList();
+                logger.info("Nr of triangles: {}", shape.size());
+                return shape;
+            }
+
+            private void updateShape() {
+                shape = createShape();
+                repaint();
             }
 
             private void useTriangles(Consumer<Triangle> consumer) {
-                final var count = inflate().onEach(consumer).count();
-                if (inflationSlider.getValueIsAdjusting()) {
-                    logger.info("Nr of triangles: {}", count);
-                }
+                shape.stream().map(t -> t.resizeBy(zoomSlider.getValue())).forEach(consumer);
             }
         };
         pane.add(renderPanel, BorderLayout.CENTER);
@@ -204,10 +217,12 @@ public final class Demo3DRotation {
         headingSlider.addChangeListener(unused -> renderPanel.repaint());
         pitchSlider.addChangeListener(unused -> renderPanel.repaint());
         zoomSlider.addChangeListener(unused -> renderPanel.repaint());
-        inflationSlider.addChangeListener(unused -> renderPanel.repaint());
+        inflationSlider.addChangeListener(unused -> renderPanel.updateShape());
         shadingSlider.addChangeListener(unused -> renderPanel.repaint());
-        modeButton.addActionListener(unused -> renderPanel.repaint());
-
+        modeButton.addActionListener(unused -> {
+            shadingSlider.setVisible(modeButton.mode == Mode.FILLED_SHADED);
+            renderPanel.repaint();
+        });
         frame.setSize(600, 600);
         frame.setVisible(true);
     }
@@ -288,4 +303,3 @@ record Matrix3(double... values) {
         );
     }
 }
-
