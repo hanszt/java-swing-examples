@@ -10,9 +10,9 @@ record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
      * Normalizing the vertices projects them on a circle around 0, 0, 0
      */
     Triangle normalizeAndResizeBy(final double factor) {
-        final var v1n = v1.normalized().multiplied(factor);
-        final var v2n = v2.normalized().multiplied(factor);
-        final var v3n = v3.normalized().multiplied(factor);
+        final var v1n = v1.normalized().scale(factor);
+        final var v2n = v2.normalized().scale(factor);
+        final var v3n = v3.normalized().scale(factor);
         return new Triangle(v1n, v2n, v3n, color);
     }
 

@@ -16,8 +16,8 @@ record Vertex(double x, double y, double z) {
         return minus(other.x, other.y, other.z);
     }
 
-    Vertex multiplied(final double factor) {
-        return new Vertex(x * factor, y * factor, z * factor);
+    Vertex scale(final double scalar) {
+        return new Vertex(x * scalar, y * scalar, z * scalar);
     }
 
     Vertex divided(final double n) {

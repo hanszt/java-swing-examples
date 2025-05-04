@@ -21,22 +21,11 @@ public final class Demo3DRotation {
     private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
 
     public static void main(String[] args) {
+        enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
         final var frame = new JFrame();
         final var pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
-        final var bottomControlPanel = new JPanel(new BorderLayout());
 
-        // slider to control horizontal rotation
-        final var headingSlider = new JSlider(-180, 180, 0);
-
-        // slider to control inflation
-        final var inflationSlider = new JSlider(1, 8, 5);
-        inflationSlider.setMinorTickSpacing(1);
-        inflationSlider.setPaintTicks(true);
-        inflationSlider.setPaintLabels(true);
-        final var zoomSlider = new JSlider(1, 1_000, 200);
-
-        enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
         final var modeButton = new Button() {
             Mode mode = Mode.FILLED_SHADED;
 
@@ -59,17 +48,30 @@ public final class Demo3DRotation {
                 return name.charAt(0) + name.substring(1).replace("_", " ").toLowerCase();
             }
         };
+        // slider to control horizontal rotation
+        final var headingSlider = new JSlider(-180, 180, 0);
+        // slider to control vertical rotation
+        final var pitchSlider = new JSlider(SwingConstants.VERTICAL, -90, 90, 0);
+        final var zoomSlider = new JSlider(1, 1_000, 200);
+        final var shadingSlider = new JSlider(0, 1_000, 200);
+
+        // slider to control inflation
+        final var inflationSlider = new JSlider(1, 8, 5);
+        inflationSlider.setMinorTickSpacing(1);
+        inflationSlider.setPaintTicks(true);
+        inflationSlider.setPaintLabels(true);
+
         final var sliderPanel = new JPanel(new BorderLayout());
         sliderPanel.add(headingSlider, BorderLayout.NORTH);
         sliderPanel.add(zoomSlider, BorderLayout.CENTER);
-        sliderPanel.add(inflationSlider, BorderLayout.SOUTH);
+        sliderPanel.add(shadingSlider, BorderLayout.SOUTH);
+        final var bottomControlPanel = new JPanel(new BorderLayout());
+
         bottomControlPanel.add(sliderPanel, BorderLayout.NORTH);
+        bottomControlPanel.add(inflationSlider, BorderLayout.CENTER);
         bottomControlPanel.add(modeButton, BorderLayout.SOUTH);
 
         pane.add(bottomControlPanel, BorderLayout.SOUTH);
-
-        // slider to control vertical rotation
-        final var pitchSlider = new JSlider(SwingConstants.VERTICAL, -90, 90, 0);
         pane.add(pitchSlider, BorderLayout.EAST);
 
         // panel to display render results
@@ -109,13 +111,27 @@ public final class Demo3DRotation {
             }
 
             private Mode drawFilledShaded(final Graphics graphics) {
-                final var image = build3DShapeImage(Demo3DRotation::shade);
+                final var image = build3DShapeImage(this::shade);
                 graphics.drawImage(image, 0, 0, null);
                 return Mode.FILLED_SHADED;
             }
 
+            private Color shade(final Color color, final double shade) {
+                final var exponent = shadingSlider.getValue() / 100.0;
+                final var redLinear = Math.pow(color.getRed(), exponent) * shade;
+                final var greenLinear = Math.pow(color.getGreen(), exponent) * shade;
+                final var blueLinear = Math.pow(color.getBlue(), exponent) * shade;
+
+                final var red = (int) Math.pow(redLinear, 1 / exponent);
+                final var green = (int) Math.pow(greenLinear, 1 / exponent);
+                final var blue = (int) Math.pow(blueLinear, 1 / exponent);
+
+                return new Color(red, green, blue);
+            }
+
             private Mode drawFilledUnShaded(final Graphics graphics) {
-                graphics.drawImage(build3DShapeImage((color, unused) -> color), 0, 0, null);
+                final var image = build3DShapeImage((color, unused) -> color);
+                graphics.drawImage(image, 0, 0, null);
                 return Mode.FILLED_UNSHADED;
             }
 
@@ -189,23 +205,11 @@ public final class Demo3DRotation {
         pitchSlider.addChangeListener(unused -> renderPanel.repaint());
         zoomSlider.addChangeListener(unused -> renderPanel.repaint());
         inflationSlider.addChangeListener(unused -> renderPanel.repaint());
+        shadingSlider.addChangeListener(unused -> renderPanel.repaint());
         modeButton.addActionListener(unused -> renderPanel.repaint());
 
         frame.setSize(600, 600);
         frame.setVisible(true);
-    }
-
-    private static Color shade(final Color color, final double shade) {
-        final var exponent = 2.4;
-        final var redLinear = Math.pow(color.getRed(), exponent) * shade;
-        final var greenLinear = Math.pow(color.getGreen(), exponent) * shade;
-        final var blueLinear = Math.pow(color.getBlue(), exponent) * shade;
-
-        final var red = (int) Math.pow(redLinear, 1 / exponent);
-        final var green = (int) Math.pow(greenLinear, 1 / exponent);
-        final var blue = (int) Math.pow(blueLinear, 1 / exponent);
-
-        return new Color(red, green, blue);
     }
 
     private static Matrix3 pitchTransform(final double pitch) {
