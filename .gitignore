@@ -21,7 +21,8 @@
 *.zip
 
 ### IntelliJ IDEA ###
-.idea
+**/.idea/*
+!/.idea/icon.png
 *.iws
 *.iml
 *.ipr
