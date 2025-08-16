@@ -13,17 +13,16 @@ public final class FiniteStateMachine {
         this.states = states;// sets the states to those specified
         this.initialState = initialState;// sets the initial state to that specified
         this.currentState = initialState;// initially sets the current state to the initial state
-    }// org.hzt.ant.FiniteStateMachine(Arrayist<org.hzt.ant.State>, org.hzt.ant.State) constructor
+    }
 
-    // update method - updates the state of the object
     public List<Action> update() {
         Transition triggeredTransition = null;// will hold the transition, if one is triggered
         final var actions = new ArrayList<Action>();// will hold the actions resulting from the update
 
-        for (final var transition : currentState.transitions()) {// loops through all potential transitions
-            if (transition.isActive()) {// checks if the current transition is triggered
-                triggeredTransition = transition;// the triggered transition is set to that triggered
-                break;// breaks if a transition has been found
+        for (final var transition : currentState.transitions()) {
+            if (transition.isActive()) {
+                triggeredTransition = transition;
+                break;
             }
         }
 
