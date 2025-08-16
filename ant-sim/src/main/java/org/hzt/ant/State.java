@@ -6,7 +6,7 @@ package org.hzt.ant;
  * @param exitAction  represents the exitAction associated with the state
  * @param transitions represents the transitions associated with the state
  */
-public record State(String action, String entryAction, String exitAction, Transition[] transitions) {
+public record State(Action action, Action entryAction, Action exitAction, Transition[] transitions) {
 
     public Transition getTransition(Transition transition) {
         if (transitions.length > 0) {

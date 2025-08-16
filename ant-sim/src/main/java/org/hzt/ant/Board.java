@@ -59,12 +59,13 @@ public final class Board extends JPanel {
     private static final int SIZE_TILES = 25;// the total number of tiles on the game board
     private static final int BOARD_WIDTH = WIDTH_TILES * SIZE_TILES;// the total number of tiles on the game board
 
-    private Transition foundFood, foundHome, foundWater, foundPoison;// transitions used with the FSM
-    private State foodSearch, homeSearch, waterSearch;// states used with the FSM
+    private Transition foundFood;
+    private Transition foundHome;
+    private Transition foundWater;
     private List<State> states;// holds all the states used with the FSM
     private Graph graph = new Graph();// the graph used to represent the org.hzt.ant.Game space
 
-    private List<Ant> ants = new ArrayList<>();// holds all the ants in the colony
+    private final List<Ant> ants = new ArrayList<>();// holds all the ants in the colony
     private boolean antHillAdded = false;// represents whether or not the ant hill has been placed
     //private List<org.hzt.ant.FiniteStateMachine> fsms = new ArrayList<org.hzt.ant.FiniteStateMachine>();// the FSMs used - one for each ant
     private Map<Ant, FiniteStateMachine> antFSM = new HashMap<>(); // holds each set of org.hzt.ant.Ant/FSM combinations
@@ -175,68 +176,62 @@ public final class Board extends JPanel {
             if (iAnt.getActions().isEmpty())// checks if the org.hzt.ant.Ant has any current actions to complete
                 iAnt.setActions(antFSM.get(iAnt).update());// if not, gets actions from FSM
 
-            String action = iAnt.getActions().removeFirst();// gets the first action in the list
+            final var action = iAnt.getActions().removeFirst();// gets the first action in the list
 
             int newPosition = iAnt.getCurrent();// will hold the next position of the ant
             boolean alive = true;// used to flag ant deaths
-            antFSM.get(iAnt).getCurrentState().getTransition(foundFood).setTriggered(false);// sets the found food trigger to false
-            antFSM.get(iAnt).getCurrentState().getTransition(foundHome).setTriggered(false);// sets the found food trigger to false
-            antFSM.get(iAnt).getCurrentState().getTransition(foundWater).setTriggered(false);// sets the found food trigger to false
+            antFSM.get(iAnt).getCurrentState().getTransition(foundFood).setActive(false);// sets the found food trigger to false
+            antFSM.get(iAnt).getCurrentState().getTransition(foundHome).setActive(false);// sets the found food trigger to false
+            antFSM.get(iAnt).getCurrentState().getTransition(foundWater).setActive(false);// sets the found food trigger to false
 
             switch (action) {// switch handles the different actions registered by the FSM
-                case ("Died"):
+                case Action.DIE -> {
                     nodes[iAnt.getCurrent()].setImage(terrain);// sets the node image to terrain
                     nodes[iAnt.getCurrent()].setOccupant("terrain");// sets the node occupant to terrain
                     alive = false;// flags the ant as dead
-                    break;
-                case ("SearchForFood"):
+                }
+                case Action.SEARCH_FOR_FOOD -> {
                     newPosition = wander(iAnt);// gets new position through wander method
                     nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// sets current node image as previous occupant
                     iAnt.setCurrent(newPosition);// updates the ant position
                     nodes[iAnt.getCurrent()].setImage(ant);// sets the new node image as the ant
                     if (nodes[newPosition].getOccupant().equals("food")) {// checks if food has been found
-                        antFSM.get(iAnt).getCurrentState().getTransition(foundFood).setTriggered(true);// updates foundFood trigger
+                        antFSM.get(iAnt).getCurrentState().getTransition(foundFood).setActive(true);// updates foundFood trigger
                     }
-                    break;
-                case ("PickupFood"):
+                }
+                case Action.PICK_UP_FOOD -> {
                     nodes[iAnt.getCurrent()].setImage(antWithFood);// sets node image to ant with food
                     nodes[iAnt.getCurrent()].setOccupant("terrain");// sets node occupant to terrain
-                    break;
-                case ("EnterAntHill"):
-                    nodes[iAnt.getCurrent()].setImage(antInHill);// updates node image to ant in hill
-                    break;
-                case ("InAntHill"):
-                    nodes[iAnt.getCurrent()].setImage(antHill);// updates node image to ant hill
-                    break;
-                case ("LeaveAntHill"):
-                    nodes[iAnt.getCurrent()].setImage(antInHill);// updates node image to ant in hill
-                    break;
-                case ("SearchForHome"):
+                }
+                case Action.ENTER_ANT_HILL ->
+                        nodes[iAnt.getCurrent()].setImage(antInHill);// updates node image to ant in hill
+                case Action.IN_ANT_HILL -> nodes[iAnt.getCurrent()].setImage(antHill);// updates node image to ant hill
+                case Action.LEAVE_ANT_HILL ->
+                        nodes[iAnt.getCurrent()].setImage(antInHill);// updates node image to ant in hill
+                case Action.SEARCH_FOR_HOME -> {
                     newPosition = getAStar(iAnt);// gets new position from A*
                     nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node image to current occupant
                     iAnt.setCurrent(newPosition);// updates ant position
                     nodes[iAnt.getCurrent()].setImage(antWithFood);// updates new node image to ant with food
                     if (iAnt.getHome() == newPosition) {// if home has been found
                         antBorn = iAnt.getHome();// gets node for new ant
-                        antFSM.get(iAnt).getCurrentState().getTransition(foundHome).setTriggered(true);// sets found home trigger to true
+                        antFSM.get(iAnt).getCurrentState().getTransition(foundHome).setActive(true);// sets found home trigger to true
                         nodes[iAnt.getCurrent()].setImage(antInHill);// sets new node image to ant in hill
                     }
-                    break;
-                case ("SearchForWater"):
+                }
+                case Action.SEARCH_FOR_WATER -> {
                     newPosition = wander(iAnt);// gets new position from wander
                     nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node to previous occupant image
                     iAnt.setCurrent(newPosition);// updates ant position
                     nodes[iAnt.getCurrent()].setImage(ant);// updates new node image to ant
                     if (nodes[newPosition].getOccupant().equals("water")) {// checks if water has been found
-                        antFSM.get(iAnt).getCurrentState().getTransition(foundWater).setTriggered(true);// sets found water trigger to true
+                        antFSM.get(iAnt).getCurrentState().getTransition(foundWater).setActive(true);// sets found water trigger to true
                     }
-                    break;
-                case ("DrinkWater"):
+                }
+                case Action.DRINK_WATER -> {
                     nodes[iAnt.getCurrent()].setImage(antInWater);// updates node image to ant in water
                     nodes[iAnt.getCurrent()].setOccupant("terrain");// updates node occupant to terrain
-                    break;
-                default:
-                    break;
+                }
             }
 
             if (nodes[newPosition].getOccupant().equals("poison")) {// checks if ant steps in poison
@@ -247,7 +242,7 @@ public final class Board extends JPanel {
             }
 
             if (alive) {
-                if (ants.get(i).getCurrent() == ants.get(i).getHome() && !action.equals("EnterAntHill") && !action.equals("LeaveAntHill") && !action.equals("SearchForHome"))
+                if (ants.get(i).getCurrent() == ants.get(i).getHome() && !action.equals(Action.ENTER_ANT_HILL) && !action.equals(Action.LEAVE_ANT_HILL) && !action.equals(Action.SEARCH_FOR_HOME))
                     nodes[ants.get(i).getCurrent()].setImage(getImageIcon("/images/" + "antHill.png").getImage());//sets image to ant hill
             }
 
@@ -276,7 +271,7 @@ public final class Board extends JPanel {
         return nodesTo.removeFirst();// returns the first node
     }// getAStar(org.hzt.ant.Ant) method
 
-    // wander mathod - moves the org.hzt.ant.Ant randomly, even odds between all current connections
+    // wander method - moves Ant randomly, even odds between all current connections
     public int wander(Ant iAnt) {
         int num = random.nextInt(graph.getConnections(iAnt.getCurrent()).size());// gets a random int between 0 and num of connections currently
         return graph.getConnections(iAnt.getCurrent()).get(num).toNode();// returns the random connection to move ant
@@ -284,7 +279,7 @@ public final class Board extends JPanel {
 
     private void makeBlank() {
         LOGGER.info("Make blank");
-        ants = new ArrayList<>();// resets the list of ants
+        ants.clear();// resets the list of ants
         antFSM = new HashMap<>();// resets the fsms
         antHillAdded = false;// sets the ant hill added to false
         blank();// calls the method to empty the board
@@ -296,7 +291,7 @@ public final class Board extends JPanel {
         LOGGER.info("Start");
         if (antHillAdded) {// makes sure an ant hill has been added
             randomize();// calls the randomize method to fill the board with random tiles
-            startSearch();// calls the method to execute the search
+            startSim();// calls the method to execute the search
             execute.setEnabled(false);// disables execute button
         }
         repaint();
@@ -328,15 +323,14 @@ public final class Board extends JPanel {
         }
     }
 
-    public void startSearch() {
+    public void startSim() {
         graph = new Graph();
-        for (int i = 0; i < WIDTH_TILES; i++) {// loops x-coords
-            for (int j = 0; j < HEIGHT_TILES; j++) {// loops y-coords
-                addNeighbours(i, j);// adds neighbours/connections for each node
+        for (int i = 0; i < WIDTH_TILES; i++) {
+            for (int j = 0; j < HEIGHT_TILES; j++) {
+                addNeighbours(i, j);
             }
         }
-
-        running = true;// sets the simulation to running
+        running = true;
     }
 
     // addNeighbours method - x-coord, y-coord, cost; sets a tiles neighbours
@@ -390,16 +384,18 @@ public final class Board extends JPanel {
 
     // addAnt method - takes care of the details involved with adding ants to the colony
     public void addAnt(int x, int y) {
-        foundFood = new Transition("PickupFood", false);// initializes the foundFood transition
-        foundHome = new Transition("InAntHill", false);// initializes the foundHome transition
-        foundWater = new Transition("DrinkWater", false);// initializes the foundWater transition
-        foundPoison = new Transition("Died", false);// initializes the foundPoison transition
+        foundFood = new Transition(Action.PICK_UP_FOOD, false);// initializes the foundFood transition
+        foundHome = new Transition(Action.IN_ANT_HILL, false);// initializes the foundHome transition
+        foundWater = new Transition(Action.DRINK_WATER, false);// initializes the foundWater transition
+        // transitions used with the FSM
+        final Transition foundPoison = new Transition(Action.DIE, false);// initializes the foundPoison transition
 
-        foodSearch = new State("SearchForFood", "DrinkWater", "PickupFood", new Transition[]{foundFood, foundPoison});
+        final State foodSearch = new State(Action.SEARCH_FOR_FOOD, Action.DRINK_WATER, Action.PICK_UP_FOOD, new Transition[]{foundFood, foundPoison});
         // initializes the foodSearch state
-        homeSearch = new State("SearchForHome", "PickUpFood", "EnterAntHill", new Transition[]{foundHome, foundPoison});
+        final State homeSearch = new State(Action.SEARCH_FOR_HOME, Action.PICK_UP_FOOD, Action.ENTER_ANT_HILL, new Transition[]{foundHome, foundPoison});
         // initializes the homeSearch state
-        waterSearch = new State("SearchForWater", "LeaveAntHill", "DrinkWater", new Transition[]{foundWater, foundPoison});
+        // states used with the FSM
+        final State waterSearch = new State(Action.SEARCH_FOR_WATER, Action.LEAVE_ANT_HILL, Action.DRINK_WATER, new Transition[]{foundWater, foundPoison});
         // initializes the waterSearch state
 
         foundFood.setTargetState(homeSearch);// adds the homeSearch as the target state for foundFood
