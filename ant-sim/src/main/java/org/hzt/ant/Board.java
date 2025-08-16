@@ -7,16 +7,16 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
-public final class Board extends JPanel implements ActionListener, MouseListener {
+public final class Board extends JPanel implements MouseListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Board.class);
 
@@ -67,8 +67,8 @@ public final class Board extends JPanel implements ActionListener, MouseListener
         setDoubleBuffered(true);// sets double buffered to true
         setLayout(new BorderLayout());// creates the layout for the game panel
 
-        execute.addActionListener(this);// adds a listener for the execute button
-        blank.addActionListener(this);// adds a listener for the blank button
+        execute.addActionListener(e -> start());// adds a listener for the execute button
+        blank.addActionListener(e -> makeBlank());// adds a listener for the blank button
         buttonPane.setLayout(new GridLayout(1, 2));// sets the layout for the buttonPane JPanel pane
         buttonPane.add(blank);// adds the fullBoard button to the buttonPane
         buttonPane.add(execute);// adds the execute button to the buttonPane
@@ -77,21 +77,28 @@ public final class Board extends JPanel implements ActionListener, MouseListener
         for (int i = 0; i < nodes.length; i++)// loops through the game nodes
             nodes[i] = new Node();// fills each element with a blank node to start
 
-        food = new ImageIcon("food.png").getImage();// creates the food image
-        water = new ImageIcon("water.png").getImage();// creates the water image
-        terrain = new ImageIcon("terrain.png").getImage();// creates the terrain image
-        poison = new ImageIcon("poison.png").getImage();// creates the poison image
-        ant = new ImageIcon("ant.png").getImage();// creates the ant image
-        antHill = new ImageIcon("antHill.png").getImage();// creates the antHill image
-        antWithFood = new ImageIcon("antWithFood.png").getImage();// creates the antWithFood image
-        antInWater = new ImageIcon("antInWater.png").getImage();// creates the antInWater image
-        antInHill = new ImageIcon("antInHill.png").getImage();// creates the antInHill image
+        food = getImageIcon("/images/food.png").getImage();// creates the food image
+        water = getImageIcon("/images/water.png").getImage();// creates the water image
+        terrain = getImageIcon("/images/terrain.png").getImage();// creates the terrain image
+        poison = getImageIcon("/images/poison.png").getImage();// creates the poison image
+        ant = getImageIcon("/images/ant.png").getImage();// creates the ant image
+        antHill = getImageIcon("/images/antHill.png").getImage();// creates the antHill image
+        antWithFood = getImageIcon("/images/antWithFood.png").getImage();// creates the antWithFood image
+        antInWater = getImageIcon("/images/antInWater.png").getImage();// creates the antInWater image
+        antInHill = getImageIcon("/images/antInHill.png").getImage();// creates the antInHill image
 
         blank.doClick();// calls the method to produce a blank board to start
 
-        timer = new Timer(DELAY, this);// creates timer with between-event DELAY
+        timer = new Timer(DELAY, e -> repaint());// creates timer with between-event DELAY
         timer.start();// starts the timer
     }// org.hzt.ant.Board() constructor
+
+    private static ImageIcon getImageIcon(final String name) {
+        final var resource = Optional.ofNullable(Board.class.getResource(name))
+                .map(URL::getFile)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found: " + name));
+        return new ImageIcon(resource);
+    }
 
     @Override // paintComponent method - performs duties to paint org.hzt.ant.Board
     public void paintComponent(Graphics g) {
@@ -146,7 +153,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
                     break;// breaks from switch
                 case ("SearchForFood"):
                     newPosition = wander(iAnt);// gets new position through wander method
-                    nodes[iAnt.getCurrent()].setImage(new ImageIcon(nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// sets current node image as previous occupant
+                    nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// sets current node image as previous occupant
                     iAnt.setCurrent(newPosition);// updates the ant position
                     nodes[iAnt.getCurrent()].setImage(ant);// sets the new node image as the ant
                     if (nodes[newPosition].getOccupant().equals("food")) {// checks if food has been found
@@ -168,7 +175,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
                     break;// breaks from switch
                 case ("SearchForHome"):
                     newPosition = getAStar(iAnt);// gets new position from A*
-                    nodes[iAnt.getCurrent()].setImage(new ImageIcon(nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node image to current occupant
+                    nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node image to current occupant
                     iAnt.setCurrent(newPosition);// updates ant position
                     nodes[iAnt.getCurrent()].setImage(antWithFood);// updates new node image to ant with food
                     if (iAnt.getHome() == newPosition) {// if home has been found
@@ -179,7 +186,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
                     break;// breaks from switch
                 case ("SearchForWater"):
                     newPosition = wander(iAnt);// gets new position from wander
-                    nodes[iAnt.getCurrent()].setImage(new ImageIcon(nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node to previous occupant image
+                    nodes[iAnt.getCurrent()].setImage(getImageIcon("/images/" + nodes[iAnt.getCurrent()].getOccupant() + ".png").getImage());// updates old node to previous occupant image
                     iAnt.setCurrent(newPosition);// updates ant position
                     nodes[iAnt.getCurrent()].setImage(ant);// updates new node image to ant
                     if (nodes[newPosition].getOccupant().equals("water")) {// checks if water has been found
@@ -203,7 +210,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
 
             if (alive) {// checks if ant is alive
                 if (ants.get(i).getCurrent() == ants.get(i).getHome() && !action.equals("EnterAntHill") && !action.equals("LeaveAntHill") && !action.equals("SearchForHome"))// checks if ant hill image needs to be added
-                    nodes[ants.get(i).getCurrent()].setImage(new ImageIcon("antHill.png").getImage());//sets image to ant hill
+                    nodes[ants.get(i).getCurrent()].setImage(getImageIcon("/images/" + "antHill.png").getImage());//sets image to ant hill
             }// if (alive)
 
             if (deadAnt != 999999) {// checks if current ant was killed
@@ -238,30 +245,31 @@ public final class Board extends JPanel implements ActionListener, MouseListener
         return graph.getConnections(iAnt.getCurrent()).get(num).getToNode();// returns the random connection to move ant
     }// wander(org.hzt.ant.Ant) method
 
-    @Override // actionPerformed method - main game loop, updates org.hzt.ant.Game world
-    public void actionPerformed(ActionEvent e) {
-        LOGGER.info("Game loop...");
-        if (e.getSource() == execute) {// checks for cases where the execute button has been pressed
-            if (antHillAdded) {// makes sure an ant hill has been added
-                randomize();// calls the randomize method to fill the board with random tiles
-                execute();// calls the method to execute the search
-                execute.setEnabled(false);// disables execute button
-            }// if (antHillAdded)
-        } else if (e.getSource() == blank) {// checks for cases where the blank button has been pressed
-            ants = new ArrayList<Ant>();// resets the list of ants
-            antFSM = new HashMap<Ant, FiniteStateMachine>();// resets the fsms
-            antHillAdded = false;// sets the ant hill added to false
-            blank();// calls the method to empty the board
-            execute.setEnabled(true);// enables the execute button
-        }// if (button)
+    private void makeBlank() {
+        LOGGER.info("Make blank");
+        ants = new ArrayList<Ant>();// resets the list of ants
+        antFSM = new HashMap<Ant, FiniteStateMachine>();// resets the fsms
+        antHillAdded = false;// sets the ant hill added to false
+        blank();// calls the method to empty the board
+        execute.setEnabled(true);// enables the execute button
         repaint();// repaints with current information
-    }// actionPerformed(ActionEvent) method
+    }
+
+    private void start() {
+        LOGGER.info("Start");
+        if (antHillAdded) {// makes sure an ant hill has been added
+            randomize();// calls the randomize method to fill the board with random tiles
+            execute();// calls the method to execute the search
+            execute.setEnabled(false);// disables execute button
+        }// if (antHillAdded)
+        repaint();// repaints with current information
+    }
 
     // blank method - creates a blank board for the user to manually specify
     public void blank() {
         running = false;// sets the simulation to stopped
         for (int i = 0; i < TOTAL_TILES; i++)// loops through all tiles
-            nodes[i] = new Node(new Point(i / WIDTH_TILES * SIZE_TILES, i % HEIGHT_TILES * SIZE_TILES), new ImageIcon("empty.png").getImage(), false, "empty");// sets empty tile
+            nodes[i] = new Node(new Point(i / WIDTH_TILES * SIZE_TILES, i % HEIGHT_TILES * SIZE_TILES), getImageIcon("/images/" + "empty.png").getImage(), false, "empty");// sets empty tile
     }// blank() method
 
     // randomize method - no parameters, fills tiles with random entities
@@ -277,7 +285,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
                 else if (r < 31) num = 2;
                 else num = 3;// distributes different objects
                 if (!nodes[i * WIDTH_TILES + j].isOccupied()) {// if tile empty or random chosen
-                    nodes[i * WIDTH_TILES + j] = new Node(new Point(i * BOARD_WIDTH / WIDTH_TILES, j * BOARD_WIDTH / HEIGHT_TILES), new ImageIcon(icons[num]).getImage(), true, occupants[num]);// creates random tile
+                    nodes[i * WIDTH_TILES + j] = new Node(new Point(i * BOARD_WIDTH / WIDTH_TILES, j * BOARD_WIDTH / HEIGHT_TILES), getImageIcon("/images/" + icons[num]).getImage(), true, occupants[num]);// creates random tile
                 }// if (random)
             }// for (j)
         }// for (i)
@@ -383,7 +391,7 @@ public final class Board extends JPanel implements ActionListener, MouseListener
             Point point = new Point(position.x - position.x % SIZE_TILES, position.y - position.y % SIZE_TILES);// gets the uper left coordinate of the tile
             if (!nodes[x * WIDTH_TILES + y].isOccupied() && !antHillAdded) {// checks if an ant needs to be added
                 addAnt(x * WIDTH_TILES + y, x * WIDTH_TILES + y);// calls the add ant method
-                nodes[x * WIDTH_TILES + y] = new Node(point, new ImageIcon("antHill.png").getImage(), true, "antHill");// adds the antHill at specified node
+                nodes[x * WIDTH_TILES + y] = new Node(point, getImageIcon("/images/" + "antHill.png").getImage(), true, "antHill");// adds the antHill at specified node
                 antHillAdded = true;// marks anthill flag as created
             } else if (nodes[x * WIDTH_TILES + y].isOccupied()) {// allows additional ants to be added to the colony
                 addAnt(x * WIDTH_TILES + y, x * WIDTH_TILES + y);// calls addAnt method
