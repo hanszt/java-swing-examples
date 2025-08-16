@@ -15,6 +15,7 @@
         <module>dashboard-sample</module>
         <module>mine-sweeper</module>
         <module>rubiks-cube-solver</module>
+        <module>ant-sim</module>
     </modules>
 
     <properties>
