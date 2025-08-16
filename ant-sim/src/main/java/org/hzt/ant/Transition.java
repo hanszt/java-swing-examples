@@ -1,10 +1,8 @@
-package org.hzt.ant;/*
- * org.hzt.ant.Transition class - used as a part of the Finite org.hzt.ant.State Machine, represents transitions between states
- */
+package org.hzt.ant;
 
 public class Transition {
 	private State targetState;// represents the state that this object transitions to
-	private String action;// represents the action that is associated with the transition taking place
+	private final String action;// represents the action that is associated with the transition taking place
 	private boolean condition;// represents the condition that indicates the transition is activated
 	
 	// org.hzt.ant.Transition constructor - the action associated and the trigger condition
@@ -42,5 +40,5 @@ public class Transition {
 	// toString method - overwrites the method to format the object for printing
 	public String toString() {
 		return this.getClass() + " " + targetState + " " + action + " " + condition;// returns the formatted result
-	}// toString() method
-}// org.hzt.ant.Transition class
+	}
+}

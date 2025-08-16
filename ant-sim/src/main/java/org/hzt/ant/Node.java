@@ -4,13 +4,13 @@ package org.hzt.ant;/*
 
 import java.awt.Image;// imports library necessary to provide an image for the org.hzt.ant.Game tile
 import java.awt.Point;// imports the library necessary to use a Point to represent the org.hzt.ant.Game tile position
-import java.util.ArrayList;// imports library necessary to use ArrayList for the Connections associated with each org.hzt.ant.Node
+import java.util.List;// imports library necessary to use List for the Connections associated with each org.hzt.ant.Node
 
 public class Node {
 	private Point tile;// represents the position of the org.hzt.ant.Game tile in the org.hzt.ant.Game space
 	private Image image;// represents the image of the entity occupying the org.hzt.ant.Game tile
 	private boolean occupied;// represents the cost associated with moving across the org.hzt.ant.Game tile
-	private ArrayList<Connection> connections;// represents the Connections to other org.hzt.ant.Game tiles
+	private List<Connection> connections;// represents the Connections to other org.hzt.ant.Game tiles
 	private String occupant;// represents the object that is currently at the node
 	
 	// org.hzt.ant.Node constructor - no parameters, creates an empty org.hzt.ant.Node
@@ -25,7 +25,7 @@ public class Node {
 		this.occupied = occupied;// sets the cost to cross the tile
 		this.connections = null;// sets to null, gets connections later
 		this.occupant = occupant;
-	}// org.hzt.ant.Node (Point, Image, int, ArrayList<org.hzt.ant.Connection>
+	}// org.hzt.ant.Node (Point, Image, int, List<org.hzt.ant.Connection>
 	
 	//getTile method - allows the position of the tile to be accessed
 	public Point getTile() {
@@ -48,7 +48,7 @@ public class Node {
 	}// getCost() method
 	
 	//getConnections method - allows the connections of the tile to be accessed
-	public ArrayList<Connection> getConnections() {
+	public List<Connection> getConnections() {
 		return this.connections;// returns the connections of the tile
 	}// getConnections() method
 	
