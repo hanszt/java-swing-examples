@@ -49,7 +49,7 @@ public final class Board extends JPanel {
 
     @Serial
     private static final long serialVersionUID = 1L;// serialization variable
-    private static final int DELAY = 10;// used to set the between-event delay
+    private static final int DELAY = 5;// used to set the between-event delay
     private int start = 0;// used to represent the start node in the search, where the ant is
     private boolean running = false;// represents when the game is running
 
@@ -79,9 +79,7 @@ public final class Board extends JPanel {
     private final Image antInWater;
     private final Image antInHill;// images used in the game
 
-    private final JPanel buttonPane = new JPanel(new GridLayout(1, 3));// adds a JPanel to hold the buttons
-    private final JButton execute = new JButton("Start");// the button to execute the ant colony
-    private final JButton blank = new JButton("Blank");// the button to start over
+    private final JButton startButton = new JButton("Start");// the button to execute the ant colony
 
     private final RandomGenerator random;
 
@@ -90,11 +88,11 @@ public final class Board extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(final MouseEvent e) {
-                Point position = e.getPoint();// gets coordinates of the click
+                final var position = e.getPoint();// gets coordinates of the click
                 if (position.x < BOARD_WIDTH && position.y < BOARD_WIDTH && !running) {// determines if the click is within the bounds of the game space
-                    int x = (int) Math.floor(position.x / SIZE_TILES);// gets the x tile value
-                    int y = (int) Math.floor(position.y / SIZE_TILES);// gets the y tile value
-                    Point point = new Point(position.x - position.x % SIZE_TILES, position.y - position.y % SIZE_TILES);// gets the uper left coordinate of the tile
+                    final var x = (int) Math.floor(position.x / SIZE_TILES);// gets the x tile value
+                    final var y = (int) Math.floor(position.y / SIZE_TILES);// gets the y tile value
+                    final var point = new Point(position.x - position.x % SIZE_TILES, position.y - position.y % SIZE_TILES);// gets the uper left coordinate of the tile
                     if (!nodes[x * WIDTH_TILES + y].isOccupied() && !antHillAdded) {// checks if an ant needs to be added
                         addAnt(x * WIDTH_TILES + y, x * WIDTH_TILES + y);// calls the add ant method
                         nodes[x * WIDTH_TILES + y] = new Node(point, getImageIcon("/images/" + "antHill.png").getImage(), true, "antHill");// adds the antHill at specified node
@@ -111,14 +109,18 @@ public final class Board extends JPanel {
         setDoubleBuffered(true);// sets double buffered to true
         setLayout(new BorderLayout());// creates the layout for the game panel
 
-        execute.addActionListener(e -> start());// adds a listener for the execute button
+        startButton.addActionListener(e -> start());// adds a listener for the execute button
+        // the button to start over
+        final JButton blank = new JButton("Blank");
         blank.addActionListener(e -> makeBlank());// adds a listener for the blank button
+        // adds a JPanel to hold the buttons
+        final JPanel buttonPane = new JPanel(new GridLayout(1, 3));
         buttonPane.setLayout(new GridLayout(1, 2));// sets the layout for the buttonPane JPanel pane
         buttonPane.add(blank);// adds the fullBoard button to the buttonPane
-        buttonPane.add(execute);// adds the execute button to the buttonPane
+        buttonPane.add(startButton);// adds the execute button to the buttonPane
         add(buttonPane, BorderLayout.SOUTH);// adds the buttonPane to the JPanel displaying the game
 
-        for (int i = 0; i < nodes.length; i++)// loops through the game nodes
+        for (var i = 0; i < nodes.length; i++)// loops through the game nodes
             nodes[i] = new Node();// fills each element with a blank node to start
 
         terrain = getImageIcon("/images/terrain.png").getImage();// creates the terrain image
@@ -131,7 +133,7 @@ public final class Board extends JPanel {
         blank.doClick();// calls the method to produce a blank board to start
 
         // represents the game timer
-        final Timer timer = new Timer(DELAY, e -> repaint());// creates timer with between-event DELAY
+        final var timer = new Timer(DELAY, e -> repaint());// creates timer with between-event DELAY
         timer.start();// starts the timer
     }// org.hzt.ant.Board() constructor
 
@@ -143,17 +145,17 @@ public final class Board extends JPanel {
     }
 
     @Override // paintComponent method - performs duties to paint org.hzt.ant.Board
-    public void paintComponent(Graphics g) {
+    public void paintComponent(final Graphics g) {
         super.paintComponent(g);// calls JPanel paintComponent
         doDrawing(g);// calls the doDrawing method to get graphics information about objects in the org.hzt.ant.Game
         Toolkit.getDefaultToolkit().sync();// synchronizes the toolkit state
     }// paintComponent(Graphics) method
 
     // doDrawing method - gets graphics information for each object in the org.hzt.ant.Game
-    private void doDrawing(Graphics g) {
-        Graphics2D g2d = (Graphics2D) g;// converts Graphics g to Graphics2D
-        for (int i = 0; i < WIDTH_TILES; i++) {// loops through x-coords
-            for (int j = 0; j < HEIGHT_TILES; j++) {// loops through y-coords
+    private void doDrawing(final Graphics g) {
+        final var g2d = (Graphics2D) g;// converts Graphics g to Graphics2D
+        for (var i = 0; i < WIDTH_TILES; i++) {// loops through x-coords
+            for (var j = 0; j < HEIGHT_TILES; j++) {// loops through y-coords
                 g2d.drawImage(nodes[i * WIDTH_TILES + j].getImage(), nodes[i * WIDTH_TILES + j].getTile().x, nodes[i * HEIGHT_TILES + j].getTile().y, this);// draws each tile with its current information
             }
         }
@@ -165,21 +167,21 @@ public final class Board extends JPanel {
 
     // moveAnts method - governs the movement of the ants, with the FSM
     public synchronized void moveAnts() {
-        List<Ant> deadAnts = new ArrayList<>();// holds all ants killed during current loop
-        List<Integer> bornAnts = new ArrayList<>();// holds all ants
-        for (int i = 0; i < ants.size(); i++) {// loops through all the ants
-            int deadAnt = 999999;// determines whether an ant has died and holds the index
-            int antBorn = 999999;// determines whether an ant has been born and holds the index
+        final var deadAnts = new ArrayList<Ant>();// holds all ants killed during current loop
+        final var bornAnts = new ArrayList<Integer>();// holds all ants
+        for (var i = 0; i < ants.size(); i++) {// loops through all the ants
+            var deadAnt = 999999;// determines whether an ant has died and holds the index
+            var antBorn = 999999;// determines whether an ant has been born and holds the index
 
-            Ant iAnt = ants.get(i);// creates duplicate of each Spider, necessary for deletion purposes
+            final var iAnt = ants.get(i);// creates duplicate of each Spider, necessary for deletion purposes
 
             if (iAnt.getActions().isEmpty())// checks if the org.hzt.ant.Ant has any current actions to complete
                 iAnt.setActions(antFSM.get(iAnt).update());// if not, gets actions from FSM
 
             final var action = iAnt.getActions().removeFirst();// gets the first action in the list
 
-            int newPosition = iAnt.getCurrent();// will hold the next position of the ant
-            boolean alive = true;// used to flag ant deaths
+            var newPosition = iAnt.getCurrent();// will hold the next position of the ant
+            var alive = true;// used to flag ant deaths
             antFSM.get(iAnt).getCurrentState().getTransition(foundFood).setActive(false);// sets the found food trigger to false
             antFSM.get(iAnt).getCurrentState().getTransition(foundHome).setActive(false);// sets the found food trigger to false
             antFSM.get(iAnt).getCurrentState().getTransition(foundWater).setActive(false);// sets the found food trigger to false
@@ -255,25 +257,25 @@ public final class Board extends JPanel {
             }// if (ant born)
         }// for (ants)
 
-        for (Ant ant : deadAnts)// loops through all ants killed in current game loop
+        for (final var ant : deadAnts)// loops through all ants killed in current game loop
             ants.remove(ant);// removes ants killed during game loop
 
-        for (Integer node : bornAnts)// loops through all ant born in current game loop
+        for (final var node : bornAnts)// loops through all ant born in current game loop
             addAnt(node, node);// adds ants born during game loop
     }// moveAnts() method
 
     // getAStar method - calls the A* algorithm to help the org.hzt.ant.Ant find its way home
-    public int getAStar(Ant ant) {
-        List<Connection> path = AStar.pathFindAStar(graph, ant.getCurrent(), ant.getHome(), new Heuristic());// creates a new path from the A* result
-        List<Integer> nodesTo = new ArrayList<>();// list to hold the toNodes on the path
-        for (Connection connection : path)// loops through the path
+    public int getAStar(final Ant ant) {
+        final var path = AStar.pathFindAStar(graph, ant.getCurrent(), ant.getHome(), new Heuristic());// creates a new path from the A* result
+        final List<Integer> nodesTo = new ArrayList<>();// list to hold the toNodes on the path
+        for (final var connection : path)// loops through the path
             nodesTo.add(connection.toNode());// adds the toNodes to the list
         return nodesTo.removeFirst();// returns the first node
     }// getAStar(org.hzt.ant.Ant) method
 
     // wander method - moves Ant randomly, even odds between all current connections
-    public int wander(Ant iAnt) {
-        int num = random.nextInt(graph.getConnections(iAnt.getCurrent()).size());// gets a random int between 0 and num of connections currently
+    public int wander(final Ant iAnt) {
+        final var num = random.nextInt(graph.getConnections(iAnt.getCurrent()).size());// gets a random int between 0 and num of connections currently
         return graph.getConnections(iAnt.getCurrent()).get(num).toNode();// returns the random connection to move ant
     }// wander(org.hzt.ant.Ant) method
 
@@ -283,7 +285,7 @@ public final class Board extends JPanel {
         antFSM = new HashMap<>();// resets the fsms
         antHillAdded = false;// sets the ant hill added to false
         blank();// calls the method to empty the board
-        execute.setEnabled(true);// enables the execute button
+        startButton.setEnabled(true);// enables the execute button
         repaint();
     }
 
@@ -292,14 +294,14 @@ public final class Board extends JPanel {
         if (antHillAdded) {// makes sure an ant hill has been added
             randomize();// calls the randomize method to fill the board with random tiles
             startSim();// calls the method to execute the search
-            execute.setEnabled(false);// disables execute button
+            startButton.setEnabled(false);// disables execute button
         }
         repaint();
     }
 
     public void blank() {
         running = false;// sets the simulation to stopped
-        for (int i = 0; i < TOTAL_TILES; i++)// loops through all tiles
+        for (var i = 0; i < TOTAL_TILES; i++)// loops through all tiles
             nodes[i] = new Node(new Point(i / WIDTH_TILES * SIZE_TILES, i % HEIGHT_TILES * SIZE_TILES), getImageIcon("/images/" + "empty.png").getImage(), false, "empty");// sets empty tile
     }
 
@@ -309,8 +311,8 @@ public final class Board extends JPanel {
     public void randomize() {
         int r;// will hold the random int
         int num;// will hold the filtered random int that determines with entity to use for a tile
-        for (int i = 0; i < WIDTH_TILES; i++) {// loops x-coords
-            for (int j = 0; j < HEIGHT_TILES; j++) {// loops y-coords
+        for (var i = 0; i < WIDTH_TILES; i++) {// loops x-coords
+            for (var j = 0; j < HEIGHT_TILES; j++) {// loops y-coords
                 r = random.nextInt(32);// gets random int from 0 to 32
                 if (r < 4) num = 0;
                 else if (r < 8) num = 1;
@@ -325,8 +327,8 @@ public final class Board extends JPanel {
 
     public void startSim() {
         graph = new Graph();
-        for (int i = 0; i < WIDTH_TILES; i++) {
-            for (int j = 0; j < HEIGHT_TILES; j++) {
+        for (var i = 0; i < WIDTH_TILES; i++) {
+            for (var j = 0; j < HEIGHT_TILES; j++) {
                 addNeighbours(i, j);
             }
         }
@@ -334,10 +336,10 @@ public final class Board extends JPanel {
     }
 
     // addNeighbours method - x-coord, y-coord, cost; sets a tiles neighbours
-    public void addNeighbours(int i, int j) {
-        int fromNode;// origin node of the connection
+    public void addNeighbours(final int i, final int j) {
+        final int fromNode;// origin node of the connection
         int toNode;// destination node of the connection
-        List<Connection> connections = new ArrayList<>();// will hold the connections
+        final List<Connection> connections = new ArrayList<>();// will hold the connections
         fromNode = i * WIDTH_TILES + j;// calculates the from node by the coordinates
         if (i > 0 && j > 0) {// not on left or top game border
             toNode = (i - 1) * WIDTH_TILES + (j - 1);// calculates to node of connection from coords
@@ -375,27 +377,27 @@ public final class Board extends JPanel {
     }// addNeighbours(int, int, int) method
 
     // connectionList method - connections, copies elements from one list and returns the results in another
-    public List<Connection> connectionList(List<Connection> connection) {
-        List<Connection> result = new ArrayList<>();// will hold list to return
-        for (int i = 0; i < connection.size(); i++)// loops through all connection in list
+    public List<Connection> connectionList(final List<Connection> connection) {
+        final List<Connection> result = new ArrayList<>();// will hold list to return
+        for (var i = 0; i < connection.size(); i++)// loops through all connection in list
             result.add(connection.get(i));// copies each connection into new list
         return result;// returns result list
     }// connectionList(List<org.hzt.ant.Connection>) method
 
     // addAnt method - takes care of the details involved with adding ants to the colony
-    public void addAnt(int x, int y) {
+    public void addAnt(final int x, final int y) {
         foundFood = new Transition(Action.PICK_UP_FOOD, false);// initializes the foundFood transition
         foundHome = new Transition(Action.IN_ANT_HILL, false);// initializes the foundHome transition
         foundWater = new Transition(Action.DRINK_WATER, false);// initializes the foundWater transition
         // transitions used with the FSM
-        final Transition foundPoison = new Transition(Action.DIE, false);// initializes the foundPoison transition
+        final var foundPoison = new Transition(Action.DIE, false);// initializes the foundPoison transition
 
-        final State foodSearch = new State(Action.SEARCH_FOR_FOOD, Action.DRINK_WATER, Action.PICK_UP_FOOD, new Transition[]{foundFood, foundPoison});
+        final var foodSearch = new State(Action.SEARCH_FOR_FOOD, Action.DRINK_WATER, Action.PICK_UP_FOOD, new Transition[]{foundFood, foundPoison});
         // initializes the foodSearch state
-        final State homeSearch = new State(Action.SEARCH_FOR_HOME, Action.PICK_UP_FOOD, Action.ENTER_ANT_HILL, new Transition[]{foundHome, foundPoison});
+        final var homeSearch = new State(Action.SEARCH_FOR_HOME, Action.PICK_UP_FOOD, Action.ENTER_ANT_HILL, new Transition[]{foundHome, foundPoison});
         // initializes the homeSearch state
         // states used with the FSM
-        final State waterSearch = new State(Action.SEARCH_FOR_WATER, Action.LEAVE_ANT_HILL, Action.DRINK_WATER, new Transition[]{foundWater, foundPoison});
+        final var waterSearch = new State(Action.SEARCH_FOR_WATER, Action.LEAVE_ANT_HILL, Action.DRINK_WATER, new Transition[]{foundWater, foundPoison});
         // initializes the waterSearch state
 
         foundFood.setTargetState(homeSearch);// adds the homeSearch as the target state for foundFood
@@ -408,8 +410,8 @@ public final class Board extends JPanel {
         states.add(homeSearch);// adds the homeSearch state
         states.add(waterSearch);// adds the waterSearch state
 
-        FiniteStateMachine fsm = new FiniteStateMachine(states, foodSearch);// creates a new FSM to pair with the ant
-        Ant ant = new Ant(x, y);// creates a new instance of the org.hzt.ant.Ant
+        final var fsm = new FiniteStateMachine(states, foodSearch);// creates a new FSM to pair with the ant
+        final var ant = new Ant(x, y);// creates a new instance of the org.hzt.ant.Ant
         ants.add(ant);// home, current
         antFSM.put(ant, fsm);// creates an ant/fsm pair
     }

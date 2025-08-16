@@ -9,7 +9,7 @@ public final class FiniteStateMachine {
     State currentState;// represents the current state of the object using the state machine
 
     // org.hzt.ant.FiniteStateMachine constructor - sets the states, the initial state, and the current state
-    public FiniteStateMachine(List<State> states, State initialState) {
+    public FiniteStateMachine(final List<State> states, final State initialState) {
         this.states = states;// sets the states to those specified
         this.initialState = initialState;// sets the initial state to that specified
         this.currentState = initialState;// initially sets the current state to the initial state
@@ -20,7 +20,7 @@ public final class FiniteStateMachine {
         Transition triggeredTransition = null;// will hold the transition, if one is triggered
         final var actions = new ArrayList<Action>();// will hold the actions resulting from the update
 
-        for (Transition transition : currentState.transitions()) {// loops through all potential transitions
+        for (final var transition : currentState.transitions()) {// loops through all potential transitions
             if (transition.isActive()) {// checks if the current transition is triggered
                 triggeredTransition = transition;// the triggered transition is set to that triggered
                 break;// breaks if a transition has been found
@@ -28,7 +28,7 @@ public final class FiniteStateMachine {
         }
 
         if (triggeredTransition != null) {// checks to see if a transition was triggered
-            State targetState = triggeredTransition.getTargetState();// gets the target state of the triggered transition
+            final var targetState = triggeredTransition.getTargetState();// gets the target state of the triggered transition
 
             actions.add(currentState.exitAction());// adds the exit action of the current state to the list to be returned
             actions.add(triggeredTransition.getAction());// adds the action of the current state to the list to be returned

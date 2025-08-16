@@ -19,7 +19,7 @@ public class Node {
 	}// org.hzt.ant.Node() constructor
 	
 	// org.hzt.ant.Node constructor - position of the tile, image of entity, cost to cross, Connections to other tiles
-	public Node (Point tile, Image image, boolean occupied, String occupant) {
+	public Node (final Point tile, final Image image, final boolean occupied, final String occupant) {
 		this.tile = tile;// sets the position to that provided
 		this.image = image;// sets the image to that of the entity occupying the tile
 		this.occupied = occupied;// sets the cost to cross the tile
@@ -38,7 +38,7 @@ public class Node {
 	}// getImage() method
 	
 	//setImage method - allows the image of the tile to be set to a specified image
-	public void setImage(Image image) {
+	public void setImage(final Image image) {
 		this.image = image;// sets the image of the tile to that specified
 	}// setImage(Image) method
 	
@@ -53,7 +53,7 @@ public class Node {
 	}// getConnections() method
 	
 	// setOccupant method - allows the occupant variable to be modified
-	public void setOccupant(String occupant) {
+	public void setOccupant(final String occupant) {
 		this.occupant = occupant;// sets the occupant to that specified
 	}// setOccupant(String) method
 	

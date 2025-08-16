@@ -6,14 +6,14 @@ public final class Transition {
 	private boolean active;// represents the condition that indicates the transition is activated
 	
 	// org.hzt.ant.Transition constructor - the action associated and the trigger condition
-	public Transition(Action action, boolean active) {
+	public Transition(final Action action, final boolean active) {
 		this.targetState = null;// initially null, this is added later
 		this.action = action;// sets the action to that specified
 		this.active = active;// sets the condition to that specified
 	}// org.hzt.ant.Transition(String, boolean) constructor
 	
 	// setTriggered method - sets the trigger condition to that specified
-	public void setActive(boolean condition) {
+	public void setActive(final boolean condition) {
 		this.active = condition;// sets the trigger condition
 	}// setTriggered(boolean) method
 	
@@ -23,7 +23,7 @@ public final class Transition {
 	}// isTriggered() method
 	
 	// setTargetState method - sets the target state to that specified
-	public void setTargetState(State targetState) {
+	public void setTargetState(final State targetState) {
 		this.targetState = targetState;// sets the targetState to that specified
 	}// setTargetState(org.hzt.ant.State) method
 	

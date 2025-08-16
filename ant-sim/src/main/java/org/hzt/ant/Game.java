@@ -30,11 +30,11 @@ public final class Game extends JFrame {
         LOGGER.info("Ant game started");
     }
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         LOGGER.info("Starting ant game...");
 
         EventQueue.invokeLater(() -> {
-            Game game = new Game();
+            final var game = new Game();
             game.setVisible(true);
         });
     }

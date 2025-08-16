@@ -8,7 +8,7 @@ package org.hzt.ant;
  */
 public record State(Action action, Action entryAction, Action exitAction, Transition[] transitions) {
 
-    public Transition getTransition(Transition transition) {
+    public Transition getTransition(final Transition transition) {
         if (transitions.length > 0) {
             return transitions[0];
         }

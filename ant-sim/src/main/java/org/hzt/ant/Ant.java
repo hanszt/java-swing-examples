@@ -11,7 +11,7 @@ public final class Ant {
 	private int current; // represents an ant's current location
 	private List<Action> actions; // represents the actions that an ant has in the queue
 
-	public Ant(int home, int current) {
+	public Ant(final int home, final int current) {
 		this.home = home;
 		this.current = current;
 		this.actions = new ArrayList<>();
@@ -21,7 +21,7 @@ public final class Ant {
 		return this.home;
 	}
 	
-	public void setCurrent(int current) {
+	public void setCurrent(final int current) {
 		this.current = current;
 	}
 
@@ -29,7 +29,7 @@ public final class Ant {
 		return this.current;
 	}
 
-	public void setActions(List<Action> actions) {
+	public void setActions(final List<Action> actions) {
 		this.actions = actions;
 	}
 

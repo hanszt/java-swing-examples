@@ -24,14 +24,14 @@ public final class AStar {
     // represents the list of Nodes that has been searched
 	
 	// pathFindAStar method - graph, start, end, and heuristic; finds the minimum path
-	public static List<Connection> pathFindAStar(Graph graph, int start, int end, Heuristic heuristic) {
-		NodeRecord startRecord = new NodeRecord(start, null, 0, heuristic.estimate(start));// creates org.hzt.ant.NodeRecord for start org.hzt.ant.Node
+	public static List<Connection> pathFindAStar(final Graph graph, final int start, final int end, final Heuristic heuristic) {
+        final var startRecord = new NodeRecord(start, null, 0, heuristic.estimate(start));// creates org.hzt.ant.NodeRecord for start org.hzt.ant.Node
 		
 		openList = new ArrayList<>();// creates the list for nodes not yet searched
 		openList.add(startRecord);// adds the start node record to the open list
 		final var closedList = new ArrayList<NodeRecord>();// creates the list for nodes already searched
-		
-		NodeRecord current = new NodeRecord();// creates a node record for the next node
+
+        var current = new NodeRecord();// creates a node record for the next node
 		List<Connection> connections;// will be used to hold the connection associated with the current node
 		int endNode;// will be used to hold the end node of the connection
 		int endNodeCost;// will be used to hold the cost of the end node of the connection
@@ -46,7 +46,7 @@ public final class AStar {
 				connections = graph.getConnections(current.node());
 			}
 			
-			for (Connection connection : connections) {// loops through the connections for the current node
+			for (final var connection : connections) {// loops through the connections for the current node
 				endNode = connection.toNode();// gets the endNode for the current connection
 				endNodeCost = current.costSoFar() + connection.cost();// gets the cost for the endNode of the current connection
 				
@@ -83,12 +83,12 @@ public final class AStar {
 		if (current.node() != end) {// checks if the current node is not the goal node
 			return Collections.emptyList();// return null, no path has been found
 		} else {// if a path has been found
-			List<Connection> path = new ArrayList<>();// will be used to hold the path
+			final List<Connection> path = new ArrayList<>();// will be used to hold the path
 			
 			while (current.node() != start) {// while there are more nodes in the path
 				path.add(current.connection());// adds the current connection to the path
-				int currentNode = current.connection().fromNode();// gets the from node from the current connection
-				for (NodeRecord nodeRecord : closedList) {// cycles through the closedList
+                final var currentNode = current.connection().fromNode();// gets the from node from the current connection
+				for (final var nodeRecord : closedList) {// cycles through the closedList
 					if (nodeRecord.node() == currentNode)// checks the node records for the current node
 						current = nodeRecord;// sets the node record if found for the current node
 				}// for (closedList)
@@ -100,8 +100,8 @@ public final class AStar {
 	
 	// getSmallestElement method - no parameters, gets the node with the smallest estimated cost
 	private static NodeRecord getSmallestElement() {
-		NodeRecord smallestElement = openList.get(0);// gets first node record from the openList
-		for (NodeRecord nodeRecord : openList) {// cycles through the node records in the openList
+        var smallestElement = openList.get(0);// gets first node record from the openList
+		for (final var nodeRecord : openList) {// cycles through the node records in the openList
 			if (nodeRecord.estimatedTotalCost() < smallestElement.estimatedTotalCost())// checks if current record has lower estimate
 				smallestElement = nodeRecord;// gets record for smallest estimate node
 		}// for (openList)
@@ -109,8 +109,8 @@ public final class AStar {
 	}// getSmallestElement() method
 	
 	// listContains method - list and node, checks if the given list contains the given node
-	private static boolean listContains(List<NodeRecord> list, int node) {
-		for (NodeRecord listNode : list) {// loops through the list
+	private static boolean listContains(final List<NodeRecord> list, final int node) {
+		for (final var listNode : list) {// loops through the list
 			if (listNode.node() == node)// checks for the given node
 				return true;// returns true if the node is found
 		}// for (list)
@@ -118,8 +118,8 @@ public final class AStar {
 	}// listContains(List<org.hzt.ant.NodeRecord>, int) method
 	
 	// findNode method - list and node, finds a node record for a given node from a given list
-	private static NodeRecord findNode(List<NodeRecord> list, int node) {
-		for (NodeRecord listNode : list) {// loop through the list
+	private static NodeRecord findNode(final List<NodeRecord> list, final int node) {
+		for (final var listNode : list) {// loop through the list
 			if (listNode.node() == node)// checks the current list element against the node
 				return listNode;// returns the node record when found
 		}// for (list)
@@ -127,9 +127,9 @@ public final class AStar {
 	}// findNode(List<org.hzt.ant.NodeRecord>, int) method
 	
 	// reverse method - search path, reverses the path provided 
-	private static List<Connection> reverse(List<Connection> path) {
-		List<Connection> reverse = new ArrayList<>();// will hold the reversed path
-		for (int i = path.size() - 1; i >= 0; i--)// loops through the connection in the path
+	private static List<Connection> reverse(final List<Connection> path) {
+		final List<Connection> reverse = new ArrayList<>();// will hold the reversed path
+		for (var i = path.size() - 1; i >= 0; i--)// loops through the connection in the path
 			reverse.add(path.get(i));// adds each connection to the reverse path
 		return reverse;// returns the reverse version of the path
 	}// reverse(List<org.hzt.ant.Connection>)
