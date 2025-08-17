@@ -10,5 +10,4 @@ public enum Action {
     PICK_UP_FOOD,
     SEARCH_FOR_HOME,
     DIE,
-
 }

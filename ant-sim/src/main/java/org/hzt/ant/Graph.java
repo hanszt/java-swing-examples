@@ -23,7 +23,9 @@ public final class Graph {
 		final List<Connection> connectionsFromNode = new ArrayList<>();// used to hold connections from the node
 		for (final var connection : this.connections) {// loops through the graph connections
 			if (connection.fromNode() == fromNode)// checks to see if they originate at the specified node
-				connectionsFromNode.add(connection);// adds connections that originate at the specified node
+            {
+                connectionsFromNode.add(connection);// adds connections that originate at the specified node
+            }
 		}// for (connection)
 		return connectionsFromNode;// returns the connections that originate from the specified node
 	}// getConnections(int) method
