@@ -19,9 +19,19 @@ import static java.lang.Math.*;
  */
 public final class Marbling {
 
-    private static final Dimension preferredCanvasSize = new Dimension(800, 1100);
+    private static final int DEFAULT_MIN = 20;
+    private static final int DEFAULT_MAX = 100;
+    private static final int DEFAULT_DROP_SIZE = 500;
+    private static final Dimension preferredCanvasSize = new Dimension(1100, 700);
 
     private final Canvas canvas = new Canvas();
+    private final JSlider sizeSlider = new JSlider(3, 500, DEFAULT_DROP_SIZE);
+    private final JSlider lowerSizeSlider = new JSlider(10, 200, DEFAULT_MIN);
+    private final JSlider upperSizeSlider = new JSlider(10, 200, DEFAULT_MAX);
+    private final JButton clearButton = new JButton("Clear");
+    private final JButton resetButton = new JButton("Reset");
+
+
     private final List<Drop> drops = new ArrayList<>();
     private final RandomGenerator random;
 
@@ -35,13 +45,46 @@ public final class Marbling {
     }
 
     private void start() {
+        setTickMarksOnSlider(sizeSlider, 20);
+        setTickMarksOnSlider(lowerSizeSlider, 10);
+        setTickMarksOnSlider(upperSizeSlider, 10);
+
+        upperSizeSlider.addChangeListener(e -> lowerSizeSlider.setMaximum(upperSizeSlider.getValue()));
+
+        clearButton.addActionListener(e -> {
+            drops.clear();
+            drawBackground(getDrawGraphics());
+            cleanup(getDrawGraphics());
+        });
+
+        resetButton.addActionListener(e -> {
+            sizeSlider.setValue(DEFAULT_DROP_SIZE);
+            lowerSizeSlider.setValue(DEFAULT_MIN);
+            upperSizeSlider.setValue(DEFAULT_MAX);
+        });
+
+        final var buttonPanel = new JPanel(new BorderLayout());
+        buttonPanel.add(resetButton, BorderLayout.NORTH);
+        buttonPanel.add(clearButton, BorderLayout.SOUTH);
+
+        final var sliderPanel = new JPanel(new BorderLayout());
+        sliderPanel.add(sizeSlider, BorderLayout.NORTH);
+        sliderPanel.add(lowerSizeSlider, BorderLayout.CENTER);
+        sliderPanel.add(upperSizeSlider, BorderLayout.SOUTH);
+
+        final var controlPanel = new JPanel(new BorderLayout());
+        controlPanel.add(sliderPanel, BorderLayout.CENTER);
+        controlPanel.add(buttonPanel, BorderLayout.EAST);
+
         final var frame = new JFrame("Marbling");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);
-        final var panel = new JPanel();
+        final var canvasPanel = new JPanel();
         canvas.setPreferredSize(preferredCanvasSize);
-        panel.add(canvas);
-        frame.add(panel, BorderLayout.CENTER);
+        canvasPanel.add(canvas);
+        frame.add(canvasPanel, BorderLayout.CENTER);
+        frame.add(controlPanel, BorderLayout.SOUTH);
+
         frame.pack();
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
@@ -54,6 +97,13 @@ public final class Marbling {
         }));
         canvas.setIgnoreRepaint(true);
         drawBackground(getDrawGraphics());
+    }
+
+    private void setTickMarksOnSlider(final JSlider slider, final int majorTickSpacing) {
+        slider.setMajorTickSpacing(majorTickSpacing);
+        slider.setMinorTickSpacing(majorTickSpacing / 10);
+        slider.setPaintTicks(true);
+        slider.setPaintLabels(true);
     }
 
     private void placeNewDrop(final Point2D mousePosition, final Graphics2D g) {
@@ -101,8 +151,10 @@ public final class Marbling {
 
     private @NotNull Drop createDrop(final Point2D mousePosition) {
         final var color = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255));
-        final var radius = random.nextInt(20, 100);
-        return new Drop(radius, mousePosition, color, Drop.DETAIL);
+        final var min = lowerSizeSlider.getValue();
+        final var max = upperSizeSlider.getValue();
+        final var radius = min == max ? min : random.nextInt(min, max);
+        return new Drop(radius, mousePosition, color, sizeSlider.getValue());
     }
 
     private Graphics2D getDrawGraphics() {
