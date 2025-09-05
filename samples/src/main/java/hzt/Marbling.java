@@ -19,7 +19,7 @@ import static java.lang.Math.*;
  */
 public final class Marbling {
 
-    private static final Dimension preferredSize = new Dimension(800, 1100);
+    private static final Dimension preferredCanvasSize = new Dimension(800, 1100);
 
     private final Canvas canvas = new Canvas();
     private final List<Drop> drops = new ArrayList<>();
@@ -39,8 +39,7 @@ public final class Marbling {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setResizable(false);
         final var panel = new JPanel();
-        panel.setPreferredSize(preferredSize);
-        canvas.setPreferredSize(preferredSize);
+        canvas.setPreferredSize(preferredCanvasSize);
         panel.add(canvas);
         frame.add(panel, BorderLayout.CENTER);
         frame.pack();
@@ -50,32 +49,34 @@ public final class Marbling {
         canvas.addMouseListener((new MouseAdapter() {
             @Override
             public void mousePressed(final MouseEvent event) {
-                updateCanvas(new Point2D(event.getX(), event.getY()), getDrawGraphics());
+                placeNewDrop(new Point2D(event.getX(), event.getY()), getDrawGraphics());
             }
         }));
         canvas.setIgnoreRepaint(true);
         drawBackground(getDrawGraphics());
     }
 
-    private void updateCanvas(final Point2D mousePosition, final Graphics2D g) {
+    private void placeNewDrop(final Point2D mousePosition, final Graphics2D g) {
         drawBackground(g);
         final var newDrop = createDrop(mousePosition);
         drops.add(newDrop);
 
-        for (final var drop : drops) {
+        for (int j = 0; j < drops.size(); j++) {
+            final var drop = drops.get(j);
             if (!drop.equals(newDrop)) {
-                drop.marbledBy(newDrop);
+                drops.set(j, drop.marbledBy(newDrop));
             }
-            g.setColor(drop.color);
-            final var vertices = drop.vertices;
-            final var xPoints = new int[vertices.length];
-            final var yPoints = new int[vertices.length];
-            for (var i = 0; i < vertices.length; i++) {
-                xPoints[i] = (int) vertices[i].x;
-                yPoints[i] = (int) vertices[i].y;
+            final var updatedDrop = drops.get(j);
+            g.setColor(updatedDrop.color);
+            final var vertices = updatedDrop.vertices;
+            final var xPoints = new int[vertices.size()];
+            final var yPoints = new int[vertices.size()];
+            for (var i = 0; i < vertices.size(); i++) {
+                xPoints[i] = (int) vertices.get(i).x;
+                yPoints[i] = (int) vertices.get(i).y;
             }
             g.fillPolygon(xPoints, yPoints, xPoints.length);
-            g.setColor(drop.color.darker());
+            g.setColor(updatedDrop.color.darker());
             g.drawPolygon(xPoints, yPoints, yPoints.length);
         }
         cleanup(g);
@@ -95,13 +96,13 @@ public final class Marbling {
 
     private void drawBackground(final Graphics2D graphics) {
         graphics.setColor(Color.WHITE);
-        graphics.fillRect(0, 0, preferredSize.width, preferredSize.height);
+        graphics.fillRect(0, 0, preferredCanvasSize.width, preferredCanvasSize.height);
     }
 
     private @NotNull Drop createDrop(final Point2D mousePosition) {
         final var color = new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255));
         final var radius = random.nextInt(20, 100);
-        return new Drop(radius, mousePosition, color);
+        return new Drop(radius, mousePosition, color, Drop.DETAIL);
     }
 
     private Graphics2D getDrawGraphics() {
@@ -110,36 +111,49 @@ public final class Marbling {
 
     static final class Drop {
         private static final int DETAIL = 500;
+
         private final double radius;
-
         private final Color color;
-        private final Point2D center;
-        private final Point2D[] vertices;
+        private final Point2D position;
+        final List<Point2D> vertices;
 
-        Drop(final double radius, final Point2D center, final Color color) {
+        Drop(final double radius, final Point2D position, final Color color, final int size) {
+            this(radius, position, color, createCircle(radius, position, size));
+        }
+
+        private Drop(final double radius, final Point2D position, final Color color, List<Point2D> vertices) {
             this.radius = radius;
-            this.center = center;
+            this.position = position;
             this.color = color;
-            vertices = createCircle(radius, center);
+            this.vertices = vertices;
         }
 
-        private Point2D[] createCircle(final double radius, final Point2D position) {
+        private static List<Point2D> createCircle(
+                final double radius,
+                final Point2D position,
+                final int size
+        ) {
             return DoubleStream.iterate(0.0, d -> d + 1.0)
-                    .limit(DETAIL)
-                    .map(d -> 2 * PI * (d / DETAIL))
+                    .limit(size)
+                    .map(d -> 2 * PI * (d / size))
                     .mapToObj(angle -> position.add(cos(angle) * radius, sin(angle) * radius))
-                    .toArray(Point2D[]::new);
+                    .toList();
         }
 
-        public void marbledBy(final Drop other) {
-            for (var i = 0; i < vertices.length; i++) {
-                final var c = other.center;
-                final var r = other.radius;
-                final var diff = vertices[i].subtract(c);
-                final var mSquared = diff.magnitudeSquared();
-                final var root = Math.sqrt(1 + ((r * r) / mSquared));
-                vertices[i] = c.add(diff.multiply(root));
-            }
+        public Drop marbledBy(final Drop other) {
+            final var vertices = this.vertices.stream()
+                    .map(vertex -> updatedBy(other, vertex))
+                    .toList();
+            return new Drop(radius, position, color, vertices);
+        }
+
+        private @NotNull Point2D updatedBy(final Drop other, final Point2D vertex) {
+            final var c = other.position;
+            final var r = other.radius;
+            final var diff = vertex.subtract(c);
+            final var mSquared = diff.magnitudeSquared();
+            final var root = sqrt(1 + ((r * r) / mSquared));
+            return c.add(diff.multiply(root));
         }
     }
 
