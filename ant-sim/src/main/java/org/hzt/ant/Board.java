@@ -57,35 +57,37 @@ public final class Board extends JPanel {
     private static final int HEIGHT_TILES = 30;
     private static final int TOTAL_TILES = WIDTH_TILES * HEIGHT_TILES;
     private static final int SIZE_TILES = 25;
+    private static final int PANEL_HEIGHT = 770;
     private static final int BOARD_WIDTH = WIDTH_TILES * SIZE_TILES;
 
-    private Graph graph = new Graph();
+    private transient Graph graph = new Graph();
 
     private final List<Ant> ants = new ArrayList<>();
     private boolean antHillAdded = false;
-    private Map<Ant, FiniteStateMachine> antFSM = new HashMap<>();
-    private final Node[] nodes = new Node[TOTAL_TILES];
+    private final Map<Ant, FiniteStateMachine> antFSM = new HashMap<>();
     private final List<String> occupants = List.of("food", "water", "terrain", "poison");
-    private final Image terrain = getImageIcon("/images/terrain.png").getImage();
-    private final Image ant = getImageIcon("/images/ant.png").getImage();
-    private final Image antHill = getImageIcon("/images/antHill.png").getImage();
-    private final Image antWithFood = getImageIcon("/images/antWithFood.png").getImage();
-    private final Image antInWater = getImageIcon("/images/antInWater.png").getImage();
-    private final Image antInHill = getImageIcon("/images/antInHill.png").getImage();
+
+    private final transient Node[] nodes = new Node[TOTAL_TILES];
+    private final transient Image terrain = getImageIcon("/images/terrain.png").getImage();
+    private final transient Image ant = getImageIcon("/images/ant.png").getImage();
+    private final transient Image antHill = getImageIcon("/images/antHill.png").getImage();
+    private final transient Image antWithFood = getImageIcon("/images/antWithFood.png").getImage();
+    private final transient Image antInWater = getImageIcon("/images/antInWater.png").getImage();
+    private final transient Image antInHill = getImageIcon("/images/antInHill.png").getImage();
 
     private final JButton startButton = new JButton("Start");
 
-    private final RandomGenerator random;
+    private final transient RandomGenerator random;
 
     public Board(final RandomGenerator random) {
         this.random = random;
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(final MouseEvent e) {
+            public void mousePressed(final MouseEvent e) {
                 final var position = e.getPoint();
                 if (position.x < BOARD_WIDTH && position.y < BOARD_WIDTH && !running) {
-                    final var x = (int) Math.floor(position.x / SIZE_TILES);
-                    final var y = (int) Math.floor(position.y / SIZE_TILES);
+                    final var x = position.x / SIZE_TILES;
+                    final var y = position.y / SIZE_TILES;
                     final var point = new Point(position.x - position.x % SIZE_TILES, position.y - position.y % SIZE_TILES);
                     if (!nodes[x * WIDTH_TILES + y].isOccupied() && !antHillAdded) {
                         addAnt(x * WIDTH_TILES + y, x * WIDTH_TILES + y);
@@ -104,7 +106,7 @@ public final class Board extends JPanel {
             }
         });
         setFocusable(true);
-        setPreferredSize(new Dimension(BOARD_WIDTH, 770));
+        setPreferredSize(new Dimension(BOARD_WIDTH, PANEL_HEIGHT));
         setBackground(Color.WHITE);
         setDoubleBuffered(true);
         setLayout(new BorderLayout());
@@ -119,13 +121,9 @@ public final class Board extends JPanel {
         buttonPane.add(blankButton);
         buttonPane.add(startButton);
         add(buttonPane, BorderLayout.SOUTH);
+        Arrays.setAll(nodes, i -> new Node());
 
-        for (var i = 0; i < nodes.length; i++) {
-            nodes[i] = new Node();
-        }
-
-        blankButton.doClick();
-
+        makeBlank();
 
         final var timer = new Timer(DELAY, e -> repaint());
         timer.start();
@@ -161,12 +159,12 @@ public final class Board extends JPanel {
     }
 
 
-    public synchronized void moveAnts() {
+    public void moveAnts() {
         final var deadAnts = new ArrayList<Ant>();
         final var bornAnts = new ArrayList<Integer>();
         for (var i = 0; i < ants.size(); i++) {
-            var deadAnt = 999999;// determines whether an ant has died and holds the index
-            var antBorn = 999999;// determines whether an ant has been born and holds the index
+            var deadAnt = 999999; // determines whether an ant has died and holds the index
+            var antBorn = 999999; // determines whether an ant has been born and holds the index
 
             final var iAnt = ants.get(i);
 
@@ -178,7 +176,7 @@ public final class Board extends JPanel {
 
             var newPosition = iAnt.getCurrent();
             var alive = true;
-            antFSM.get(iAnt).getCurrentState().firstTransitionOrThrow().setActive(false);// sets the found food trigger to false
+            antFSM.get(iAnt).getCurrentState().firstTransitionOrThrow().setActive(false); // sets the found food trigger to false
 
             switch (action) {
                 case Action.DIE -> {
@@ -272,15 +270,15 @@ public final class Board extends JPanel {
         return nodesTo.removeFirst();
     }
 
-    public int wander(final Ant iAnt) {
-        final var num = random.nextInt(graph.getConnections(iAnt.getCurrent()).size());
-        return graph.getConnections(iAnt.getCurrent()).get(num).toNode();
+    public int wander(final Ant ant) {
+        final var num = random.nextInt(graph.getConnections(ant.getCurrent()).size());
+        return graph.getConnections(ant.getCurrent()).get(num).toNode();
     }
 
     private void makeBlank() {
         LOGGER.info("Make blank");
         ants.clear();
-        antFSM = new HashMap<>();
+        antFSM.clear();
         antHillAdded = false;
         blank();
         startButton.setEnabled(true);
@@ -411,13 +409,7 @@ public final class Board extends JPanel {
         foundWater.setTargetState(foodSearch);
         foundPoison.setTargetState(null);
 
-
-        final List<State> states = new ArrayList<>();
-        states.add(foodSearch);
-        states.add(homeSearch);
-        states.add(waterSearch);
-
-        final var fsm = new FiniteStateMachine(states, foodSearch);
+        final var fsm = new FiniteStateMachine(List.of(foodSearch, homeSearch, waterSearch), foodSearch);
         final var ant = new Ant(x, y);
         ants.add(ant);
         antFSM.put(ant, fsm);
