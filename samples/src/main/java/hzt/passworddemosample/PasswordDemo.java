@@ -41,7 +41,7 @@ import java.util.Base64;
 
 /* PasswordDemo.java requires no other files. */
 
-public class PasswordDemo {
+public final class PasswordDemo {
 
     private static final String OK = "ok";
     private static final String HELP = "help";

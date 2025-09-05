@@ -7,7 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 
-public class JAVASwingFormExample {
+public final class JAVASwingFormExample {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(JAVASwingFormExample.class);
 
@@ -73,7 +73,12 @@ public class JAVASwingFormExample {
 		configureSubmitButton();
 	}
 
-	private void configureLabel(final String text, final int labelX, final int labelY, final int labelWidth) {
+	private void configureLabel(
+			final String text,
+			final int labelX,
+			final int labelY,
+			final int labelWidth
+	) {
         final var sexLabel = new JLabel(text);
 		sexLabel.setBounds(labelX, labelY, labelWidth, LABEL_HEIGHT);
 		frame.getContentPane().add(sexLabel);
@@ -85,7 +90,12 @@ public class JAVASwingFormExample {
 		frame.getContentPane().add(addressField);
 	}
 
-	private void configureLabeledTextField(final String name, final JTextField textField, final int y, final int textFieldWidth) {
+	private void configureLabeledTextField(
+			final String name,
+			final JTextField textField,
+			final int y,
+			final int textFieldWidth
+	) {
 		configureLabel(name, LABEL_X, y, LABEL_WIDTH);
 		textField.setBounds(TEXT_FIELD_X, y, textFieldWidth, TEXT_FIELD_HEIGHT);
 		textField.setColumns(10);

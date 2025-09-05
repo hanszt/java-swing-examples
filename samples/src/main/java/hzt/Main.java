@@ -10,7 +10,7 @@ import hzt.spinnersample.SpinnerDemo4;
 import hzt.treedemoproject.TreeIconDemo;
 import hzt.unitconvertersample.Converter;
 
-public class Main {
+public final class Main {
 
     public static void main(final String[] args) {
         ColorPickerSample.main(args);
