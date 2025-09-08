@@ -49,15 +49,15 @@ final class Marbling {
         setTickMarksOnSlider(lowerSizeSlider, 10);
         setTickMarksOnSlider(upperSizeSlider, 10);
 
-        upperSizeSlider.addChangeListener(e -> lowerSizeSlider.setMaximum(upperSizeSlider.getValue()));
+        upperSizeSlider.addChangeListener(_ -> lowerSizeSlider.setMaximum(upperSizeSlider.getValue()));
 
-        clearButton.addActionListener(e -> {
+        clearButton.addActionListener(_ -> {
             drops.clear();
             drawBackground(getDrawGraphics());
             cleanup(getDrawGraphics());
         });
 
-        resetButton.addActionListener(e -> {
+        resetButton.addActionListener(_ -> {
             sizeSlider.setValue(DEFAULT_DROP_SIZE);
             lowerSizeSlider.setValue(DEFAULT_MIN);
             upperSizeSlider.setValue(DEFAULT_MAX);
@@ -162,7 +162,6 @@ final class Marbling {
     }
 
     static final class Drop {
-        private static final int DETAIL = 500;
 
         private final double radius;
         private final Color color;
