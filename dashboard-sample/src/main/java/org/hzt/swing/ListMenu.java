@@ -4,15 +4,11 @@ import org.hzt.event.EventMenuSelected;
 import org.hzt.model.ModelMenu;
 import org.hzt.model.ModelMenu.MenuType;
 
-import java.awt.Component;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
-import javax.swing.DefaultListCellRenderer;
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
-import javax.swing.ListCellRenderer;
-import javax.swing.SwingUtilities;
 
 public final class ListMenu extends JList<ModelMenu> {
 
@@ -21,7 +17,7 @@ public final class ListMenu extends JList<ModelMenu> {
     private int overIndex = -1;
     private EventMenuSelected event;
 
-    public void addEventMenuSelected(EventMenuSelected event) {
+    public void addEventMenuSelected(final EventMenuSelected event) {
         this.event = event;
     }
 
@@ -30,11 +26,11 @@ public final class ListMenu extends JList<ModelMenu> {
         setModel(model);
         addMouseListener(new MouseAdapter() {
             @Override
-            public void mousePressed(MouseEvent me) {
+            public void mousePressed(final MouseEvent me) {
                 if (SwingUtilities.isLeftMouseButton(me)) {
-                    int index = locationToIndex(me.getPoint());
-                    Object o = model.getElementAt(index);
-                    if (o instanceof ModelMenu menu) {
+                    final var index = locationToIndex(me.getPoint());
+                    final Object o = model.getElementAt(index);
+                    if (o instanceof final ModelMenu menu) {
                         if (menu.type() == MenuType.MENU) {
                             selectedIndex = index;
                             if (event != null) {
@@ -49,18 +45,18 @@ public final class ListMenu extends JList<ModelMenu> {
             }
 
             @Override
-            public void mouseExited(MouseEvent me) {
+            public void mouseExited(final MouseEvent me) {
                 overIndex = -1;
                 repaint();
             }
         });
         addMouseMotionListener(new MouseMotionAdapter() {
             @Override
-            public void mouseMoved(MouseEvent me) {
-                int index = locationToIndex(me.getPoint());
+            public void mouseMoved(final MouseEvent me) {
+                final var index = locationToIndex(me.getPoint());
                 if (index != overIndex) {
-                    Object o = model.getElementAt(index);
-                    if (o instanceof ModelMenu menu) {
+                    final Object o = model.getElementAt(index);
+                    if (o instanceof final ModelMenu menu) {
                         if (menu.type() == MenuType.MENU) {
                             overIndex = index;
                         } else {
@@ -77,14 +73,14 @@ public final class ListMenu extends JList<ModelMenu> {
     public ListCellRenderer<? super ModelMenu> getCellRenderer() {
         return new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> jlist, Object o, int index, boolean selected, boolean focus) {
-                ModelMenu data;
+            public Component getListCellRendererComponent(final JList<?> jlist, final Object o, final int index, final boolean selected, final boolean focus) {
+                final ModelMenu data;
                 if (o instanceof ModelMenu) {
                     data = (ModelMenu) o;
                 } else {
                     data = new ModelMenu("", o + "", MenuType.EMPTY);
                 }
-                MenuItem item = new MenuItem(data);
+                final var item = new MenuItem(data);
                 item.setSelected(selectedIndex == index);
                 item.setOver(overIndex == index);
                 return item;
@@ -93,7 +89,7 @@ public final class ListMenu extends JList<ModelMenu> {
         };
     }
 
-    public void addItem(ModelMenu data) {
+    public void addItem(final ModelMenu data) {
         model.addElement(data);
     }
 }

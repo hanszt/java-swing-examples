@@ -12,7 +12,7 @@ record Vertex(double x, double y, double z) {
         return new Vertex(this.x - x, this.y - y, this.z - z);
     }
 
-    Vertex minus(Vertex other) {
+    Vertex minus(final Vertex other) {
         return minus(other.x, other.y, other.z);
     }
 

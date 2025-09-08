@@ -20,7 +20,7 @@ public final class Main {
         Converter.main(args);
         TreeIconDemo.main(args);
         ASCIIMazeVisualizer.main(args);
-        DynamicsSimDemo.main(args);
+        DynamicsSimDemo.main();
         RadioButtonDemo.main(args);
     }
 }

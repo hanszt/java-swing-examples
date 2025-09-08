@@ -8,11 +8,7 @@ package org.hzt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.File;
 
@@ -54,7 +50,7 @@ public final class MinesweeperFrame extends JFrame {
         repaint();
     }
 
-    private void reload(MinesweeperGame game) {
+    private void reload(final MinesweeperGame game) {
         remove(panel);
         panel = new MinesweeperPanel(game);
         add(panel);
@@ -73,7 +69,7 @@ public final class MinesweeperFrame extends JFrame {
                 final var file = filename.contains(".") ? saveFile : new File(filename + "." + FILE_EXTENSION);
                 reload(MineSweeperLoader.load(file));
                 return;
-            } catch (MineSweeperLoader.CouldNotLoadGameException e) {
+            } catch (final MineSweeperLoader.CouldNotLoadGameException e) {
                 final var message = "Could not load game.";
                 LOGGER.error(message);
                 JOptionPane.showMessageDialog(this, message);
@@ -111,7 +107,7 @@ public final class MinesweeperFrame extends JFrame {
                 null, new String[]{"Easy", "Intermediate", "Expert"}, "Intermediate"));
 
         final var game = panel.getGame();
-        var newGame = switch (difficulty) {
+        final var newGame = switch (difficulty) {
             case "Easy" -> game.newGame(MinesweeperGame.Difficulty.EASY);
             case "Expert" -> game.newGame(MinesweeperGame.Difficulty.EXPERT);
             default -> game.newGame(MinesweeperGame.Difficulty.INTERMEDIATE);

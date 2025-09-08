@@ -1,12 +1,11 @@
 package org.hzt.swing;
 
 import org.hzt.model.StatusType;
-import java.awt.Color;
-import java.awt.Component;
-import javax.swing.JLabel;
-import javax.swing.JTable;
+
+import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 
 public final class Table extends JTable {
 
@@ -18,8 +17,8 @@ public final class Table extends JTable {
         header.setReorderingAllowed(false);
         header.setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable jtable, Object o, boolean bln, boolean bln1, int i, int i1) {
-                TableHeader header = new TableHeader(o + "");
+            public Component getTableCellRendererComponent(final JTable jtable, final Object o, final boolean bln, final boolean bln1, final int i, final int i1) {
+                final var header = new TableHeader(o + "");
                 if (i1 == 4) {
                     header.setHorizontalAlignment(JLabel.CENTER);
                 }
@@ -28,9 +27,9 @@ public final class Table extends JTable {
         });
         setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable jtable, Object o, boolean selected, boolean bln1, int i, int i1) {
+            public Component getTableCellRendererComponent(final JTable jtable, final Object o, final boolean selected, final boolean bln1, final int i, final int i1) {
                 if (i1 != 4) {
-                    Component com = super.getTableCellRendererComponent(jtable, o, selected, bln1, i, i1);
+                    final var com = super.getTableCellRendererComponent(jtable, o, selected, bln1, i, i1);
                     com.setBackground(Color.WHITE);
                     setBorder(noFocusBorder);
                     if (selected) {
@@ -46,7 +45,7 @@ public final class Table extends JTable {
         });
     }
 
-    public void addRow(Object[] row) {
+    public void addRow(final Object[] row) {
         ((DefaultTableModel) getModel()).addRow(row);
     }
 }

@@ -1,10 +1,7 @@
 package org.hzt.swing;
 
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import javax.swing.*;
+import java.awt.*;
 
 public final class PanelBorder extends JPanel {
 
@@ -14,7 +11,7 @@ public final class PanelBorder extends JPanel {
     }
 
     private void initComponents() {
-        GroupLayout layout = new GroupLayout(this);
+        final var layout = new GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(GroupLayout.Alignment.LEADING)
@@ -27,8 +24,8 @@ public final class PanelBorder extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics grphcs) {
-        Graphics2D g2 = (Graphics2D) grphcs;
+    protected void paintComponent(final Graphics grphcs) {
+        final var g2 = (Graphics2D) grphcs;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(getBackground());
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);

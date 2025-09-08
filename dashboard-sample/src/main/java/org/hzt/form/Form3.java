@@ -1,7 +1,7 @@
 
 package org.hzt.form;
 
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public final class Form3 extends JPanel {
 
@@ -30,7 +30,7 @@ public final class Form3 extends JPanel {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Form 3");
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        final var layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

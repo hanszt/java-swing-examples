@@ -14,7 +14,7 @@ public final class DynamicsSimDemo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DynamicsSimDemo.class);
 
-    public static void main(final String[] args) {
+    public static void main() {
         new DynamicsSimDemo().start();
     }
 
@@ -34,7 +34,7 @@ public final class DynamicsSimDemo {
     private void buildMainFrame(final SimulationPanel simulationPanel) {
         final var jFrame = new JFrame("Dynamics sim 2D");
         jFrame.setDefaultCloseOperation(EXIT_ON_CLOSE);
-        jFrame.addWindowListener((WindowClosingListener) e -> stopSimulation(simulationPanel));
+        jFrame.addWindowListener((WindowClosingListener) _ -> stopSimulation(simulationPanel));
 
         jFrame.pack();
         jFrame.setSize(new Dimension(800, 600));

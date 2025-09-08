@@ -17,7 +17,7 @@ import static java.lang.Math.*;
 /**
  * <a href="https://www.youtube.com/watch?v=p7IGZTjC008">Coding Challenge 183: Paper Marbling Algorithm</a>
  */
-public final class Marbling {
+final class Marbling {
 
     private static final int DEFAULT_MIN = 20;
     private static final int DEFAULT_MAX = 100;
@@ -39,7 +39,7 @@ public final class Marbling {
         this.random = random;
     }
 
-    public static void main(final String[] args) {
+    static void main() {
         final var marbling = new Marbling(new Random());
         SwingUtilities.invokeLater(marbling::start);
     }
@@ -111,7 +111,7 @@ public final class Marbling {
         final var newDrop = createDrop(mousePosition);
         drops.add(newDrop);
 
-        for (int j = 0; j < drops.size(); j++) {
+        for (var j = 0; j < drops.size(); j++) {
             final var drop = drops.get(j);
             if (!drop.equals(newDrop)) {
                 drops.set(j, drop.marbledBy(newDrop));
@@ -173,7 +173,7 @@ public final class Marbling {
             this(radius, position, color, createCircle(radius, position, size));
         }
 
-        private Drop(final double radius, final Point2D position, final Color color, List<Point2D> vertices) {
+        private Drop(final double radius, final Point2D position, final Color color, final List<Point2D> vertices) {
             this.radius = radius;
             this.position = position;
             this.color = color;

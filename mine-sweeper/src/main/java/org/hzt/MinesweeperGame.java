@@ -80,17 +80,17 @@ public final class MinesweeperGame {
     }
 
     public MinesweeperGame(
-            double mineProbability,
-            long debugSeed,
-            int numberOfMines,
-            int sideLength,
-            int numberOfTilesExplored,
-            long startTime,
-            long stopTime,
-            GameState gameState,
-            List<Integer> flags,
-            int[] gameGrid,
-            boolean[] explored
+            final double mineProbability,
+            final long debugSeed,
+            final int numberOfMines,
+            final int sideLength,
+            final int numberOfTilesExplored,
+            final long startTime,
+            final long stopTime,
+            final GameState gameState,
+            final List<Integer> flags,
+            final int[] gameGrid,
+            final boolean[] explored
     ) {
         this.stopTime = stopTime;
         this.numberOfTilesExplored = numberOfTilesExplored;

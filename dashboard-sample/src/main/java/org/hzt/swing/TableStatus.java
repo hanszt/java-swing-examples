@@ -17,18 +17,18 @@ public final class TableStatus extends JLabel {
 
     private StatusType type;
 
-    public void setType(StatusType type) {
+    public void setType(final StatusType type) {
         this.type = type;
         setText(type.toString());
         repaint();
     }
 
     @Override
-    protected void paintComponent(Graphics grphcs) {
+    protected void paintComponent(final Graphics grphcs) {
         if (type != null) {
-            Graphics2D g2 = (Graphics2D) grphcs;
+            final var g2 = (Graphics2D) grphcs;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            GradientPaint g = switch (type) {
+            final var g = switch (type) {
                 case PENDING ->
                         new GradientPaint(0, 0, new Color(186, 123, 247), 0, getHeight(), new Color(167, 94, 236));
                 case APPROVED ->

@@ -113,7 +113,7 @@ public final class Board extends JPanel {
 
         startButton.addActionListener(e -> start());
 
-        final JButton blankButton = new JButton("Blank");
+        final var blankButton = new JButton("Blank");
         blankButton.addActionListener(e -> makeBlank());
 
         final var buttonPane = new JPanel(new GridLayout(1, 3));
@@ -390,9 +390,9 @@ public final class Board extends JPanel {
 
 
     public void addAnt(final int x, final int y) {
-        final Transition foundFood = new Transition(Action.PICK_UP_FOOD, false);
-        final Transition foundHome = new Transition(Action.IN_ANT_HILL, false);
-        final Transition foundWater = new Transition(Action.DRINK_WATER, false);
+        final var foundFood = new Transition(Action.PICK_UP_FOOD, false);
+        final var foundHome = new Transition(Action.IN_ANT_HILL, false);
+        final var foundWater = new Transition(Action.DRINK_WATER, false);
 
         final var foundPoison = new Transition(Action.DIE, false);
 

@@ -3,15 +3,8 @@ package org.hzt.component;
 import org.hzt.Resources;
 import org.hzt.model.ModelCard;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import javax.swing.*;
+import java.awt.*;
 
 public final class Card extends JPanel {
 
@@ -29,7 +22,7 @@ public final class Card extends JPanel {
         this.color2 = color2;
     }
 
-    public void setData(ModelCard data) {
+    public void setData(final ModelCard data) {
         lbIcon.setIcon(data.icon());
         lbTitle.setText(data.title());
         lbValues.setText(data.values());
@@ -52,7 +45,7 @@ public final class Card extends JPanel {
         lbDescription.setForeground(new java.awt.Color(255, 255, 255));
         lbDescription.setText("Description");
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        final var layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -81,10 +74,10 @@ public final class Card extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics grphcs) {
-        Graphics2D g2 = (Graphics2D) grphcs;
+    protected void paintComponent(final Graphics grphcs) {
+        final var g2 = (Graphics2D) grphcs;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        GradientPaint g = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
+        final var g = new GradientPaint(0, 0, color1, 0, getHeight(), color2);
         g2.setPaint(g);
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
         g2.setColor(new Color(255, 255, 255, 50));

@@ -1,14 +1,8 @@
 package org.hzt.swing;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JScrollBar;
+import javax.swing.*;
 import javax.swing.plaf.basic.BasicScrollBarUI;
+import java.awt.*;
 
 public final class ModernScrollBarUI extends BasicScrollBarUI {
 
@@ -21,33 +15,33 @@ public final class ModernScrollBarUI extends BasicScrollBarUI {
     }
 
     @Override
-    protected JButton createDecreaseButton(int orientation) {
+    protected JButton createDecreaseButton(final int orientation) {
         return new InvisibleScrollBarButton();
     }
 
     @Override
-    protected JButton createIncreaseButton(int orientation) {
+    protected JButton createIncreaseButton(final int orientation) {
         return new InvisibleScrollBarButton();
     }
 
     @Override
-    protected void paintTrack(Graphics g, JComponent c, Rectangle trackBounds) {
+    protected void paintTrack(final Graphics g, final JComponent c, final Rectangle trackBounds) {
     }
 
     @Override
-    protected void paintThumb(Graphics g, JComponent c, Rectangle thumbBounds) {
-        int alpha = isThumbRollover() ? SCROLL_BAR_ALPHA_ROLLOVER : SCROLL_BAR_ALPHA;
-        int orientation = scrollbar.getOrientation();
-        int x = thumbBounds.x;
-        int y = thumbBounds.y;
+    protected void paintThumb(final Graphics g, final JComponent c, final Rectangle thumbBounds) {
+        final var alpha = isThumbRollover() ? SCROLL_BAR_ALPHA_ROLLOVER : SCROLL_BAR_ALPHA;
+        final var orientation = scrollbar.getOrientation();
+        final var x = thumbBounds.x;
+        final var y = thumbBounds.y;
 
-        int width = orientation == JScrollBar.VERTICAL ? THUMB_SIZE : thumbBounds.width;
+        var width = orientation == JScrollBar.VERTICAL ? THUMB_SIZE : thumbBounds.width;
         width = Math.max(width, THUMB_SIZE);
 
-        int height = orientation == JScrollBar.VERTICAL ? thumbBounds.height : THUMB_SIZE;
+        var height = orientation == JScrollBar.VERTICAL ? thumbBounds.height : THUMB_SIZE;
         height = Math.max(height, THUMB_SIZE);
 
-        Graphics2D graphics2D = (Graphics2D) g.create();
+        final var graphics2D = (Graphics2D) g.create();
         graphics2D.setColor(new Color(THUMB_COLOR.getRed(), THUMB_COLOR.getGreen(), THUMB_COLOR.getBlue(), alpha));
         graphics2D.fillRect(x, y, width, height);
         graphics2D.dispose();

@@ -85,7 +85,7 @@ public final class SimulationBody extends Body {
 	 * @param fixture the fixture to render
 	 * @param color the color to render the fixture
 	 */
-	protected void renderFixture(final Graphics2D g, final double scale, final BodyFixture fixture, Color color) {
+    void renderFixture(final Graphics2D g, final double scale, final BodyFixture fixture, final Color color) {
 		// get the shape on the fixture
         final var convex = fixture.getShape();
 

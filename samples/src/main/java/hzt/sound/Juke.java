@@ -784,7 +784,7 @@ public final class Juke extends JPanel implements ControlContext {
             var menuBar = new JMenuBar();
             menuBar.setBorder(new BevelBorder(BevelBorder.RAISED));
             var menu = (JMenu) menuBar.add(new JMenu("Add"));
-            final String[] items = {"File or Directory of Files", "URL"};
+            final var items = new String[]{"File or Directory of Files", "URL"};
             for (var i = 0; i < items.length; i++) {
                 final var item = menu.add(new JMenuItem(items[i]));
                 item.addActionListener(this::actionPerformed);
@@ -868,7 +868,7 @@ public final class Juke extends JPanel implements ControlContext {
                 } else if (mi.getText().equals("URL")) {
                     doFrame("Add URL");
                 } else if (mi.getText().equals("Selected")) {
-                    final int[] rows = table.getSelectedRows();
+                    final var rows = table.getSelectedRows();
                     final List<File> tmp = new Vector();
                     for (final var row : rows) {
                         tmp.add(sounds.get(row));
@@ -941,8 +941,8 @@ public final class Juke extends JPanel implements ControlContext {
                 final var sw = (float) tl.getBounds().getWidth();
                 tl.draw(g2, d.width - sw - 45, d.height - 10);
                 final double x = d.width - 33;
-                double y = d.height - 30;
-                double ew = 25;
+                final double y = d.height - 30;
+                final double ew = 25;
                 final double eh = 25;
                 g2.draw(new Ellipse2D.Double(x, y, ew, eh));
                 g2.fill(new Arc2D.Double(x, y, ew, eh, 90, extent, Arc2D.PIE));

@@ -4,14 +4,9 @@ import org.hzt.Resources;
 import org.hzt.swing.SearchText;
 
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 
 import static javax.swing.GroupLayout.DEFAULT_SIZE;
 
@@ -24,9 +19,9 @@ public final class Header extends JPanel {
 
     private void initComponents() {
 
-        JLabel jLabel1 = new JLabel();
-        SearchText searchText1 = new SearchText();
-        JLabel jLabel2 = new JLabel();
+        final var jLabel1 = new JLabel();
+        final var searchText1 = new SearchText();
+        final var jLabel2 = new JLabel();
 
         setBackground(new Color(255, 255, 255));
 
@@ -35,7 +30,7 @@ public final class Header extends JPanel {
         jLabel2.setIcon(new ImageIcon(Resources.urlOrThrow("/org/hzt/icon/menu.png")));
         jLabel2.setBorder(javax.swing.BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        final var layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(Alignment.LEADING)
@@ -57,8 +52,8 @@ public final class Header extends JPanel {
     }
 
     @Override
-    protected void paintComponent(Graphics grphcs) {
-        Graphics2D g2 = (Graphics2D) grphcs;
+    protected void paintComponent(final Graphics grphcs) {
+        final var g2 = (Graphics2D) grphcs;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(getBackground());
         g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);

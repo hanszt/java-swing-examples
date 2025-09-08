@@ -2,12 +2,11 @@ package org.hzt.swing;
 
 import org.hzt.model.StatusType;
 
-import javax.swing.GroupLayout;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 public final class CellStatus extends JPanel {
 
-    public CellStatus(StatusType type) {
+    public CellStatus(final StatusType type) {
         initComponents();
         status.setType(type);
     }
@@ -18,7 +17,7 @@ public final class CellStatus extends JPanel {
         status.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         status.setText("tableStatus1");
 
-        GroupLayout layout = new GroupLayout(this);
+        final var layout = new GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(GroupLayout.Alignment.LEADING)

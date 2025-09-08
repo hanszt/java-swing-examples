@@ -21,7 +21,7 @@ public final class Demo3DRotation {
 
     private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
         final var frame = new JFrame();
         final var pane = frame.getContentPane();
@@ -208,7 +208,7 @@ public final class Demo3DRotation {
                 repaint();
             }
 
-            private void useTriangles(Consumer<Triangle> consumer) {
+            private void useTriangles(final Consumer<Triangle> consumer) {
                 shape.stream().map(t -> t.resizeBy(zoomSlider.getValue())).forEach(consumer);
             }
         };

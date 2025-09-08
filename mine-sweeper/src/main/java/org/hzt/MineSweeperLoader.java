@@ -77,11 +77,11 @@ public final class MineSweeperLoader {
 
     static class CouldNotLoadGameException extends Exception {
 
-        CouldNotLoadGameException(String message, Throwable cause) {
+        CouldNotLoadGameException(final String message, final Throwable cause) {
             super(message, cause);
         }
 
-        CouldNotLoadGameException(String message) {
+        CouldNotLoadGameException(final String message) {
             super(message);
         }
     }

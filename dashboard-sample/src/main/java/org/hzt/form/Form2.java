@@ -1,10 +1,8 @@
 
 package org.hzt.form;
 
-import javax.swing.GroupLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import java.awt.Color;
+import javax.swing.*;
+import java.awt.*;
 
 public final class Form2 extends JPanel {
 
@@ -16,7 +14,7 @@ public final class Form2 extends JPanel {
     }
 
     private void initComponents() {
-        JLabel jLabel1 = new JLabel();
+        final var jLabel1 = new JLabel();
 
         setBackground(new Color(242, 242, 242));
 
@@ -25,7 +23,7 @@ public final class Form2 extends JPanel {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Form 2");
 
-        GroupLayout layout = new GroupLayout(this);
+        final var layout = new GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(GroupLayout.Alignment.LEADING)

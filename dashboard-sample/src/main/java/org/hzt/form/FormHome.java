@@ -31,7 +31,7 @@ public final class FormHome extends JPanel {
         spTable.setVerticalScrollBar(new ScrollBar());
         spTable.getVerticalScrollBar().setBackground(Color.WHITE);
         spTable.getViewport().setBackground(Color.WHITE);
-        JPanel p = new JPanel();
+        final var p = new JPanel();
         p.setBackground(Color.WHITE);
         spTable.setCorner(JScrollPane.UPPER_RIGHT_CORNER, p);
         table.addRow(new Object[]{"Mike Bhand", "mikebhand@gmail.com", "Admin", "25 Apr,2018", StatusType.PENDING});
@@ -51,9 +51,9 @@ public final class FormHome extends JPanel {
     }
 
     private void initComponents() {
-        JLayeredPane panel = new JLayeredPane();
-        PanelBorder panelBorder1 = new PanelBorder();
-        var jLabel1 = new JLabel();
+        final var panel = new JLayeredPane();
+        final var panelBorder1 = new PanelBorder();
+        final var jLabel1 = new JLabel();
         spTable = new JScrollPane();
 
         setBackground(new Color(242, 242, 242));
@@ -97,13 +97,13 @@ public final class FormHome extends JPanel {
                     false, false, false, false, false
             };
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
+            public boolean isCellEditable(final int rowIndex, final int columnIndex) {
                 return canEdit[columnIndex];
             }
         });
         spTable.setViewportView(table);
 
-        javax.swing.GroupLayout panelBorder1Layout = new javax.swing.GroupLayout(panelBorder1);
+        final var panelBorder1Layout = new javax.swing.GroupLayout(panelBorder1);
         panelBorder1.setLayout(panelBorder1Layout);
         panelBorder1Layout.setHorizontalGroup(
                 panelBorder1Layout.createParallelGroup(Alignment.LEADING)
@@ -126,7 +126,7 @@ public final class FormHome extends JPanel {
                                 .addGap(20, 20, 20))
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        final var layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
                 layout.createParallelGroup(Alignment.LEADING)
