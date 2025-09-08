@@ -19,8 +19,8 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>24</maven.compiler.source>
+        <maven.compiler.target>24</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--dependencies-->
         <dyn4j.version>4.2.1</dyn4j.version>
@@ -29,7 +29,7 @@
         <logback-classic.version>1.5.3</logback-classic.version>
         <hzt.utils.version>1.0.5.21</hzt.utils.version>
         <!--test dependencies-->
-        <junit.jupiter.version>5.11.3</junit.jupiter.version>
+        <junit.jupiter.version>5.13.2</junit.jupiter.version>
         <assertj-core.version>3.27.3</assertj-core.version>
         <!--plugins-->
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
