@@ -4,79 +4,80 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /// [adding-jbutton-to-jtable](https://stackoverflow.com/questions/13833688/adding-jbutton-to-jtable)
-public class JButtonTableSample {
+final class JButtonTableSample {
 
-    public JButtonTableSample() {
-        JFrame frame = new JFrame("JButtonTable Example");
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+    JButtonTableSample() {
+        final var dm = new DefaultTableModel();
+        var columnIdentifiers = new String[]{"Button", "String"};
+        var dataVector = new Object[][]{
+                {"button 1", "foo"},
+                {"button 2", "bar"},
+                {"button 3", "boo"}
+        };
+        dm.setDataVector(dataVector, columnIdentifiers);
 
-        DefaultTableModel dm = new DefaultTableModel();
-        dm.setDataVector(new Object[][]{{"button 1", "foo"},
-                {"button 2", "bar"}}, new Object[]{"Button", "String"});
+        final var table = new JTable(dm);
+        var buttonColumn = table.getColumn("Button");
+        buttonColumn.setCellRenderer(new ButtonRenderer());
+        buttonColumn.setCellEditor(new ButtonEditor());
 
-        JTable table = new JTable(dm);
-        table.getColumn("Button").setCellRenderer(new ButtonRenderer());
-        table.getColumn("Button").setCellEditor(new ButtonEditor(new JCheckBox()));
-
-
-        JScrollPane scroll = new JScrollPane(table);
 
         table.setPreferredScrollableViewportSize(table.getPreferredSize());//thanks mKorbel +1 http://stackoverflow.com/questions/10551995/how-to-set-jscrollpane-layout-to-be-the-same-as-jtable
 
         table.getColumnModel().getColumn(0).setPreferredWidth(100);//so buttons will fit and not be shown butto..
 
-        frame.add(scroll);
-
+        final var frame = new JFrame("JButtonTable Example");
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.add(new JScrollPane(table));
         frame.pack();
         frame.setVisible(true);
     }
 
-    void main() {
+    static void main() {
         SwingUtilities.invokeLater(JButtonTableSample::new);
     }
 }
 
-class ButtonRenderer extends JButton implements TableCellRenderer {
+final class ButtonRenderer implements TableCellRenderer {
+
+    private final JButton button = new JButton(); // Used as a template for the button in the rendering phase
 
     public ButtonRenderer() {
-        setOpaque(true);
+        button.setOpaque(true);
     }
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus, int row, int column) {
         if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            setBackground(table.getSelectionBackground());
+            button.setForeground(table.getSelectionForeground());
+            button.setBackground(table.getSelectionBackground());
         } else {
-            setForeground(table.getForeground());
-            setBackground(UIManager.getColor("Button.background"));
+            button.setForeground(table.getForeground());
+            button.setBackground(UIManager.getColor("Button.background"));
         }
-        setText((value == null) ? "" : value.toString());
-        return this;
+        button.setText((value == null) ? "" : value.toString());
+        return button;
     }
 }
 
-class ButtonEditor extends DefaultCellEditor {
+final class ButtonEditor extends DefaultCellEditor {
 
-    protected JButton button;
+    private final JButton button = new JButton(); // Used as a template for the button in the editor phase
     private String label;
     private boolean isPushed;
 
-    public ButtonEditor(JCheckBox checkBox) {
-        super(checkBox);
-        button = new JButton();
+    public ButtonEditor() {
+        super(new JCheckBox());
         button.setOpaque(true);
         button.addActionListener(_ -> fireEditingStopped());
     }
 
     @Override
-    public Component getTableCellEditorComponent(JTable table, Object value,
-                                                 boolean isSelected, int row, int column) {
+    public Component getTableCellEditorComponent(final JTable table, final Object value,
+                                                 final boolean isSelected, final int row, final int column) {
         if (isSelected) {
             button.setForeground(table.getSelectionForeground());
             button.setBackground(table.getSelectionBackground());
