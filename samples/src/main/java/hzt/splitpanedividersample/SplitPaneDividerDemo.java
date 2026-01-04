@@ -104,7 +104,7 @@ public class SplitPaneDividerDemo {
         frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    void main() {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(SplitPaneDividerDemo::createAndShowGUI);

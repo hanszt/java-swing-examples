@@ -4,7 +4,7 @@ import javax.swing.*;
 
 public class ColorPickerSample {
 
-    public static void main(final String[] args) {
+    public static void main() {
         ColorPickerSample.run();
     }
 

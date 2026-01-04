@@ -30,16 +30,6 @@ public final class RangeSlider extends JSlider {
     }
 
     /**
-     * Constructs a RangeSlider with the specified default minimum and maximum 
-     * values.
-     */
-    public RangeSlider(final int min, final int max, final Color rangeColor) {
-        this.rangeColor = rangeColor;
-        super(min, max);
-        initSlider();
-    }
-
-    /**
      * Initializes the slider by setting default properties.
      */
     private void initSlider() {

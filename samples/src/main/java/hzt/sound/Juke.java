@@ -362,10 +362,6 @@ public final class Juke extends JPanel implements ControlContext {
     }
 
 
-    public Thread getThread() {
-        return thread;
-    }
-
     public void startJuke() {
         thread = new Thread(this::run);
         thread.setName("Juke");
@@ -1009,7 +1005,7 @@ public final class Juke extends JPanel implements ControlContext {
     }
 
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         final var media = "media";
         final var juke = new Juke(args.length == 0 ? media : args[0]);
         juke.open();

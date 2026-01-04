@@ -929,7 +929,7 @@ public final class CapturePlaybackPanel extends JPanel implements ControlContext
         }
     }
 
-    public static void main(final String[] args) {
+    static void main() {
         final var capturePlaybackPanel = new CapturePlaybackPanel();
         capturePlaybackPanel.open();
         final var f = new JFrame("Capture/Playback");

@@ -30,7 +30,7 @@ public final class Game extends JFrame {
         LOGGER.info("Ant game started");
     }
 
-    public static void main(final String[] args) {
+    static void main() {
         LOGGER.info("Starting ant game...");
 
         EventQueue.invokeLater(() -> {

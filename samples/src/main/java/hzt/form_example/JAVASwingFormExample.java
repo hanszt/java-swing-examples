@@ -33,7 +33,7 @@ public final class JAVASwingFormExample {
 		initialize();
 	}
 
-	public static void main(final String[] args) {
+	static void main() {
 		EventQueue.invokeLater(JAVASwingFormExample::run);
 	}
 

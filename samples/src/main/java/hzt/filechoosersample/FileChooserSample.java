@@ -9,15 +9,15 @@ import java.awt.event.ActionEvent;
 import java.io.IOException;
 import java.util.Scanner;
 
-public class FileChooserSample {
+public record FileChooserSample() {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileChooserSample.class);
 
-    public static void main(final String[] args) {
-        SwingUtilities.invokeLater(FileChooserSample::createAndShowGUI);
+    public static void main() {
+        SwingUtilities.invokeLater(new FileChooserSample()::createAndShowGUI);
     }
 
-    private static void createAndShowGUI() {
+    private void createAndShowGUI() {
         final var frame = new JFrame("FileChooserSample");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         final var contentPane = createContentPane();
@@ -27,7 +27,7 @@ public class FileChooserSample {
         frame.setVisible(true);
     }
 
-    private static JPanel createContentPane() {
+    private JPanel createContentPane() {
         final var splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane.setTopComponent(configuredFileChooser());
         splitPane.setBottomComponent(new JTextArea());
@@ -36,14 +36,14 @@ public class FileChooserSample {
         return contentPane;
     }
 
-    private static JFileChooser configuredFileChooser() {
+    private JFileChooser configuredFileChooser() {
         final var fileChooser = new JFileChooser();
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.addActionListener(FileChooserSample::printContent);
+        fileChooser.addActionListener(this::printContent);
         return fileChooser;
     }
 
-    private static void printContent(final ActionEvent e) {
+    private void printContent(final ActionEvent e) {
         LOGGER.info("Start printing content");
         final var fileChooser = (JFileChooser) e.getSource();
         final var file = fileChooser.getSelectedFile();

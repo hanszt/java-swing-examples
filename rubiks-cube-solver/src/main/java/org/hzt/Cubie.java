@@ -51,27 +51,6 @@ public final class Cubie {
     }
 
     /**
-     * @return x location of cubie
-     */
-    public int getX() {
-        return x;
-    }
-
-    /**
-     * @return y location of cubie
-     */
-    public int getY() {
-        return y;
-    }
-
-    /**
-     * @return z location of cubie
-     */
-    public int getZ() {
-        return z;
-    }
-
-    /**
      * Finds and returns the direction of a particular color on any type of cubie
      *
      * @param color The color for which the direction is being found

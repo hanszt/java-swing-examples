@@ -72,7 +72,7 @@ public final class TreeIconDemo {
 
         tree = new JTree(top);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.addTreeSelectionListener(e -> updateTree(htmlPane));
+        tree.addTreeSelectionListener(_ -> updateTree(htmlPane));
         setIconForLeaveNodes();
 
         helpURL = initHelp(htmlPane);
@@ -113,38 +113,27 @@ public final class TreeIconDemo {
             final var nodeInfo = node.getUserObject();
             if (node.isLeaf()) {
                 final var book = (BookInfo) nodeInfo;
-                displayURL(book.getBookURL(), htmlPane);
+                displayURL(book.bookURL(), htmlPane);
             } else {
                 displayURL(helpURL, htmlPane);
             }
         }
     }
 
-    private static class BookInfo {
+    private record BookInfo(String bookName, URL bookURL) {
 
-        private final String bookName;
-        private final URL bookURL;
+            private BookInfo(final String bookName, final String bookURL) {
+                final var resource = TreeIconDemo.class.getResource(bookURL);
+                if (resource == null) {
+                    LOGGER.error("Couldn't find file: {}", bookURL);
+                }
+                this(bookName, resource);
+            }
 
-        public BookInfo(final String book, final String filename) {
-            bookName = book;
-            bookURL = TreeIconDemo.class.getResource(filename);
-            if (bookURL == null) {
-                LOGGER.error("Couldn't find file: {}", filename);
+            public String toString() {
+                return bookName();
             }
         }
-
-        public String toString() {
-            return getBookName();
-        }
-
-        public String getBookName() {
-            return bookName;
-        }
-
-        public URL getBookURL() {
-            return bookURL;
-        }
-    }
 
     private static URL initHelp(final JEditorPane htmlPane) {
         final var fileName = "TreeDemoHelp.html";
@@ -222,7 +211,7 @@ public final class TreeIconDemo {
         frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    public static void main() {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(TreeIconDemo::createAndShowGUI);

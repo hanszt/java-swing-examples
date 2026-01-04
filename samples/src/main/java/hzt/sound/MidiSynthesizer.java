@@ -871,7 +871,7 @@ public final class MidiSynthesizer extends JPanel implements ControlContext {
         }
     }
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         final var midiSynthesizer = new MidiSynthesizer();
         midiSynthesizer.open();
         final var frame = new JFrame("Midi Synthesizer");

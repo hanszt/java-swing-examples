@@ -166,7 +166,7 @@ public final class PasswordDemo {
         frame.setVisible(true);
     }
 
-        public static void main(final String[] args) {
+        static void main(final String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(PasswordDemo::run);

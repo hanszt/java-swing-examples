@@ -114,10 +114,7 @@ public final class Main extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(final String[] args) {
+    static void main() {
         final var nimbus = "Nimbus";
         try {
             final var info = Arrays.stream(UIManager.getInstalledLookAndFeels())

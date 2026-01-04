@@ -12,15 +12,18 @@ import hzt.unitconvertersample.Converter;
 
 public final class Main {
 
-    public static void main(final String[] args) {
-        ColorPickerSample.main(args);
-        ComboBoxDemo.main(args);
-        FileChooserSample.main(args);
-        SpinnerDemo4.main(args);
-        Converter.main(args);
-        TreeIconDemo.main(args);
-        ASCIIMazeVisualizer.main(args);
+    private Main() {
+    }
+
+    static void main() {
+        ColorPickerSample.main();
+        ComboBoxDemo.main();
+        FileChooserSample.main();
+        SpinnerDemo4.main();
+        Converter.main();
+        TreeIconDemo.main();
+        ASCIIMazeVisualizer.main();
         DynamicsSimDemo.main();
-        RadioButtonDemo.main(args);
+        RadioButtonDemo.main();
     }
 }

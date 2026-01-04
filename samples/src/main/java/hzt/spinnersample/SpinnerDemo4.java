@@ -60,7 +60,7 @@ public final class SpinnerDemo4 {
                 6, 10);       //xPad, yPad
     }
 
-    protected static JSpinner addLabeledSpinner(final Container container, final String text, final SpinnerModel model) {
+    static JSpinner addLabeledSpinner(final Container container, final String text, final SpinnerModel model) {
         final var label = new JLabel(text);
         container.add(label);
 
@@ -92,7 +92,7 @@ public final class SpinnerDemo4 {
         frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    public static void main() {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
         SwingUtilities.invokeLater(SpinnerDemo4::run);

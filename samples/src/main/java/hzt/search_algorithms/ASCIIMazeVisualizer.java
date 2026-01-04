@@ -109,7 +109,7 @@ public class ASCIIMazeVisualizer {
 
     private enum State {STOPPED, STARTED, PAUSED}
 
-    public static void main(final String[] args) {
+    public static void main() {
         try {
             UIManager.setLookAndFeel("javax.swing.plaf.nimbus.NimbusLookAndFeel");
         } catch (final ClassNotFoundException | IllegalAccessException | InstantiationException | UnsupportedLookAndFeelException ex) {

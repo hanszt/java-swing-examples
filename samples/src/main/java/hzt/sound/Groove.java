@@ -452,7 +452,7 @@ public final class Groove implements ControlContext {
     }
 
 
-    public static void main(final String[] args) {
+    static void main() {
         final var groove = new Groove();
         final var frame = new JFrame("Rhythm Groove Box");
         frame.addWindowListener(new WindowAdapter() {

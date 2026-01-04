@@ -67,13 +67,13 @@ public final class Converter extends JPanel {
     private Converter() {
         dataModel = new ConverterRangeModel();
         metricPanel = buildMetricConversionPanel(dataModel);
-        //Create Unit objects for U.S. distances, and then
+        //Create Unit objects for U.S. distances and then
         //instantiate a ConversionPanel with these Units.
         usaPanel = buildUsaConversionPanel(dataModel);
     }
 
     public Converter buildConverter() {
-        //Create Unit objects for metric distances, and then
+        //Create Unit objects for metric distances and then
         //instantiate a ConversionPanel with these Units.
 
 
@@ -104,7 +104,7 @@ public final class Converter extends JPanel {
                 new Unit("Kilometers", 1000.0)
         );
         final var panel = new ConversionPanel(dataModel).buildContent(metricDistances);
-        panel.setOnUnitChanged(e -> dataModel.setMaximum(calculateMaximum()));
+        panel.setOnUnitChanged(_ -> dataModel.setMaximum(calculateMaximum()));
         panel.setTittle("Metric System");
         return panel;
     }
@@ -118,7 +118,7 @@ public final class Converter extends JPanel {
                 new Unit("Miles", 1613.0)
         );
         final var panel = new ConversionPanel(new FollowerRangeModel(dataModel)).buildContent(usaDistances);
-        panel.setOnUnitChanged(e -> dataModel.setMaximum(calculateMaximum()));
+        panel.setOnUnitChanged(_ -> dataModel.setMaximum(calculateMaximum()));
         panel.setTittle("U.S. System");
         return panel;
     }
@@ -162,7 +162,7 @@ public final class Converter extends JPanel {
         frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    public static void main() {
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
         final var converter = new Converter();

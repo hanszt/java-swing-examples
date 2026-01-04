@@ -181,7 +181,7 @@ public final class TextAreaDemo {
         textAreaDemo.frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         SwingUtilities.invokeLater(TextAreaDemo::run);
     }
 

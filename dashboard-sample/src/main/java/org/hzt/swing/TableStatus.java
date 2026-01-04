@@ -7,10 +7,6 @@ import java.awt.*;
 
 public final class TableStatus extends JLabel {
 
-    public StatusType getType() {
-        return type;
-    }
-
     public TableStatus() {
         setForeground(Color.WHITE);
     }

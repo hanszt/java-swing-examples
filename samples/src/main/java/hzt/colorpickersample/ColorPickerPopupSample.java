@@ -5,7 +5,7 @@ import java.awt.*;
 
 public class ColorPickerPopupSample {
 
-    public static void main(final String[] args) {
+    static void main() {
         final var frame = new JFrame("JColorChooser Sample Popup");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 

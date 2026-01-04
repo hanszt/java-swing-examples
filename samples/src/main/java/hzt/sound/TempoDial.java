@@ -125,22 +125,6 @@ public class TempoDial extends JPanel {
         return currentData.tempo;
     }
 
-
-    /**
-     * Tempo value must match one found in data vector.
-     * Acceptable tempo values start at 40 increment by 10 until 160.
-     */
-    public void setTempo(final double tempo) {
-        for (final var datum : data) {
-            currentData = datum;
-            if (Double.compare(currentData.tempo, tempo) == 0) {
-                break;
-            }
-        }
-        repaint();
-    }
-
-
     @Override
     public void paint(final Graphics g) {
         final var d = getSize();
@@ -199,8 +183,7 @@ public class TempoDial extends JPanel {
         }
     }
 
-
-    public static void main(final String[] args) {
+    void main() {
         final var frame = new JFrame("Tempo Dial");
         frame.addWindowListener(new WindowAdapter() {
             @Override

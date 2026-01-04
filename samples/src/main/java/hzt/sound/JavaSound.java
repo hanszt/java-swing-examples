@@ -119,7 +119,7 @@ public final class JavaSound extends JPanel implements ControlContext {
     }
 
 
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         try {
             if (MidiSystem.getSequencer() == null) {
                 LOGGER.error("MidiSystem Sequencer Unavailable, exiting!");

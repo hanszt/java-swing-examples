@@ -78,7 +78,7 @@ public final class PythagorasTree extends JPanel {
         if (depth == treeDepthSilder.getValue()) {
             counter.count++;
             final var count = counter.count;
-            if (count % Math.pow(2, depth - 4) == 0) {
+            if (count % Math.pow(2, depth - 4.0) == 0) {
                 LOGGER.atInfo()
                         .setMessage(() -> "Leaf triangle Side %-5d: from x = %4.2f, y = %4.2f to x: %4.2f, y: %4.2f".formatted(count, x1, y1, x2, y2))
                         .log();
@@ -137,14 +137,14 @@ public final class PythagorasTree extends JPanel {
         drawTree(g);
     }
 
-    public static void main(final String... args) {
-        SwingUtilities.invokeLater(new PythagorasTree()::run);
+    void main() {
+        SwingUtilities.invokeLater(this::run);
     }
 
     private void run() {
         final var controlPanel = new JPanel();
         final var resetAll = new JButton("Reset all");
-        resetAll.addActionListener(unused -> {
+        resetAll.addActionListener(_ -> {
             treeDepthSilder.setValue(INIT_DEPTH);
             angleSlider1.setValue(INIT_ANGLE_1);
             angleSlider2.setValue(INIT_ANGLE_2);
@@ -170,7 +170,6 @@ public final class PythagorasTree extends JPanel {
         final var frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setTitle("Pythagoras Tree");
-//        frame.setResizable(false);
         frame.add(this, BorderLayout.CENTER);
         frame.add(controlPanel, BorderLayout.PAGE_END);
         frame.pack();
@@ -202,7 +201,7 @@ public final class PythagorasTree extends JPanel {
             super();
             final var initValue = slider.getValue();
             final var resetButton = new JButton("Reset");
-            resetButton.addActionListener(unused -> slider.setValue(initValue));
+            resetButton.addActionListener(_ -> slider.setValue(initValue));
             add(slider);
             add(resetButton);
         }

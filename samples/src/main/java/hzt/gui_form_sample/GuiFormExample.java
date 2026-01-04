@@ -28,7 +28,7 @@ public final class GuiFormExample {
         frame.setVisible(true);
     }
 
-    public static void main(final String[] args) {
+    static void main() {
         new GuiFormExample().start();
     }
 }

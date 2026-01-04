@@ -45,7 +45,7 @@ import java.awt.event.WindowListener;
 /**
  * SliderDemo.java requires all the files in the images/doggy directory.
  */
-public class SliderDemo {
+public final class SliderDemo {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SliderDemo.class);
     //Set up animation parameters.
@@ -215,7 +215,7 @@ public class SliderDemo {
         demo.startAnimation();
     }
 
-    public static void main(final String[] args) {
+    void main() {
         /* Turn off metal's use of bold fonts */
         UIManager.put("swing.boldMetal", Boolean.FALSE);
 

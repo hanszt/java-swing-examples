@@ -19,7 +19,7 @@ public final class CubeDisplayer extends JFrame {
     //Auto-generated ID
     private static final long serialVersionUID = -3198702237161500498L;
 
-    public static void main(final String[] args) {
+    static void main() {
         EventQueue.invokeLater(CubeDisplayer::new);
     }
 
