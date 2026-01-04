@@ -1,5 +1,6 @@
 package hzt.samples3d;
 
+import hzt.samples3d.RenderingModeButton.Mode;
 import org.hzt.utils.sequences.Sequence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,34 +23,12 @@ public final class Demo3DQuaternions {
 
     private static final Logger logger = LoggerFactory.getLogger(Demo3DQuaternions.class);
 
-    public static void main(final String[] args) {
-        enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
+    void main() {
         final var frame = new JFrame();
         final var pane = frame.getContentPane();
         pane.setLayout(new BorderLayout());
 
-        final var modeButton = new Button() {
-            Mode mode = Mode.FILLED_SHADED;
-
-            {
-                setLabel(getLabel(mode));
-                addActionListener(unused -> {
-                    final var newMode = switch (mode) {
-                        case WIRE_FRAME -> Mode.FILLED_UNSHADED;
-                        case FILLED_SHADED -> Mode.WIRE_FRAME;
-                        case FILLED_UNSHADED -> Mode.FILLED_SHADED;
-                    };
-                    logger.info("Switching to mode {}", newMode);
-                    mode = newMode;
-                    setLabel(getLabel(newMode));
-                });
-            }
-
-            private static String getLabel(final Mode mode) {
-                final var name = mode.name();
-                return name.charAt(0) + name.substring(1).replace("_", " ").toLowerCase();
-            }
-        };
+        final var modeButton = new RenderingModeButton(newMode -> logger.info("Switching to mode {}", newMode));
         // slider to control horizontal rotation
         final var headingSlider = new JSlider(-180, 180, 0);
         // slider to control vertical rotation
@@ -79,7 +58,7 @@ public final class Demo3DQuaternions {
         // panel to display render results
         final var renderPanel = new JPanel() {
 
-            private List<Triangle> shape = createShape();
+            private transient List<Triangle> shape = createShape();
 
             /**
              * Called when repaint is called
@@ -91,7 +70,7 @@ public final class Demo3DQuaternions {
                 g.setColor(Color.BLACK);
                 g.fillRect(0, 0, getWidth(), getHeight());
 
-                final var mode = switch (modeButton.mode) {
+                final var mode = switch (modeButton.getMode()) {
                     case Mode.WIRE_FRAME -> drawWireframe(g);
                     case Mode.FILLED_SHADED -> drawFilledShaded(g);
                     case Mode.FILLED_UNSHADED -> drawFilledUnShaded(g);
@@ -139,7 +118,7 @@ public final class Demo3DQuaternions {
             }
 
             private Mode drawFilledUnShaded(final Graphics graphics) {
-                final var image = build3DShapeImage((color, unused) -> color);
+                final var image = build3DShapeImage((color, _) -> color);
                 graphics.drawImage(image, 0, 0, null);
                 return Mode.FILLED_UNSHADED;
             }
@@ -163,9 +142,9 @@ public final class Demo3DQuaternions {
                     final var angleCos = Math.abs(norm.z());
 
                     final var minX = (int) max(0, ceil(min(v1.x(), min(v2.x(), v3.x()))));
-                    final var maxX = (int) min(width - 1, floor(max(v1.x(), max(v2.x(), v3.x()))));
+                    final var maxX = (int) min(width - 1.0, floor(max(v1.x(), max(v2.x(), v3.x()))));
                     final var minY = (int) max(0, ceil(min(v1.y(), min(v2.y(), v3.y()))));
-                    final var maxY = (int) min(height - 1, floor(max(v1.y(), max(v2.y(), v3.y()))));
+                    final var maxY = (int) min(height - 1.0, floor(max(v1.y(), max(v2.y(), v3.y()))));
 
                     final var triangleArea = (v1.y() - v3.y()) * (v2.x() - v3.x()) + (v2.y() - v3.y()) * (v3.x() - v1.x());
 
@@ -215,13 +194,13 @@ public final class Demo3DQuaternions {
         };
         pane.add(renderPanel, BorderLayout.CENTER);
 
-        headingSlider.addChangeListener(unused -> renderPanel.repaint());
-        pitchSlider.addChangeListener(unused -> renderPanel.repaint());
-        zoomSlider.addChangeListener(unused -> renderPanel.repaint());
-        inflationSlider.addChangeListener(unused -> renderPanel.updateShape());
-        shadingSlider.addChangeListener(unused -> renderPanel.repaint());
-        modeButton.addActionListener(unused -> {
-            shadingSlider.setVisible(modeButton.mode == Mode.FILLED_SHADED);
+        headingSlider.addChangeListener(_ -> renderPanel.repaint());
+        pitchSlider.addChangeListener(_ -> renderPanel.repaint());
+        zoomSlider.addChangeListener(_ -> renderPanel.repaint());
+        inflationSlider.addChangeListener(_ -> renderPanel.updateShape());
+        shadingSlider.addChangeListener(_ -> renderPanel.repaint());
+        modeButton.addActionListener(_ -> {
+            shadingSlider.setVisible(modeButton.getMode() == Mode.FILLED_SHADED);
             renderPanel.repaint();
         });
         frame.setTitle("3D Quaternions");
@@ -307,5 +286,20 @@ record Matrix4(double... values) {
                 v.x() * values[1] + v.y() * values[5] + v.z() * values[9],
                 v.x() * values[3] + v.y() * values[6] + v.z() * values[10]
         );
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof Matrix4(double[] otherValues) && Arrays.equals(values, otherValues);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(values);
+    }
+
+    @Override
+    public String toString() {
+        return "Matrix4{values=%s}".formatted(Arrays.toString(values));
     }
 }
