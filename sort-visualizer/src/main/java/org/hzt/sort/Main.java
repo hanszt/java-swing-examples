@@ -17,7 +17,7 @@ public final class Main {
     void main() {
         LOGGER.info("Starting sort visualizer...");
         final var frame = new JFrame("Algorithm Visualizer");
-        final var visualizer = new SortVisualizer(100, rnd);
+        final var visualizer = new JSortVisualizer(100, rnd);
 
         // Setup Control Panel
         final var controlPanel = new JPanel();
@@ -88,7 +88,7 @@ public final class Main {
         dropdown.addActionListener(_ -> setupSort(visualizer));
     }
 
-    private void setupSort(final SortVisualizer visualizer) {
+    private void setupSort(final JSortVisualizer visualizer) {
         reset(visualizer);
         final var selected = (SortAlgorithm) dropdown.getSelectedItem();
         assert selected != null;
@@ -98,7 +98,7 @@ public final class Main {
         sortingThread = unstartedSortingThread(visualizer, selected);
     }
 
-    private Thread unstartedSortingThread(final SortVisualizer visualizer, final SortAlgorithm algo) {
+    private Thread unstartedSortingThread(final JSortVisualizer visualizer, final SortAlgorithm algo) {
         return Thread.ofVirtual().unstarted(() -> {
             visualizer.setValidationIndex(-1); // Reset validation
             algo.sort(visualizer.getArray());
@@ -108,14 +108,14 @@ public final class Main {
         });
     }
 
-    private void reset(final SortVisualizer visualizer) {
+    private void reset(final JSortVisualizer visualizer) {
         stopSorting();
         visualizer.reset();
         visualizer.shuffle(rnd);
         sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) dropdown.getSelectedItem());
     }
 
-    private void doValidationSweep(final SortVisualizer visualizer) {
+    private void doValidationSweep(final JSortVisualizer visualizer) {
         for (int i = 0; i < visualizer.getArray().length; i++) {
             visualizer.setValidationIndex(i);
             try {
