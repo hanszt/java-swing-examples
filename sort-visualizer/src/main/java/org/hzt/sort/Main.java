@@ -11,7 +11,8 @@ public final class Main {
 
     private static final Random rnd = new Random();
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
-    private Thread sortingThread;
+    private Thread sortingThread = null;
+    private SortAlgorithm algorithm = null;
 
     void main() {
         LOGGER.info("Starting sort visualizer...");
@@ -48,28 +49,70 @@ public final class Main {
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
 
+        // Initial setup on startup
+        setupSort(dropdown, visualizer);
+
         // Action: Reset
-        resetButton.addActionListener(_ -> {
-            stopSorting();
-            visualizer.shuffle(rnd); // You'll need to add this method to SortVisualizer
-        });
+        resetButton.addActionListener(_ -> reset(visualizer));
 
         // Action: Start
         startButton.addActionListener(_ -> {
-            stopSorting(); // Don't allow two sorts at once
-            final var selected = (String) dropdown.getSelectedItem();
-            LOGGER.info("Starting sort using {}...", selected);
-
-            assert selected != null;
-            final var algorithm = switch (selected) {
-                case "Quick Sort" -> new QuickSort(visualizer);
-                case "Merge Sort" -> new MergeSort(visualizer);
-                default -> new BubbleSort(visualizer);
-            };
-
-            // To run this, we wrap it in a JFrame and execute the sort in a separate Thread (so the UI doesn't freeze).
-            sortingThread = Thread.ofVirtual().start(() -> algorithm.sort(visualizer.getArray()));
+            if (sortingThread != null) {
+                final var state = sortingThread.getState();
+                if (state == Thread.State.NEW) {
+                    sortingThread.start();
+                }
+            }
         });
+        dropdown.addActionListener(_ -> setupSort(dropdown, visualizer));
+    }
+
+    private void setupSort(final JComboBox<String> dropdown, final SortVisualizer visualizer) {
+        algorithm = getSortAlgorithm(dropdown, visualizer);
+
+        // To run this, we wrap it in a JFrame and execute the sort in a separate Thread (so the UI doesn't freeze).
+        sortingThread = unstartedSortingThread(visualizer);
+    }
+
+    private Thread unstartedSortingThread(final SortVisualizer visualizer) {
+        return Thread.ofVirtual().unstarted(() -> {
+            visualizer.setValidationIndex(-1); // Reset validation
+            algorithm.sort(visualizer.getArray());
+
+            // The Validation Sweep
+            doValidationSweep(visualizer);
+        });
+    }
+
+    private void reset(final SortVisualizer visualizer) {
+        stopSorting();
+        visualizer.reset();
+        visualizer.shuffle(rnd);
+        sortingThread = unstartedSortingThread(visualizer);
+    }
+
+    private SortAlgorithm getSortAlgorithm(final JComboBox<String> dropdown, final SortVisualizer visualizer) {
+        reset(visualizer);
+        final var selected = (String) dropdown.getSelectedItem();
+        LOGGER.info("Going to use sort algorithm {}...", selected);
+
+        assert selected != null;
+        return switch (selected) {
+            case "Quick Sort" -> new QuickSort(visualizer);
+            case "Merge Sort" -> new MergeSort(visualizer);
+            default -> new BubbleSort(visualizer);
+        };
+    }
+
+    private void doValidationSweep(final SortVisualizer visualizer) {
+        for (int i = 0; i < visualizer.getArray().length; i++) {
+            visualizer.setValidationIndex(i);
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException _) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     /// Because we are using Thread.sleep() in the updateVisuals method,

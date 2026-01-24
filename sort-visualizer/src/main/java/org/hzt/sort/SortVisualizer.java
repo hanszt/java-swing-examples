@@ -9,6 +9,7 @@ public final class SortVisualizer extends JPanel {
     private int currentPivot = -1;
     private int currentCompare = -1;
     private volatile int sleepTime = 10; // Default speed
+    private int validationIndex = -1;
 
     private long comparisons = 0;
     private long swaps = 0;
@@ -21,6 +22,11 @@ public final class SortVisualizer extends JPanel {
 
     public void setSleepTime(final int ms) {
         this.sleepTime = ms;
+    }
+
+    public void setValidationIndex(int index) {
+        this.validationIndex = index;
+        repaint();
     }
 
     // This is where the magic happens: any sort can call this
@@ -40,13 +46,17 @@ public final class SortVisualizer extends JPanel {
         super.paintComponent(g);
         final var barWidth = getWidth() / array.length;
         for (var i = 0; i < array.length; i++) {
-            if (i == currentPivot) g.setColor(Color.RED);
+            if (i <= validationIndex) g.setColor(Color.GREEN); // Sorted & Verified
+            else if (i == currentPivot) g.setColor(Color.RED);
             else if (i == currentCompare) g.setColor(Color.YELLOW);
             else g.setColor(Color.WHITE);
 
             g.fillRect(i * barWidth, getHeight() - array[i], barWidth - 1, array[i]);
         }
+        drawStats(g);
+    }
 
+    private void drawStats(final Graphics g) {
         // Draw the stats in the top left corner
         g.setColor(Color.GREEN);
         g.setFont(new Font("Monospaced", Font.BOLD, 14));
@@ -67,9 +77,30 @@ public final class SortVisualizer extends JPanel {
         repaint();
     }
 
-    public void updateStats(long comparisons, long swaps) {
-        this.comparisons = comparisons;
-        this.swaps = swaps;
-        // Note: repaint() is already called in updateVisuals
+    public void incrementComparison() {
+        this.comparisons++;
+    }
+
+    public void incrementSwaps() {
+        swaps++;
+    }
+
+    public void reset() {
+        updateVisuals(-1, -1);
+        comparisons = 0;
+        swaps = 0;
+        setValidationIndex(-1); // Reset validation
+    }
+
+    @Override
+    public String toString() {
+        return "SortVisualizer{" +
+                "currentPivot=" + currentPivot +
+                ", currentCompare=" + currentCompare +
+                ", sleepTime=" + sleepTime +
+                ", validationIndex=" + validationIndex +
+                ", comparisons=" + comparisons +
+                ", swaps=" + swaps +
+                '}';
     }
 }
