@@ -20,7 +20,7 @@ public final class MergeSort extends SortAlgorithm {
         }
     }
 
-    private void merge(final int[] arr, final int l, final int m, final int r) {
+    void merge(final int[] arr, final int l, final int m, final int r) {
         final var n1 = m - l + 1;
         final var n2 = r - m;
 

@@ -23,10 +23,11 @@ public final class Main {
         final var controlPanel = new JPanel();
         final var options = new SortAlgorithm[]{
                 new BubbleSort(visualizer),
+                new SelectionSort(visualizer),
+                new InsertionSort(visualizer),
                 new QuickSort(visualizer),
                 new MergeSort(visualizer),
-                new SelectionSort(visualizer),
-                new InsertionSort(visualizer)
+                new TimSort(visualizer)
         };
         dropdown.setModel(new DefaultComboBoxModel<>(options));
         dropdown.setRenderer(new DefaultListCellRenderer() {

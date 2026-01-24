@@ -1,7 +1,7 @@
 package org.hzt.sort;
 
 /// This acts as the "plug." To add a new sort, you just extend this class and implement the sort method.
-public abstract sealed class SortAlgorithm permits BubbleSort, InsertionSort, MergeSort, QuickSort, SelectionSort {
+public abstract sealed class SortAlgorithm permits BubbleSort, InsertionSort, MergeSort, QuickSort, SelectionSort, TimSort {
     protected final SortVisualizer visualizer;
 
     protected SortAlgorithm(final SortVisualizer visualizer) {

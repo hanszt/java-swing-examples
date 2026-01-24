@@ -6,18 +6,20 @@ public final class InsertionSort extends SortAlgorithm {
 
     @Override
     public void sort(int[] arr) {
-        for (int i = 1; i < arr.length; i++) {
-            int key = arr[i];
-            int j = i - 1;
+        sort(arr, 0, arr.length - 1);
+    }
 
-            // Visualize the key being picked up
-            while (j >= 0 && compare(arr[j], key)) {
+    void sort(int[] arr, int left, int right) {
+        for (int i = left + 1; i <= right; i++) {
+            int temp = arr[i];
+            int j = i - 1;
+            while (j >= left && compare(arr[j], temp)) {
                 arr[j + 1] = arr[j];
                 visualizer.incrementSwaps();
                 visualizer.updateVisuals(i, j);
-                j = j - 1;
+                j--;
             }
-            arr[j + 1] = key;
+            arr[j + 1] = temp;
             visualizer.updateVisuals(j + 1, -1);
         }
     }
