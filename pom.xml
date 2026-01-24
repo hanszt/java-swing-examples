@@ -16,6 +16,7 @@
         <module>mine-sweeper</module>
         <module>rubiks-cube-solver</module>
         <module>ant-sim</module>
+        <module>sort-visualizer</module>
     </modules>
 
     <properties>
