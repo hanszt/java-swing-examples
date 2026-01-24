@@ -22,12 +22,12 @@ public final class Main {
         // Setup Control Panel
         final var controlPanel = new JPanel();
         final var options = new SortAlgorithm[]{
-                new BubbleSort(visualizer),
-                new SelectionSort(visualizer),
-                new InsertionSort(visualizer),
-                new QuickSort(visualizer),
+                new BubbleSort(visualizer, visualizer, visualizer),
+                new SelectionSort(visualizer, visualizer, visualizer),
+                new InsertionSort(visualizer, visualizer, visualizer),
+                new QuickSort(visualizer, visualizer, visualizer),
                 new MergeSort(visualizer),
-                new TimSort(visualizer)
+                new TimSort(visualizer, visualizer, visualizer)
         };
         dropdown.setModel(new DefaultComboBoxModel<>(options));
         dropdown.setRenderer(new DefaultListCellRenderer() {

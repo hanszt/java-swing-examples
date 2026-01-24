@@ -8,8 +8,16 @@ import static org.hzt.sort.ArraysX.swap;
 public final class QuickSort implements SortAlgorithm {
 
     private final SortVisualizer visualizer;
+    private final ComparisonIncrementer comparisonIncrementer;
+    private final SwapIncrementer swapIncrementer;
 
-    public QuickSort(final SortVisualizer v) { this.visualizer = v; }
+    public QuickSort(final SortVisualizer v,
+                     final ComparisonIncrementer comparisonIncrementer,
+                     final SwapIncrementer swapIncrementer) {
+        this.visualizer = v;
+        this.comparisonIncrementer = comparisonIncrementer;
+        this.swapIncrementer = swapIncrementer;
+    }
 
     @Override
     public void sort(final int[] arr) {
@@ -31,16 +39,16 @@ public final class QuickSort implements SortAlgorithm {
             // Visualize the comparison
             visualizer.updateVisuals(high, j);
 
-            visualizer.incrementComparison(); // Push update to UI
+            comparisonIncrementer.incrementComparison(); // Push update to UI
             if (pivot > arr[j]) {
                 i++;
                 swap(arr, i, j);
-                visualizer.incrementSwaps();
+                swapIncrementer.incrementSwaps();
                 visualizer.updateVisuals(i, j);
             }
         }
         swap(arr, i + 1, high);
-        visualizer.incrementSwaps();
+        swapIncrementer.incrementSwaps();
         visualizer.updateVisuals(i + 1, high);
         return i + 1;
     }

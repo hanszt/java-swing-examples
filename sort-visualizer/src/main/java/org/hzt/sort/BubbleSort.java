@@ -6,16 +6,21 @@ import static org.hzt.sort.ArraysX.swap;
 public final class BubbleSort implements SortAlgorithm {
 
     private final SortVisualizer visualizer;
-    public BubbleSort(final SortVisualizer v) { this.visualizer = v; }
+    private final ComparisonIncrementer comparisonIncrementer;
+    private final SwapIncrementer swapIncrementer;
+    public BubbleSort(final SortVisualizer v, final ComparisonIncrementer comparisonIncrementer, final SwapIncrementer swapIncrementer) { this.visualizer = v;
+        this.comparisonIncrementer = comparisonIncrementer;
+        this.swapIncrementer = swapIncrementer;
+    }
 
     @Override
     public void sort(final int[] arr) {
         for (var i = 0; i < arr.length - 1; i++) {
             for (var j = 0; j < arr.length - i - 1; j++) {
-                visualizer.incrementComparison(); // Push update to UI
+                comparisonIncrementer.incrementComparison(); // Push update to UI
                 if (arr[j] > arr[j + 1]) {
                     swap(arr, j, j + 1);
-                    visualizer.incrementSwaps();
+                    swapIncrementer.incrementSwaps();
                     visualizer.updateVisuals(j, j + 1);
                 }
             }

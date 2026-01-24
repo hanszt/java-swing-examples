@@ -6,9 +6,13 @@ import static org.hzt.sort.ArraysX.swap;
 public final class SelectionSort implements SortAlgorithm {
 
     private final SortVisualizer visualizer;
+    private final ComparisonIncrementer comparisonIncrementer;
+    private final SwapIncrementer swapIncrementer;
 
-    public SelectionSort(SortVisualizer v) {
+    public SelectionSort(SortVisualizer v, final ComparisonIncrementer comparisonIncrementer, final SwapIncrementer swapIncrementer) {
         this.visualizer = v;
+        this.comparisonIncrementer = comparisonIncrementer;
+        this.swapIncrementer = swapIncrementer;
     }
 
     @Override
@@ -16,14 +20,14 @@ public final class SelectionSort implements SortAlgorithm {
         for (int i = 0; i < arr.length - 1; i++) {
             int minIdx = i;
             for (int j = i + 1; j < arr.length; j++) {
-                visualizer.incrementComparison(); // Push update to UI
+                comparisonIncrementer.incrementComparison(); // Push update to UI
                 if (arr[minIdx] > arr[j]) {
                     minIdx = j;
                 }
                 visualizer.updateVisuals(i, j);
             }
             swap(arr, minIdx, i);
-            visualizer.incrementSwaps();
+            swapIncrementer.incrementSwaps();
             visualizer.updateVisuals(minIdx, i);
         }
     }

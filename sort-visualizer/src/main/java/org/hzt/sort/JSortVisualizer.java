@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.random.RandomGenerator;
 
-final class JSortVisualizer extends JPanel implements SortVisualizer {
+final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrementer, ComparisonIncrementer {
     private final int[] array;
     private int currentPivot = -1;
     private int currentCompare = -1;
