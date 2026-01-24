@@ -1,10 +1,15 @@
 package org.hzt.sort;
 
+import static org.hzt.sort.ArraysX.swap;
+
 /// Implementing recursive algorithms like QuickSort is where this visualizer really shines, as you can see the "Divide and Conquer" strategy in action.
 ///
 /// QuickSort is a bit more complex than Bubble Sort because it relies on a pivot to partition the array. In our visualizer, the bars will dance around that pivot until the entire array is sorted.
-public final class QuickSort extends SortAlgorithm {
-    public QuickSort(final SortVisualizer v) { super(v); }
+public final class QuickSort implements SortAlgorithm {
+
+    private final SortVisualizer visualizer;
+
+    public QuickSort(final SortVisualizer v) { this.visualizer = v; }
 
     @Override
     public void sort(final int[] arr) {
@@ -26,12 +31,17 @@ public final class QuickSort extends SortAlgorithm {
             // Visualize the comparison
             visualizer.updateVisuals(high, j);
 
-            if (compare(pivot, arr[j])) {
+            visualizer.incrementComparison(); // Push update to UI
+            if (pivot > arr[j]) {
                 i++;
                 swap(arr, i, j);
+                visualizer.incrementSwaps();
+                visualizer.updateVisuals(i, j);
             }
         }
         swap(arr, i + 1, high);
+        visualizer.incrementSwaps();
+        visualizer.updateVisuals(i + 1, high);
         return i + 1;
     }
 }

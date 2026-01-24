@@ -3,8 +3,13 @@ package org.hzt.sort;
 /// MergeSort is unique because it doesn't typically swap elements in place; it creates temporary arrays and merges them back.
 ///
 /// To visualize this, we modify our SortAlgorithm or simply call updateVisuals whenever we write a value back to the original array.
-public final class MergeSort extends SortAlgorithm {
-    public MergeSort(final SortVisualizer v) { super(v); }
+public final class MergeSort implements SortAlgorithm {
+
+    private final SortVisualizer visualizer;
+
+    public MergeSort(final SortVisualizer v) {
+        this.visualizer = v;
+    }
 
     @Override
     public void sort(final int[] arr) {
@@ -48,12 +53,14 @@ public final class MergeSort extends SortAlgorithm {
         while (i < n1) {
             arr[k] = left[i];
             visualizer.updateVisuals(k, -1);
-            i++; k++;
+            i++;
+            k++;
         }
         while (j < n2) {
             arr[k] = right[j];
             visualizer.updateVisuals(k, -1);
-            j++; k++;
+            j++;
+            k++;
         }
     }
 }

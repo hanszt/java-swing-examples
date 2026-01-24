@@ -8,13 +8,12 @@ package org.hzt.sort;
 ///
 /// Because it is highly optimized for real-world data, it is significantly more complex to code than the others,
 /// but it looks fascinating when visualized—you'll see small sections being sorted locally before a massive merge sweep happens.
-public final class TimSort extends SortAlgorithm {
+public final class TimSort implements SortAlgorithm {
     private static final int RUN = 16;
     private final MergeSort mergeSort;
     private final InsertionSort insertionSort;
 
     public TimSort(SortVisualizer v) {
-        super(v);
         mergeSort = new MergeSort(v);
         insertionSort = new InsertionSort(v);
     }

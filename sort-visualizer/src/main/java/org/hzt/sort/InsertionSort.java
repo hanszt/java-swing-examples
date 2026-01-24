@@ -1,8 +1,12 @@
 package org.hzt.sort;
 
 /// Insertion: Average $O(n^2)$, best: $O(n)$ Items "slide" into place. Very fast if nearly sorted.
-public final class InsertionSort extends SortAlgorithm {
-    public InsertionSort(SortVisualizer v) { super(v); }
+public final class InsertionSort implements SortAlgorithm {
+    private final SortVisualizer visualizer;
+
+    public InsertionSort(SortVisualizer visualizer) {
+        this.visualizer = visualizer;
+    }
 
     @Override
     public void sort(int[] arr) {
@@ -13,7 +17,9 @@ public final class InsertionSort extends SortAlgorithm {
         for (int i = left + 1; i <= right; i++) {
             int temp = arr[i];
             int j = i - 1;
-            while (j >= left && compare(arr[j], temp)) {
+            while (j >= left) {
+                visualizer.incrementComparison(); // Push update to UI
+                if (arr[j] <= temp) break;
                 arr[j + 1] = arr[j];
                 visualizer.incrementSwaps();
                 visualizer.updateVisuals(i, j);

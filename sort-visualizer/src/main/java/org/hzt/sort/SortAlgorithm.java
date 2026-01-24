@@ -1,29 +1,12 @@
 package org.hzt.sort;
 
 /// This acts as the "plug." To add a new sort, you just extend this class and implement the sort method.
-public abstract sealed class SortAlgorithm permits BubbleSort, InsertionSort, MergeSort, QuickSort, SelectionSort, TimSort {
-    protected final SortVisualizer visualizer;
+public sealed interface SortAlgorithm permits BubbleSort, InsertionSort, MergeSort, QuickSort, SelectionSort, TimSort {
 
-    protected SortAlgorithm(final SortVisualizer visualizer) {
-        this.visualizer = visualizer;
-    }
+    void sort(int[] arr);
 
-    public abstract void sort(int[] arr);
-
-    public String name() {
+    default String name() {
         return getClass().getSimpleName();
     }
 
-    protected void swap(final int[] arr, final int i, final int j) {
-        final var temp = arr[i];
-        arr[i] = arr[j];
-        arr[j] = temp;
-        visualizer.incrementSwaps();
-        visualizer.updateVisuals(i, j);
-    }
-
-    protected boolean compare(int a, int b) {
-        visualizer.incrementComparison(); // Push update to UI
-        return a > b;
-    }
 }
