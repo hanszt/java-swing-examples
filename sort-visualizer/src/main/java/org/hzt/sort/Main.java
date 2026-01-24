@@ -16,7 +16,7 @@ public final class Main {
     void main() {
         LOGGER.info("Starting sort visualizer...");
         final var frame = new JFrame("Algorithm Visualizer");
-        final var visualizer = new SortVisualizer(100);
+        final var visualizer = new SortVisualizer(100, rnd);
 
         // Setup Control Panel
         final var controlPanel = new JPanel();
@@ -56,9 +56,9 @@ public final class Main {
 
         // Action: Start
         startButton.addActionListener(_ -> {
-            LOGGER.info("Starting new sort...");
             stopSorting(); // Don't allow two sorts at once
             final var selected = (String) dropdown.getSelectedItem();
+            LOGGER.info("Starting sort using {}...", selected);
 
             assert selected != null;
             final var algorithm = switch (selected) {

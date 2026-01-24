@@ -26,7 +26,7 @@ public final class QuickSort extends SortAlgorithm {
             // Visualize the comparison
             visualizer.updateVisuals(high, j);
 
-            if (arr[j] < pivot) {
+            if (compare(pivot, arr[j])) {
                 i++;
                 swap(arr, i, j);
             }

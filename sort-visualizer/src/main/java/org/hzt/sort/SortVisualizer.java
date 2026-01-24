@@ -2,7 +2,6 @@ package org.hzt.sort;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Random;
 import java.util.random.RandomGenerator;
 
 public final class SortVisualizer extends JPanel {
@@ -11,9 +10,11 @@ public final class SortVisualizer extends JPanel {
     private int currentCompare = -1;
     private volatile int sleepTime = 10; // Default speed
 
-    public SortVisualizer(final int size) {
+    private long comparisons = 0;
+    private long swaps = 0;
+
+    public SortVisualizer(final int size, RandomGenerator rand) {
         array = new int[size];
-        final var rand = new Random();
         for (var i = 0; i < size; i++) array[i] = rand.nextInt(400) + 10;
         setBackground(Color.BLACK);
     }
@@ -45,6 +46,12 @@ public final class SortVisualizer extends JPanel {
 
             g.fillRect(i * barWidth, getHeight() - array[i], barWidth - 1, array[i]);
         }
+
+        // Draw the stats in the top left corner
+        g.setColor(Color.GREEN);
+        g.setFont(new Font("Monospaced", Font.BOLD, 14));
+        g.drawString("Comparisons: " + comparisons, 20, 30);
+        g.drawString("Swaps:       " + swaps, 20, 50);
     }
 
     public int[] getArray() {
@@ -58,5 +65,11 @@ public final class SortVisualizer extends JPanel {
         currentPivot = -1;
         currentCompare = -1;
         repaint();
+    }
+
+    public void updateStats(long comparisons, long swaps) {
+        this.comparisons = comparisons;
+        this.swaps = swaps;
+        // Note: repaint() is already called in updateVisuals
     }
 }
