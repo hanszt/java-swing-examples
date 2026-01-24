@@ -1,8 +1,8 @@
 package org.hzt.sort;
 
 /// This acts as the "plug." To add a new sort, you just extend this class and implement the sort method.
-public abstract class SortAlgorithm {
-    protected SortVisualizer visualizer;
+public abstract sealed class SortAlgorithm permits BubbleSort, InsertionSort, MergeSort, QuickSort, SelectionSort {
+    protected final SortVisualizer visualizer;
 
     protected SortAlgorithm(final SortVisualizer visualizer) {
         this.visualizer = visualizer;

@@ -21,7 +21,7 @@ public final class Main {
 
         // Setup Control Panel
         final var controlPanel = new JPanel();
-        final var options = new String[]{"Bubble Sort", "Quick Sort", "Merge Sort"};
+        final var options = new String[]{"Bubble Sort", "Quick Sort", "Merge Sort", "Selection Sort", "Insertion Sort"};
         final var dropdown = new JComboBox<>(options);
         final var startButton = new JButton("Start Sort");
         final var resetButton = new JButton("Reset Array");
@@ -100,6 +100,8 @@ public final class Main {
         return switch (selected) {
             case "Quick Sort" -> new QuickSort(visualizer);
             case "Merge Sort" -> new MergeSort(visualizer);
+            case "Selection Sort" -> new SelectionSort(visualizer);
+            case "Insertion Sort" -> new InsertionSort(visualizer);
             default -> new BubbleSort(visualizer);
         };
     }
