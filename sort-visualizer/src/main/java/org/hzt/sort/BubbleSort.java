@@ -1,14 +1,17 @@
 package org.hzt.sort;
 
-import static org.hzt.sort.ArraysX.swap;
-
 /// Notice how clean the algorithm logic stays. It doesn't need to know how it's being drawn; it just calls swap.
 public final class BubbleSort implements SortAlgorithm {
 
     private final SortVisualizer visualizer;
     private final ComparisonIncrementer comparisonIncrementer;
     private final SwapIncrementer swapIncrementer;
-    public BubbleSort(final SortVisualizer v, final ComparisonIncrementer comparisonIncrementer, final SwapIncrementer swapIncrementer) { this.visualizer = v;
+
+    public BubbleSort(
+            final SortVisualizer v,
+            final ComparisonIncrementer comparisonIncrementer,
+            final SwapIncrementer swapIncrementer) {
+        this.visualizer = v;
         this.comparisonIncrementer = comparisonIncrementer;
         this.swapIncrementer = swapIncrementer;
     }
@@ -19,8 +22,7 @@ public final class BubbleSort implements SortAlgorithm {
             for (var j = 0; j < arr.length - i - 1; j++) {
                 comparisonIncrementer.incrementComparison(); // Push update to UI
                 if (arr[j] > arr[j + 1]) {
-                    swap(arr, j, j + 1);
-                    swapIncrementer.incrementSwaps();
+                    swapIncrementer.swap(arr, j, j + 1);
                     visualizer.updateVisuals(j, j + 1);
                 }
             }

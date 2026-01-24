@@ -42,13 +42,11 @@ public final class QuickSort implements SortAlgorithm {
             comparisonIncrementer.incrementComparison(); // Push update to UI
             if (pivot > arr[j]) {
                 i++;
-                swap(arr, i, j);
-                swapIncrementer.incrementSwaps();
+                swapIncrementer.swap(arr, i, j);
                 visualizer.updateVisuals(i, j);
             }
         }
-        swap(arr, i + 1, high);
-        swapIncrementer.incrementSwaps();
+        swapIncrementer.swap(arr, i + 1, high);
         visualizer.updateVisuals(i + 1, high);
         return i + 1;
     }

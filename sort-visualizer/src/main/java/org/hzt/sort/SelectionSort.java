@@ -26,8 +26,7 @@ public final class SelectionSort implements SortAlgorithm {
                 }
                 visualizer.updateVisuals(i, j);
             }
-            swap(arr, minIdx, i);
-            swapIncrementer.incrementSwaps();
+            swapIncrementer.swap(arr, minIdx, i);
             visualizer.updateVisuals(minIdx, i);
         }
     }
