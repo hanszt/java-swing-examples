@@ -10,6 +10,10 @@ public abstract sealed class SortAlgorithm permits BubbleSort, InsertionSort, Me
 
     public abstract void sort(int[] arr);
 
+    public String name() {
+        return getClass().getSimpleName();
+    }
+
     protected void swap(final int[] arr, final int i, final int j) {
         final var temp = arr[i];
         arr[i] = arr[j];

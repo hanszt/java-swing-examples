@@ -12,7 +12,7 @@ public final class Main {
     private static final Random rnd = new Random();
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private Thread sortingThread = null;
-    private SortAlgorithm algorithm = null;
+    private final JComboBox<SortAlgorithm> dropdown = new JComboBox<>();
 
     void main() {
         LOGGER.info("Starting sort visualizer...");
@@ -21,8 +21,28 @@ public final class Main {
 
         // Setup Control Panel
         final var controlPanel = new JPanel();
-        final var options = new String[]{"Bubble Sort", "Quick Sort", "Merge Sort", "Selection Sort", "Insertion Sort"};
-        final var dropdown = new JComboBox<>(options);
+        final var options = new SortAlgorithm[]{
+                new BubbleSort(visualizer),
+                new QuickSort(visualizer),
+                new MergeSort(visualizer),
+                new SelectionSort(visualizer),
+                new InsertionSort(visualizer)
+        };
+        dropdown.setModel(new DefaultComboBoxModel<>(options));
+        dropdown.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                                                          int index, boolean isSelected, boolean cellHasFocus) {
+
+                // Call the super method to handle background colors/selection logic
+                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (value instanceof final SortAlgorithm algo) {
+                    setText(algo.name()); // This sets the display text to the enum name
+                }
+                return this;
+            }
+        });
         final var startButton = new JButton("Start Sort");
         final var resetButton = new JButton("Reset Array");
 
@@ -50,7 +70,7 @@ public final class Main {
         frame.setVisible(true);
 
         // Initial setup on startup
-        setupSort(dropdown, visualizer);
+        setupSort(visualizer);
 
         // Action: Reset
         resetButton.addActionListener(_ -> reset(visualizer));
@@ -64,20 +84,23 @@ public final class Main {
                 }
             }
         });
-        dropdown.addActionListener(_ -> setupSort(dropdown, visualizer));
+        dropdown.addActionListener(_ -> setupSort(visualizer));
     }
 
-    private void setupSort(final JComboBox<String> dropdown, final SortVisualizer visualizer) {
-        algorithm = getSortAlgorithm(dropdown, visualizer);
+    private void setupSort(final SortVisualizer visualizer) {
+        reset(visualizer);
+        final var selected = (SortAlgorithm) dropdown.getSelectedItem();
+        assert selected != null;
+        LOGGER.atInfo().setMessage(() -> "Going to use sort algorithm %s...".formatted(selected.name())).log();
 
         // To run this, we wrap it in a JFrame and execute the sort in a separate Thread (so the UI doesn't freeze).
-        sortingThread = unstartedSortingThread(visualizer);
+        sortingThread = unstartedSortingThread(visualizer, selected);
     }
 
-    private Thread unstartedSortingThread(final SortVisualizer visualizer) {
+    private Thread unstartedSortingThread(final SortVisualizer visualizer, final SortAlgorithm algo) {
         return Thread.ofVirtual().unstarted(() -> {
             visualizer.setValidationIndex(-1); // Reset validation
-            algorithm.sort(visualizer.getArray());
+            algo.sort(visualizer.getArray());
 
             // The Validation Sweep
             doValidationSweep(visualizer);
@@ -88,22 +111,7 @@ public final class Main {
         stopSorting();
         visualizer.reset();
         visualizer.shuffle(rnd);
-        sortingThread = unstartedSortingThread(visualizer);
-    }
-
-    private SortAlgorithm getSortAlgorithm(final JComboBox<String> dropdown, final SortVisualizer visualizer) {
-        reset(visualizer);
-        final var selected = (String) dropdown.getSelectedItem();
-        LOGGER.info("Going to use sort algorithm {}...", selected);
-
-        assert selected != null;
-        return switch (selected) {
-            case "Quick Sort" -> new QuickSort(visualizer);
-            case "Merge Sort" -> new MergeSort(visualizer);
-            case "Selection Sort" -> new SelectionSort(visualizer);
-            case "Insertion Sort" -> new InsertionSort(visualizer);
-            default -> new BubbleSort(visualizer);
-        };
+        sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) dropdown.getSelectedItem());
     }
 
     private void doValidationSweep(final SortVisualizer visualizer) {
