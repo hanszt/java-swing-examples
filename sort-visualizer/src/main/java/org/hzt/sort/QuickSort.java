@@ -1,7 +1,5 @@
 package org.hzt.sort;
 
-import static org.hzt.sort.ArraysX.swap;
-
 /// Implementing recursive algorithms like QuickSort is where this visualizer really shines, as you can see the "Divide and Conquer" strategy in action.
 ///
 /// QuickSort is a bit more complex than Bubble Sort because it relies on a pivot to partition the array. In our visualizer, the bars will dance around that pivot until the entire array is sorted.

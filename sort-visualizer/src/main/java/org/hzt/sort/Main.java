@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Random;
+import java.util.random.RandomGenerator;
 
 public final class Main {
 
-    private static final Random rnd = new Random();
+    private static final RandomGenerator rnd = RandomGenerator.getDefault();
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private Thread sortingThread = null;
     private final JComboBox<SortAlgorithm> sortAlgorithmDropdown = new JComboBox<>();
@@ -32,19 +32,15 @@ public final class Main {
                 new MergeSort(visualizer),
                 new TimSort(visualizer, visualizer, visualizer)
         };
-        sortAlgorithmDropdown.addActionListener(_ -> setupSort(visualizer));
         sortAlgorithmDropdown.setModel(new DefaultComboBoxModel<>(options));
         sortAlgorithmDropdown.setRenderer(new ConfigurableListCellRenderer<>(SortAlgorithm::name));
         final var startButton = new JButton("Start Sort");
-        final var resetButton = new JButton("Reset Array");
-        JCheckBox soundToggle = new JCheckBox("Sound", true);
-        soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
-        controlPanel.add(soundToggle);
+        final var reshuffleButton = new JButton("Reshuffle");
 
         final var dropdownPanel = new JPanel(new GridLayout(3, 2));
         dropdownPanel.add(new JLabel("Algorithm:"));
         dropdownPanel.add(sortAlgorithmDropdown);
-        dropdownPanel.add(new JLabel("Data Type:"));
+        dropdownPanel.add(new JLabel("Shuffle Type:"));
         dropdownPanel.add(shuffleDropdown);
         final var colorModeDropdown = new JComboBox<>(ColorMode.values());
         colorModeDropdown.setRenderer(new ConfigurableListCellRenderer<>(this::enumNameToFirstLetterUppercase));
@@ -52,9 +48,12 @@ public final class Main {
         dropdownPanel.add(colorModeDropdown);
         colorModeDropdown.addActionListener(_ -> visualizer.setColorMode((ColorMode) colorModeDropdown.getSelectedItem()));
 
-        final var buttonPanel = new JPanel(new GridLayout(2, 2));
+        final var buttonPanel = new JPanel(new GridLayout(3, 2));
+        final var soundToggle = new JCheckBox("Sound", true);
+        soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
         buttonPanel.add(startButton);
-        buttonPanel.add(resetButton);
+        buttonPanel.add(reshuffleButton);
+        buttonPanel.add(soundToggle);
 
         controlPanel.add(dropdownPanel);
         controlPanel.add(buttonPanel);
@@ -80,7 +79,7 @@ public final class Main {
         setupSort(visualizer);
 
         // Action: Reset
-        resetButton.addActionListener(_ -> reset(visualizer));
+        reshuffleButton.addActionListener(_ -> reset(visualizer));
 
         // Action: Start
         startButton.addActionListener(_ -> {
@@ -93,7 +92,7 @@ public final class Main {
         });
         shuffleDropdown.addActionListener(_ -> reset(visualizer));
         shuffleDropdown.setRenderer(new ConfigurableListCellRenderer<>(this::enumNameToFirstLetterUppercase));
-        resetButton.addActionListener(_ -> reset(visualizer));
+        reshuffleButton.addActionListener(_ -> reset(visualizer));
     }
 
     private String enumNameToFirstLetterUppercase(final Enum<?> name) {
@@ -103,19 +102,19 @@ public final class Main {
 
     private void setupSort(final JSortVisualizer visualizer) {
         reset(visualizer);
-        final var selected = (SortAlgorithm) sortAlgorithmDropdown.getSelectedItem();
-        assert selected != null;
-        LOGGER.atInfo().setMessage(() -> "Going to use sort algorithm %s...".formatted(selected.name())).log();
-
         // To run this, we wrap it in a JFrame and execute the sort in a separate Thread (so the UI doesn't freeze).
-        sortingThread = unstartedSortingThread(visualizer, selected);
+        sortingThread = unstartedSortingThread(visualizer);
     }
 
-    private Thread unstartedSortingThread(final JSortVisualizer visualizer, final SortAlgorithm algo) {
+    private Thread unstartedSortingThread(final JSortVisualizer visualizer) {
         return Thread.ofVirtual().unstarted(() -> {
+            final var selected = (SortAlgorithm) sortAlgorithmDropdown.getSelectedItem();
+            assert selected != null;
+            LOGGER.atInfo().setMessage(() -> "Going to use sort algorithm %s...".formatted(selected.name())).log();
             visualizer.setValidationIndex(-1); // Reset validation
-            algo.sort(visualizer.getArray());
+            visualizer.setSortAlgorithmName(selected.name());
 
+            selected.sort(visualizer.getArray());
             // The Validation Sweep
             visualizer.doValidationSweep();
         });
@@ -123,9 +122,16 @@ public final class Main {
 
     private void reset(final JSortVisualizer visualizer) {
         stopSorting();
+        if (sortingThread != null) {
+            try {
+                sortingThread.join();
+            } catch (InterruptedException _) {
+                Thread.currentThread().interrupt();
+            }
+        }
         visualizer.reset();
         visualizer.shuffle((ShuffleType) shuffleDropdown.getSelectedItem());
-        sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) sortAlgorithmDropdown.getSelectedItem());
+        sortingThread = unstartedSortingThread(visualizer);
     }
 
     /// Because we are using Thread.sleep() in the updateVisuals method,

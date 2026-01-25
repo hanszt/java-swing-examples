@@ -16,6 +16,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
     private int validationIndex = -1;
     private boolean soundEnabled = true;
     private ColorMode colorMode = ColorMode.WHITE;
+    private transient String sortAlgorithmName = "-";
 
     private long comparisons = 0;
     private long swaps = 0;
@@ -34,6 +35,10 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
     public void setValidationIndex(int index) {
         this.validationIndex = index;
         repaint();
+    }
+
+    public void setSortAlgorithmName(final String sortAlgorithmName) {
+        this.sortAlgorithmName = sortAlgorithmName;
     }
 
     public void setSoundEnabled(boolean enabled) {
@@ -95,8 +100,9 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         // Draw the stats in the top left corner
         g.setColor(Color.GREEN);
         g.setFont(new Font("Monospaced", Font.BOLD, 14));
-        g.drawString("Comparisons: " + comparisons, 20, 30);
-        g.drawString("Swaps:       " + swaps, 20, 50);
+        g.drawString("Running algorithm: " + sortAlgorithmName, 20, 30);
+        g.drawString("Comparisons: " + comparisons, 20, 50);
+        g.drawString("Swaps:       " + swaps, 20, 70);
     }
 
     public int[] getArray() {

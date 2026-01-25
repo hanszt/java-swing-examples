@@ -1,7 +1,5 @@
 package org.hzt.sort;
 
-import static org.hzt.sort.ArraysX.swap;
-
 /// Selection: Average: $O(n^2)$, best: $O(n^2)$ A slow "scanner" moves across the array repeatedly.
 public final class SelectionSort implements SortAlgorithm {
 
