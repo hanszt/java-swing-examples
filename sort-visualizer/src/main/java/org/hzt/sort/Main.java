@@ -41,11 +41,16 @@ public final class Main {
         soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
         controlPanel.add(soundToggle);
 
-        final var dropdownPanel = new JPanel(new GridLayout(2, 2));
+        final var dropdownPanel = new JPanel(new GridLayout(3, 2));
         dropdownPanel.add(new JLabel("Algorithm:"));
         dropdownPanel.add(sortAlgorithmDropdown);
         dropdownPanel.add(new JLabel("Data Type:"));
         dropdownPanel.add(shuffleDropdown);
+        final var colorModeDropdown = new JComboBox<>(ColorMode.values());
+        colorModeDropdown.setRenderer(new ConfigurableListCellRenderer<>(this::enumNameToFirstLetterUppercase));
+        dropdownPanel.add(new JLabel("Color Mode:"));
+        dropdownPanel.add(colorModeDropdown);
+        colorModeDropdown.addActionListener(_ -> visualizer.setColorMode((ColorMode) colorModeDropdown.getSelectedItem()));
 
         final var buttonPanel = new JPanel(new GridLayout(2, 2));
         buttonPanel.add(startButton);
@@ -87,11 +92,13 @@ public final class Main {
             }
         });
         shuffleDropdown.addActionListener(_ -> reset(visualizer));
-        shuffleDropdown.setRenderer(new ConfigurableListCellRenderer<>((ShuffleType st) -> {
-            final var lowerCase = st.name().replace("_", " ").toLowerCase();
-            return Character.toString(lowerCase.charAt(0)).toUpperCase() + lowerCase.substring(1);
-        }));
+        shuffleDropdown.setRenderer(new ConfigurableListCellRenderer<>(this::enumNameToFirstLetterUppercase));
         resetButton.addActionListener(_ -> reset(visualizer));
+    }
+
+    private String enumNameToFirstLetterUppercase(final Enum<?> name) {
+        final var lowerCase = name.name().replace("_", " ").toLowerCase();
+        return Character.toString(lowerCase.charAt(0)).toUpperCase() + lowerCase.substring(1);
     }
 
     private void setupSort(final JSortVisualizer visualizer) {

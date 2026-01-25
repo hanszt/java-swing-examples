@@ -15,6 +15,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
     private volatile int sleepTime = 10; // Default speed
     private int validationIndex = -1;
     private boolean soundEnabled = true;
+    private ColorMode colorMode = ColorMode.WHITE;
 
     private long comparisons = 0;
     private long swaps = 0;
@@ -37,6 +38,11 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
 
     public void setSoundEnabled(boolean enabled) {
         this.soundEnabled = enabled;
+    }
+
+    public void setColorMode(final ColorMode colorMode) {
+        this.colorMode = colorMode;
+        repaint();
     }
 
     // This is where the magic happens: any sort can call this
@@ -62,9 +68,9 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         final var barWidth = getWidth() / array.length;
         for (var i = 0; i < array.length; i++) {
             if (i <= validationIndex) g.setColor(Color.GREEN); // Sorted & Verified
-            else if (i == currentPivot) g.setColor(Color.RED);
-            else if (i == currentCompare) g.setColor(Color.YELLOW);
-            else g.setColor(Color.WHITE);
+            else if (i == currentPivot) g.setColor(colorMode.getPivotColor());
+            else if (i == currentCompare) g.setColor(colorMode.getCompareColor());
+            else g.setColor(colorMode.getColor(array[i]));
 
             g.fillRect(i * barWidth, getHeight() - array[i], barWidth - 1, array[i]);
         }
