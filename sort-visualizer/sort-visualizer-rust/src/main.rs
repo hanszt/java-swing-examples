@@ -166,6 +166,95 @@ impl SortAlgorithm for QuickSort {
     }
 }
 
+struct MergeSort;
+
+impl MergeSort {
+    fn merge(
+        &self,
+        array: &mut Vec<i32>,
+        l: usize,
+        m: usize,
+        r: usize,
+        sender: &Sender<Frame>,
+        stats: &mut Stats,
+        delay: &Arc<AtomicU64>,
+    ) {
+        let left_half = array[l..=m].to_vec();
+        let right_half = array[m + 1..=r].to_vec();
+
+        let (mut i, mut j, mut k) = (0, 0, l);
+
+        while i < left_half.len() && j < right_half.len() {
+            stats.comparisons += 1;
+            stats.active_idx = k as i32;
+            stats.compare_idx = (m + 1 + j) as i32;
+
+            if left_half[i] <= right_half[j] {
+                array[k] = left_half[i];
+                i += 1;
+            } else {
+                array[k] = right_half[j];
+                j += 1;
+            }
+
+            stats.swaps += 1; // In Merge Sort, we count writes as swaps/moves
+            self.emit_frame(array, sender, stats, delay);
+            k += 1;
+        }
+
+        while i < left_half.len() {
+            array[k] = left_half[i];
+            stats.active_idx = k as i32;
+            self.emit_frame(array, sender, stats, delay);
+            i += 1;
+            k += 1;
+        }
+
+        while j < right_half.len() {
+            array[k] = right_half[j];
+            stats.active_idx = k as i32;
+            self.emit_frame(array, sender, stats, delay);
+            j += 1;
+            k += 1;
+        }
+    }
+
+    fn merge_sort_recursive(
+        &self,
+        array: &mut Vec<i32>,
+        l: usize,
+        r: usize,
+        sender: &Sender<Frame>,
+        stats: &mut Stats,
+        delay: &Arc<AtomicU64>,
+    ) {
+        if l < r {
+            let m = l + (r - l) / 2;
+            self.merge_sort_recursive(array, l, m, sender, stats, delay);
+            self.merge_sort_recursive(array, m + 1, r, sender, stats, delay);
+            self.merge(array, l, m, r, sender, stats, delay);
+        }
+    }
+
+    fn emit_frame(&self, array: &Vec<i32>, sender: &Sender<Frame>, stats: &Stats, delay: &Arc<AtomicU64>) {
+        let _ = sender.send(Frame {
+            data: array.clone(),
+            stats: stats.clone(),
+        });
+        let current_delay = delay.load(Ordering::Relaxed);
+        thread::sleep(Duration::from_millis(current_delay));
+    }
+}
+
+impl SortAlgorithm for MergeSort {
+    fn run_sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>, stats: &mut Stats, delay: Arc<AtomicU64>) {
+        let n = array.len();
+        if n > 0 {
+            self.merge_sort_recursive(array, 0, n - 1, &sender, stats, &delay);
+        }
+    }
+}
+
 /// In Rust, using a Channel (std::sync::mpsc) is the most robust way to visualize algorithms. It allows the sorting logic to run at full speed in a background thread while "sending" snapshots of the array to the main thread for rendering.
 ///
 /// This mimics the Producer-Consumer pattern: the Sort Algorithm produces states, and the GUI consumes them to draw.
@@ -199,7 +288,7 @@ async fn main() {
         root_ui().window(
             hash!(),
             vec2(screen_width() - 200.0, 10.0),
-            vec2(180.0, 100.0),
+            vec2(180.0, 120.0),
             |ui| {
                 // --- Speed Slider ---
                 let mut val = delay_ms.load(Ordering::Relaxed) as f32;
@@ -223,6 +312,14 @@ async fn main() {
                         let mut sort_array = current_frame.data.clone();
                         thread::spawn(move || {
                             QuickSort.sort(&mut sort_array, tx_clone, delay_clone)
+                        });
+                    }
+                    if ui.button(None, "Merge Sort") {
+                        let tx_clone = tx.clone();
+                        let delay_clone = Arc::clone(&delay_ms);
+                        let mut sort_array = current_frame.data.clone();
+                        thread::spawn(move || {
+                            MergeSort.sort(&mut sort_array, tx_clone, delay_clone);
                         });
                     }
                     if ui.button(None, "Shuffle") {
