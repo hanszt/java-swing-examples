@@ -107,7 +107,7 @@ public final class Main {
             algo.sort(visualizer.getArray());
 
             // The Validation Sweep
-            doValidationSweep(visualizer);
+            visualizer.doValidationSweep();
         });
     }
 
@@ -116,17 +116,6 @@ public final class Main {
         visualizer.reset();
         visualizer.shuffle(rnd);
         sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) dropdown.getSelectedItem());
-    }
-
-    private void doValidationSweep(final JSortVisualizer visualizer) {
-        for (int i = 0; i < visualizer.getArray().length; i++) {
-            visualizer.setValidationIndex(i);
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException _) {
-                Thread.currentThread().interrupt();
-            }
-        }
     }
 
     /// Because we are using Thread.sleep() in the updateVisuals method,

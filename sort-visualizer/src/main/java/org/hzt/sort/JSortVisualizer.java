@@ -68,6 +68,20 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         drawStats(g);
     }
 
+    void doValidationSweep() {
+        for (int i = 0; i < array.length; i++) {
+            setValidationIndex(i);
+            if (soundEnabled) {
+                soundEngine.playNote(array[i]);
+            }
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException _) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
     private void drawStats(final Graphics g) {
         // Draw the stats in the top left corner
         g.setColor(Color.GREEN);
