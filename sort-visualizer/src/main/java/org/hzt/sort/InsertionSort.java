@@ -22,11 +22,11 @@ public final class InsertionSort implements SortAlgorithm {
             int temp = arr[i];
             int j = i - 1;
             while (j >= left) {
-                comparisonIncrementer.incrementComparison(); // Push update to UI
+                comparisonIncrementer.incrementComparison();
+                visualizer.updateVisuals(i, j);
                 if (arr[j] <= temp) break;
                 arr[j + 1] = arr[j];
                 swapIncrementer.incrementSwaps();
-                visualizer.updateVisuals(i, j);
                 j--;
             }
             arr[j + 1] = temp;

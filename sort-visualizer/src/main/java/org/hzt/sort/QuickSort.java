@@ -36,9 +36,7 @@ public final class QuickSort implements SortAlgorithm {
         for (var j = low; j < high; j++) {
             // Visualize the comparison
             visualizer.updateVisuals(high, j);
-
-            comparisonIncrementer.incrementComparison(); // Push update to UI
-            if (pivot > arr[j]) {
+            if (comparisonIncrementer.compare(pivot, arr[j])) {
                 i++;
                 swapIncrementer.swap(arr, i, j);
                 visualizer.updateVisuals(i, j);

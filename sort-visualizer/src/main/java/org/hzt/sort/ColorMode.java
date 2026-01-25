@@ -2,18 +2,18 @@ package org.hzt.sort;
 
 import java.awt.*;
 
-enum ColorMode {
+public enum ColorMode {
 
     WHITE(Color.RED, Color.YELLOW) {
         @Override
-        Color getColor(final int value) {
+        public Color getColor(final int value) {
             return Color.WHITE;
         }
     },
 
     RAINBOW(Color.WHITE, Color.GRAY) {
         @Override
-        Color getColor(final int value) {
+        public Color getColor(final int value) {
             // Map value (10-460) to Hue (0.0 to 0.8)
             float hue = (value - 10) / 450f;
             return Color.getHSBColor(hue, 0.8f, 0.9f);
@@ -28,7 +28,7 @@ enum ColorMode {
         this.compareColor = compareColor;
     }
 
-    abstract Color getColor(int index);
-    Color getPivotColor() { return pivotColor; }
-    Color getCompareColor() { return compareColor; }
+    public abstract Color getColor(int index);
+    public Color getPivotColor() { return pivotColor; }
+    public Color getCompareColor() { return compareColor; }
 }

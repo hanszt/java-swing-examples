@@ -20,10 +20,9 @@ public final class BubbleSort implements SortAlgorithm {
     public void sort(final int[] arr) {
         for (var i = 0; i < arr.length - 1; i++) {
             for (var j = 0; j < arr.length - i - 1; j++) {
-                comparisonIncrementer.incrementComparison(); // Push update to UI
-                if (arr[j] > arr[j + 1]) {
+                visualizer.updateVisuals(j, j + 1);
+                if (comparisonIncrementer.compare(arr[j], arr[j + 1])) {
                     swapIncrementer.swap(arr, j, j + 1);
-                    visualizer.updateVisuals(j, j + 1);
                 }
             }
         }

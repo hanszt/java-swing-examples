@@ -18,8 +18,7 @@ public final class SelectionSort implements SortAlgorithm {
         for (int i = 0; i < arr.length - 1; i++) {
             int minIdx = i;
             for (int j = i + 1; j < arr.length; j++) {
-                comparisonIncrementer.incrementComparison(); // Push update to UI
-                if (arr[minIdx] > arr[j]) {
+                if (comparisonIncrementer.compare(arr[minIdx], arr[j])) {
                     minIdx = j;
                 }
                 visualizer.updateVisuals(i, j);

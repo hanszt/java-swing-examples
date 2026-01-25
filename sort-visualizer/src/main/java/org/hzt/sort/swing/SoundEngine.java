@@ -1,4 +1,4 @@
-package org.hzt.sort;
+package org.hzt.sort.swing;
 
 import javax.sound.midi.MidiChannel;
 import javax.sound.midi.MidiSystem;

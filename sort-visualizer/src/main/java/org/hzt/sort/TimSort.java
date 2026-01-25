@@ -13,12 +13,12 @@ public final class TimSort implements SortAlgorithm {
     private final MergeSort mergeSort;
     private final InsertionSort insertionSort;
 
-    public TimSort(SortVisualizer v,
-                   ComparisonIncrementer comparisonIncrementer,
-                   SwapIncrementer swapIncrementer
+    public TimSort(
+            SortVisualizer v,
+            StatsUpdater statsUpdater
     ) {
-        mergeSort = new MergeSort(v);
-        insertionSort = new InsertionSort(v, comparisonIncrementer, swapIncrementer);
+        mergeSort = new MergeSort(v, statsUpdater);
+        insertionSort = new InsertionSort(v, statsUpdater, statsUpdater);
     }
 
     @Override

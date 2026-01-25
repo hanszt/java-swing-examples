@@ -1,10 +1,12 @@
-package org.hzt.sort;
+package org.hzt.sort.swing;
+
+import org.hzt.sort.*;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.random.RandomGenerator;
 
-final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrementer, ComparisonIncrementer {
+final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdater {
 
     private final transient SoundEngine soundEngine = new SoundEngine();
     private final transient RandomGenerator rand;
@@ -20,6 +22,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
 
     private long comparisons = 0;
     private long swaps = 0;
+    private long writes = 0;
 
     JSortVisualizer(final int size, RandomGenerator rand) {
         this.rand = rand;
@@ -101,8 +104,9 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         g.setColor(Color.GREEN);
         g.setFont(new Font("Monospaced", Font.BOLD, 14));
         g.drawString("Running algorithm: " + sortAlgorithmName, 20, 30);
-        g.drawString("Comparisons: " + comparisons, 20, 50);
-        g.drawString("Swaps:       " + swaps, 20, 70);
+        g.drawString("Comparisons:       " + comparisons, 20, 50);
+        g.drawString("Swaps:             " + swaps, 20, 70);
+        g.drawString("Writes:            " + writes, 20, 90);
     }
 
     public int[] getArray() {
@@ -156,10 +160,16 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         swaps++;
     }
 
+    @Override
+    public void incrementWrites() {
+        writes++;
+    }
+
     public void reset() {
         updateVisuals(-1, -1);
         comparisons = 0;
         swaps = 0;
+        writes = 0;
         setValidationIndex(-1); // Reset validation
     }
 
@@ -171,6 +181,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
                 ", sleepTime=" + sleepTime +
                 ", validationIndex=" + validationIndex +
                 ", comparisons=" + comparisons +
+                ", writes=" + writes +
                 ", swaps=" + swaps +
                 '}';
     }

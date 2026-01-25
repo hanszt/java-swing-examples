@@ -6,9 +6,11 @@ package org.hzt.sort;
 public final class MergeSort implements SortAlgorithm {
 
     private final SortVisualizer visualizer;
+    private final WriteIncrementer writeIncrementer;
 
-    public MergeSort(final SortVisualizer v) {
+    public MergeSort(final SortVisualizer v, final WriteIncrementer writeIncrementer) {
         this.visualizer = v;
+        this.writeIncrementer = writeIncrementer;
     }
 
     @Override
@@ -46,18 +48,21 @@ public final class MergeSort implements SortAlgorithm {
                 arr[k] = right[j];
                 j++;
             }
-            visualizer.updateVisuals(k, -1); // Visualize the write-back
+            writeIncrementer.incrementWrites();
+            visualizer.updateVisuals(k, -1);
             k++;
         }
 
         while (i < n1) {
             arr[k] = left[i];
+            writeIncrementer.incrementWrites();
             visualizer.updateVisuals(k, -1);
             i++;
             k++;
         }
         while (j < n2) {
             arr[k] = right[j];
+            writeIncrementer.incrementWrites();
             visualizer.updateVisuals(k, -1);
             j++;
             k++;

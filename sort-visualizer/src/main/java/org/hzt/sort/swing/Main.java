@@ -1,7 +1,7 @@
-package org.hzt.sort;
+package org.hzt.sort.swing;
 
+import org.hzt.sort.*;
 import org.hzt.sort.SortVisualizer.ShuffleType;
-import org.hzt.sort.swing.ConfigurableListCellRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +29,9 @@ public final class Main {
                 new SelectionSort(visualizer, visualizer, visualizer),
                 new InsertionSort(visualizer, visualizer, visualizer),
                 new QuickSort(visualizer, visualizer, visualizer),
-                new MergeSort(visualizer),
-                new TimSort(visualizer, visualizer, visualizer)
+                new MergeSort(visualizer, visualizer),
+                new HeapSort(visualizer, visualizer),
+                new TimSort(visualizer, visualizer)
         };
         sortAlgorithmDropdown.setModel(new DefaultComboBoxModel<>(options));
         sortAlgorithmDropdown.setRenderer(new ConfigurableListCellRenderer<>(SortAlgorithm::name));

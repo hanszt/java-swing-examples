@@ -36,7 +36,7 @@
                         <configuration>
                             <archive>
                                 <manifest>
-                                    <mainClass>org.hzt.sort.Main</mainClass>
+                                    <mainClass>org.hzt.sort.swing.Main</mainClass>
                                 </manifest>
                             </archive>
                             <descriptorRefs>
