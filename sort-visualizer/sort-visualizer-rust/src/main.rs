@@ -1,17 +1,28 @@
 extern crate rand;
+
 use macroquad::hash;
+use macroquad::math::i32;
 use macroquad::prelude::*;
 use macroquad::ui::root_ui;
 use rand::seq::SliceRandom;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::mpsc::{self, Sender};
+use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 
 // --- PLUG-IN INTERFACE ---
 trait SortAlgorithm {
-    fn run_sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>, stats: &mut Stats);
+    fn run_sort(
+        &self,
+        array: &mut Vec<i32>,
+        sender: Sender<Frame>,
+        stats: &mut Stats,
+        delay_ms: Arc<AtomicU64>,
+    );
 
     // 2. This is the "Plug-in" entry point with default logic
-    fn sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>) {
+    fn sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>, delay_ms: Arc<AtomicU64>) {
         // Initialize the variables
         let mut stats = Stats {
             comparisons: 0,
@@ -20,7 +31,7 @@ trait SortAlgorithm {
             compare_idx: -1,
             is_done: false,
         };
-        self.run_sort(array, sender.clone(), &mut stats);
+        self.run_sort(array, sender.clone(), &mut stats, delay_ms);
         // Signal the sorting is completed
         stats.is_done = true;
         stats.active_idx = -1;
@@ -44,7 +55,13 @@ struct Stats {
 // --- EXAMPLE: BUBBLE SORT ---
 struct BubbleSort;
 impl SortAlgorithm for BubbleSort {
-    fn run_sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>, stats: &mut Stats) {
+    fn run_sort(
+        &self,
+        array: &mut Vec<i32>,
+        sender: Sender<Frame>,
+        stats: &mut Stats,
+        delay_ms: Arc<AtomicU64>,
+    ) {
         let n = array.len();
         for i in 0..n {
             for j in 0..n - i - 1 {
@@ -61,7 +78,7 @@ impl SortAlgorithm for BubbleSort {
                     stats.swaps += 1;
                 }
                 // Artificial delay so we can see it
-                thread::sleep(std::time::Duration::from_millis(1));
+                thread::sleep(Duration::from_millis(delay_ms.load(Ordering::Relaxed)));
             }
         }
     }
@@ -83,6 +100,7 @@ impl QuickSort {
         high: usize,
         sender: &Sender<Frame>,
         stats: &mut Stats,
+        delay_ms: &Arc<AtomicU64>,
     ) -> usize {
         let pivot_idx = high;
         let pivot_val = array[pivot_idx];
@@ -104,7 +122,7 @@ impl QuickSort {
                 stats.swaps += 1;
                 i += 1;
             }
-            thread::sleep(std::time::Duration::from_millis(10));
+            thread::sleep(Duration::from_millis(delay_ms.load(Ordering::Relaxed)));
         }
 
         array.swap(i, high);
@@ -119,24 +137,31 @@ impl QuickSort {
         high: usize,
         sender: &Sender<Frame>,
         stats: &mut Stats,
+        delay_ms: &Arc<AtomicU64>,
     ) {
         if low < high {
-            let p = self.partition(array, low, high, sender, stats);
+            let p = self.partition(array, low, high, sender, stats, delay_ms);
 
             // Handle potential underflow for usize in recursion
             if p > 0 {
-                self.quick_sort_recursive(array, low, p - 1, sender, stats);
+                self.quick_sort_recursive(array, low, p - 1, sender, stats, delay_ms);
             }
-            self.quick_sort_recursive(array, p + 1, high, sender, stats);
+            self.quick_sort_recursive(array, p + 1, high, sender, stats, delay_ms);
         }
     }
 }
 
 impl SortAlgorithm for QuickSort {
-    fn run_sort(&self, array: &mut Vec<i32>, sender: Sender<Frame>, stats: &mut Stats) {
+    fn run_sort(
+        &self,
+        array: &mut Vec<i32>,
+        sender: Sender<Frame>,
+        stats: &mut Stats,
+        delay_ms: Arc<AtomicU64>,
+    ) {
         let n = array.len();
         if n > 1 {
-            self.quick_sort_recursive(array, 0, n - 1, &sender, stats);
+            self.quick_sort_recursive(array, 0, n - 1, &sender, stats, &delay_ms);
         }
     }
 }
@@ -150,6 +175,9 @@ async fn main() {
     let n = array.len();
     let mut rng = rand::rng();
     array.shuffle(&mut rng);
+
+    // Add this to your main function
+    let delay_ms = Arc::new(AtomicU64::new(10)); // Default 10ms
 
     // Create the Channel
     let (tx, rx) = mpsc::channel();
@@ -167,23 +195,35 @@ async fn main() {
 
     loop {
         clear_background(BLACK);
-        // 1. UI BUTTONS
-        // Place buttons in the top right
+
         root_ui().window(
             hash!(),
-            vec2(screen_width() - 150.0, 10.0),
-            vec2(140.0, 100.0),
+            vec2(screen_width() - 200.0, 10.0),
+            vec2(180.0, 100.0),
             |ui| {
+                // --- Speed Slider ---
+                let mut val = delay_ms.load(Ordering::Relaxed) as f32;
+                ui.slider(hash!(), "Delay (ms)", 0.0..100.0, &mut val);
+                delay_ms.store(val as u64, Ordering::Relaxed);
+
+                ui.separator();
+
                 if current_frame.stats.is_done {
                     if ui.button(None, "Bubble Sort") {
                         let tx_clone = tx.clone();
+                        let delay_clone = Arc::clone(&delay_ms);
                         let mut sort_array = current_frame.data.clone();
-                        thread::spawn(move || BubbleSort.sort(&mut sort_array, tx_clone));
+                        thread::spawn(move || {
+                            BubbleSort.sort(&mut sort_array, tx_clone, delay_clone)
+                        });
                     }
                     if ui.button(None, "Quick Sort") {
                         let tx_clone = tx.clone();
+                        let delay_clone = Arc::clone(&delay_ms);
                         let mut sort_array = current_frame.data.clone();
-                        thread::spawn(move || QuickSort.sort(&mut sort_array, tx_clone));
+                        thread::spawn(move || {
+                            QuickSort.sort(&mut sort_array, tx_clone, delay_clone)
+                        });
                     }
                     if ui.button(None, "Shuffle") {
                         let mut rng = rand::rng();
