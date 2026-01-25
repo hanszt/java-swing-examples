@@ -46,6 +46,9 @@ public final class Main {
         });
         final var startButton = new JButton("Start Sort");
         final var resetButton = new JButton("Reset Array");
+        JCheckBox soundToggle = new JCheckBox("Sound", true);
+        soundToggle.addActionListener(e -> visualizer.setSoundEnabled(soundToggle.isSelected()));
+        controlPanel.add(soundToggle);
 
         controlPanel.add(new JLabel("Algorithm:"));
         controlPanel.add(dropdown);

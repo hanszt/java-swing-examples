@@ -6,10 +6,13 @@ import java.util.random.RandomGenerator;
 
 final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrementer, ComparisonIncrementer {
     private final int[] array;
+    private final SoundEngine soundEngine = new SoundEngine();
+
     private int currentPivot = -1;
     private int currentCompare = -1;
     private volatile int sleepTime = 10; // Default speed
     private int validationIndex = -1;
+    private boolean soundEnabled = true;
 
     private long comparisons = 0;
     private long swaps = 0;
@@ -29,10 +32,19 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         repaint();
     }
 
+    public void setSoundEnabled(boolean enabled) {
+        this.soundEnabled = enabled;
+    }
+
     // This is where the magic happens: any sort can call this
     public void updateVisuals(final int pivot, final int compare) {
         this.currentPivot = pivot;
         this.currentCompare = compare;
+
+        // Play sound based on the element being acted upon
+        if (soundEnabled && pivot >= 0 && compare < array.length) {
+            soundEngine.playNote(array[pivot]);
+        }
         try {
             Thread.sleep(sleepTime); // Control the speed here
         } catch (InterruptedException _) {
