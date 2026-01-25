@@ -52,3 +52,7 @@ logs
 ## Unignored files #
 ####################
 !**/_local-mvn-repo/**/*.jar
+
+# Rust #
+########
+*.lock
