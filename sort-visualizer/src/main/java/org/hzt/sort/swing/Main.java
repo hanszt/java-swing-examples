@@ -16,22 +16,24 @@ public final class Main {
     private Thread sortingThread = null;
     private final JComboBox<SortAlgorithm> sortAlgorithmDropdown = new JComboBox<>();
     private final JComboBox<ShuffleType> shuffleDropdown = new JComboBox<>(ShuffleType.values());
+    private final StatsContainer statsContainer = new StatsContainer();
 
     void main() {
         LOGGER.info("Starting sort visualizer...");
         final var frame = new JFrame("Algorithm Visualizer");
-        final var visualizer = new JSortVisualizer(100, rnd);
+
+        final var visualizer = new JSortVisualizer(100, rnd, statsContainer);
 
         // Setup Control Panel
         final var  controlPanel = new JPanel();
         final var options = new SortAlgorithm[]{
-                new BubbleSort(visualizer, visualizer, visualizer),
-                new SelectionSort(visualizer, visualizer, visualizer),
-                new InsertionSort(visualizer, visualizer, visualizer),
-                new QuickSort(visualizer, visualizer, visualizer),
-                new MergeSort(visualizer, visualizer),
-                new HeapSort(visualizer, visualizer),
-                new TimSort(visualizer, visualizer)
+                new BubbleSort(visualizer, statsContainer, statsContainer),
+                new SelectionSort(visualizer, statsContainer, statsContainer),
+                new InsertionSort(visualizer, statsContainer, statsContainer),
+                new QuickSort(visualizer, statsContainer, statsContainer),
+                new MergeSort(visualizer, statsContainer),
+                new HeapSort(visualizer, statsContainer),
+                new TimSort(visualizer, statsContainer)
         };
         sortAlgorithmDropdown.setModel(new DefaultComboBoxModel<>(options));
         sortAlgorithmDropdown.setRenderer(new ConfigurableListCellRenderer<>(SortAlgorithm::name));
@@ -134,6 +136,7 @@ public final class Main {
             }
         }
         visualizer.reset();
+        statsContainer.reset();
         visualizer.shuffle((ShuffleType) shuffleDropdown.getSelectedItem());
         sortingThread = unstartedSortingThread(visualizer);
     }

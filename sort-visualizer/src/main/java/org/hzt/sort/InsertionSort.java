@@ -6,7 +6,11 @@ public final class InsertionSort implements SortAlgorithm {
     private final ComparisonIncrementer comparisonIncrementer;
     private final SwapIncrementer swapIncrementer;
 
-    public InsertionSort(SortVisualizer visualizer, final ComparisonIncrementer comparisonIncrementer, final SwapIncrementer swapIncrementer) {
+    public InsertionSort(
+            final SortVisualizer visualizer,
+            final ComparisonIncrementer comparisonIncrementer,
+            final SwapIncrementer swapIncrementer
+    ) {
         this.visualizer = visualizer;
         this.comparisonIncrementer = comparisonIncrementer;
         this.swapIncrementer = swapIncrementer;

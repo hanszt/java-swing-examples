@@ -2,16 +2,17 @@ package org.hzt.sort.swing;
 
 import org.hzt.sort.ColorMode;
 import org.hzt.sort.SortVisualizer;
-import org.hzt.sort.StatsUpdater;
+import org.hzt.sort.StatsQuerier;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.random.RandomGenerator;
 
-final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdater {
+final class JSortVisualizer extends JPanel implements SortVisualizer {
 
     private final transient SoundEngine soundEngine = new SoundEngine();
     private final transient RandomGenerator rand;
+    private final transient StatsQuerier statsQuerier;
 
     private final int[] array;
     private int currentPivot = -1;
@@ -23,13 +24,10 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
     private transient String sortAlgorithmName = "-";
     private boolean treeMode = false;
 
-    private long comparisons = 0;
-    private long swaps = 0;
-    private long writes = 0;
-
-    JSortVisualizer(final int size, RandomGenerator rand) {
+    JSortVisualizer(final int size, RandomGenerator rand, final StatsQuerier statsQuerier) {
         this.rand = rand;
         array = new int[size];
+        this.statsQuerier = statsQuerier;
         for (var i = 0; i < size; i++) array[i] = rand.nextInt(400) + 10;
         setBackground(Color.BLACK);
     }
@@ -155,9 +153,9 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
         g.setColor(Color.GREEN);
         g.setFont(new Font("Monospaced", Font.BOLD, 14));
         g.drawString("Running algorithm: " + sortAlgorithmName, 20, 30);
-        g.drawString("Comparisons:       " + comparisons, 20, 50);
-        g.drawString("Swaps:             " + swaps, 20, 70);
-        g.drawString("Writes:            " + writes, 20, 90);
+        g.drawString("Comparisons:       " + statsQuerier.comparisons(), 20, 50);
+        g.drawString("Swaps:             " + statsQuerier.swaps(), 20, 70);
+        g.drawString("Writes:            " + statsQuerier.writes(), 20, 90);
     }
 
     public int[] getArray() {
@@ -203,24 +201,8 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
         repaint();
     }
 
-    public void incrementComparison() {
-        this.comparisons++;
-    }
-
-    public void incrementSwaps() {
-        swaps++;
-    }
-
-    @Override
-    public void incrementWrites() {
-        writes++;
-    }
-
     public void reset() {
         updateVisuals(-1, -1);
-        comparisons = 0;
-        swaps = 0;
-        writes = 0;
         setValidationIndex(-1); // Reset validation
     }
 
@@ -231,9 +213,6 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
                 ", currentCompare=" + currentCompare +
                 ", sleepTime=" + sleepTime +
                 ", validationIndex=" + validationIndex +
-                ", comparisons=" + comparisons +
-                ", writes=" + writes +
-                ", swaps=" + swaps +
                 '}';
     }
 }

@@ -7,7 +7,11 @@ public final class SelectionSort implements SortAlgorithm {
     private final ComparisonIncrementer comparisonIncrementer;
     private final SwapIncrementer swapIncrementer;
 
-    public SelectionSort(SortVisualizer v, final ComparisonIncrementer comparisonIncrementer, final SwapIncrementer swapIncrementer) {
+    public SelectionSort(
+            final SortVisualizer v,
+            final ComparisonIncrementer comparisonIncrementer,
+            final SwapIncrementer swapIncrementer
+    ) {
         this.visualizer = v;
         this.comparisonIncrementer = comparisonIncrementer;
         this.swapIncrementer = swapIncrementer;

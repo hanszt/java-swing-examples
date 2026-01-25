@@ -5,7 +5,7 @@ public final class HeapSort implements SortAlgorithm {
     private final SortVisualizer visualizer;
     private final StatsUpdater statsUpdater;
 
-    public HeapSort(SortVisualizer v, final StatsUpdater statsUpdater) {
+    public HeapSort(final SortVisualizer v, final StatsUpdater statsUpdater) {
         this.visualizer = v;
         this.statsUpdater = statsUpdater;
     }
