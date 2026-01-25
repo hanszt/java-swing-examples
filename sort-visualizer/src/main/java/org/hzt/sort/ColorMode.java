@@ -4,7 +4,7 @@ import java.awt.*;
 
 public enum ColorMode {
 
-    WHITE(Color.RED, Color.YELLOW) {
+    MONO_CHROME(Color.RED, Color.YELLOW) {
         @Override
         public Color getColor(final int value) {
             return Color.WHITE;

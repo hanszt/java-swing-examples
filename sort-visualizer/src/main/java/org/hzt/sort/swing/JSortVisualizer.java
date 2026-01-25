@@ -19,7 +19,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
     private volatile int sleepTime = 10; // Default speed
     private int validationIndex = -1;
     private boolean soundEnabled = true;
-    private ColorMode colorMode = ColorMode.WHITE;
+    private ColorMode colorMode = ColorMode.MONO_CHROME;
     private transient String sortAlgorithmName = "-";
     private boolean treeMode = false;
 
@@ -135,15 +135,17 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
     }
 
     void doValidationSweep() {
-        for (int i = 0; i < array.length; i++) {
-            setValidationIndex(i);
-            if (soundEnabled) {
-                soundEngine.playNote(array[i]);
-            }
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException _) {
-                Thread.currentThread().interrupt();
+        if (!treeMode) {
+            for (int i = 0; i < array.length; i++) {
+                setValidationIndex(i);
+                if (soundEnabled) {
+                    soundEngine.playNote(array[i]);
+                }
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException _) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
