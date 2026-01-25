@@ -1,5 +1,7 @@
 package org.hzt.sort;
 
+import org.hzt.sort.SortVisualizer.ShuffleType;
+import org.hzt.sort.swing.ConfigurableListCellRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +14,8 @@ public final class Main {
     private static final Random rnd = new Random();
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
     private Thread sortingThread = null;
-    private final JComboBox<SortAlgorithm> dropdown = new JComboBox<>();
+    private final JComboBox<SortAlgorithm> sortAlgorithmDropdown = new JComboBox<>();
+    private final JComboBox<ShuffleType> shuffleDropdown = new JComboBox<>(ShuffleType.values());
 
     void main() {
         LOGGER.info("Starting sort visualizer...");
@@ -20,7 +23,7 @@ public final class Main {
         final var visualizer = new JSortVisualizer(100, rnd);
 
         // Setup Control Panel
-        final var controlPanel = new JPanel();
+        final var  controlPanel = new JPanel();
         final var options = new SortAlgorithm[]{
                 new BubbleSort(visualizer, visualizer, visualizer),
                 new SelectionSort(visualizer, visualizer, visualizer),
@@ -29,32 +32,27 @@ public final class Main {
                 new MergeSort(visualizer),
                 new TimSort(visualizer, visualizer, visualizer)
         };
-        dropdown.setModel(new DefaultComboBoxModel<>(options));
-        dropdown.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value,
-                                                          int index, boolean isSelected, boolean cellHasFocus) {
-
-                // Call the super method to handle background colors/selection logic
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
-                if (value instanceof final SortAlgorithm algo) {
-                    setText(algo.name()); // This sets the display text to the enum name
-                }
-                return this;
-            }
-        });
+        sortAlgorithmDropdown.addActionListener(_ -> setupSort(visualizer));
+        sortAlgorithmDropdown.setModel(new DefaultComboBoxModel<>(options));
+        sortAlgorithmDropdown.setRenderer(new ConfigurableListCellRenderer<>(SortAlgorithm::name));
         final var startButton = new JButton("Start Sort");
         final var resetButton = new JButton("Reset Array");
         JCheckBox soundToggle = new JCheckBox("Sound", true);
-        soundToggle.addActionListener(e -> visualizer.setSoundEnabled(soundToggle.isSelected()));
+        soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
         controlPanel.add(soundToggle);
 
-        controlPanel.add(new JLabel("Algorithm:"));
-        controlPanel.add(dropdown);
-        controlPanel.add(startButton);
-        controlPanel.add(resetButton);
+        final var dropdownPanel = new JPanel(new GridLayout(2, 2));
+        dropdownPanel.add(new JLabel("Algorithm:"));
+        dropdownPanel.add(sortAlgorithmDropdown);
+        dropdownPanel.add(new JLabel("Data Type:"));
+        dropdownPanel.add(shuffleDropdown);
 
+        final var buttonPanel = new JPanel(new GridLayout(2, 2));
+        buttonPanel.add(startButton);
+        buttonPanel.add(resetButton);
+
+        controlPanel.add(dropdownPanel);
+        controlPanel.add(buttonPanel);
         // Inside your main method where other controls are:
         final var speedSlider = new JSlider(SwingConstants.HORIZONTAL, 1, 100, 10);
         speedSlider.setInverted(true); // Left = Fast (1ms), Right = Slow (100ms)
@@ -88,12 +86,17 @@ public final class Main {
                 }
             }
         });
-        dropdown.addActionListener(_ -> setupSort(visualizer));
+        shuffleDropdown.addActionListener(_ -> reset(visualizer));
+        shuffleDropdown.setRenderer(new ConfigurableListCellRenderer<>((ShuffleType st) -> {
+            final var lowerCase = st.name().replace("_", " ").toLowerCase();
+            return Character.toString(lowerCase.charAt(0)).toUpperCase() + lowerCase.substring(1);
+        }));
+        resetButton.addActionListener(_ -> reset(visualizer));
     }
 
     private void setupSort(final JSortVisualizer visualizer) {
         reset(visualizer);
-        final var selected = (SortAlgorithm) dropdown.getSelectedItem();
+        final var selected = (SortAlgorithm) sortAlgorithmDropdown.getSelectedItem();
         assert selected != null;
         LOGGER.atInfo().setMessage(() -> "Going to use sort algorithm %s...".formatted(selected.name())).log();
 
@@ -114,8 +117,8 @@ public final class Main {
     private void reset(final JSortVisualizer visualizer) {
         stopSorting();
         visualizer.reset();
-        visualizer.shuffle(rnd);
-        sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) dropdown.getSelectedItem());
+        visualizer.shuffle((ShuffleType) shuffleDropdown.getSelectedItem());
+        sortingThread = unstartedSortingThread(visualizer, (SortAlgorithm) sortAlgorithmDropdown.getSelectedItem());
     }
 
     /// Because we are using Thread.sleep() in the updateVisuals method,

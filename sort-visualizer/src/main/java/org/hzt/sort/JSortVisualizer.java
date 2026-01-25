@@ -5,9 +5,11 @@ import java.awt.*;
 import java.util.random.RandomGenerator;
 
 final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrementer, ComparisonIncrementer {
-    private final int[] array;
-    private final SoundEngine soundEngine = new SoundEngine();
 
+    private final transient SoundEngine soundEngine = new SoundEngine();
+    private final transient RandomGenerator rand;
+
+    private final int[] array;
     private int currentPivot = -1;
     private int currentCompare = -1;
     private volatile int sleepTime = 10; // Default speed
@@ -18,6 +20,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
     private long swaps = 0;
 
     JSortVisualizer(final int size, RandomGenerator rand) {
+        this.rand = rand;
         array = new int[size];
         for (var i = 0; i < size; i++) array[i] = rand.nextInt(400) + 10;
         setBackground(Color.BLACK);
@@ -94,10 +97,40 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, SwapIncrem
         return array;
     }
 
-    public void shuffle(RandomGenerator rand) {
-        for (var i = 0; i < array.length; i++) {
-            array[i] = rand.nextInt(400) + 10;
+    public void shuffle(ShuffleType type) {
+        int n = array.length;
+
+        // First, create a sorted base for certain types
+        for (int i = 0; i < n; i++) array[i] = (int) (((double) i / n) * 400) + 10;
+
+        switch (type) {
+            case RANDOM -> {
+                for (int i = 0; i < n; i++) {
+                    int j = rand.nextInt(n);
+                    int temp = array[i];
+                    array[i] = array[j];
+                    array[j] = temp;
+                }
+            }
+            case REVERSED -> {
+                for (int i = 0; i < n / 2; i++) {
+                    int temp = array[i];
+                    array[i] = array[n - 1 - i];
+                    array[n - 1 - i] = temp;
+                }
+            }
+            case NEARLY_SORTED -> {
+                // Swap a few random pairs to create slight disorder
+                for (int i = 0; i < 5; i++) {
+                    int idx1 = rand.nextInt(n);
+                    int idx2 = rand.nextInt(n);
+                    int temp = array[idx1];
+                    array[idx1] = array[idx2];
+                    array[idx2] = temp;
+                }
+            }
         }
+        validationIndex = -1;
         currentPivot = -1;
         currentCompare = -1;
         repaint();
