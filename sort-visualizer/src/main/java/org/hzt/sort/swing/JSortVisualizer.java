@@ -1,6 +1,8 @@
 package org.hzt.sort.swing;
 
-import org.hzt.sort.*;
+import org.hzt.sort.ColorMode;
+import org.hzt.sort.SortVisualizer;
+import org.hzt.sort.StatsUpdater;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +21,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
     private boolean soundEnabled = true;
     private ColorMode colorMode = ColorMode.WHITE;
     private transient String sortAlgorithmName = "-";
+    private boolean treeMode = false;
 
     private long comparisons = 0;
     private long swaps = 0;
@@ -37,6 +40,11 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
 
     public void setValidationIndex(int index) {
         this.validationIndex = index;
+        repaint();
+    }
+
+    public void setTreeMode(boolean treeMode) {
+        this.treeMode = treeMode;
         repaint();
     }
 
@@ -73,6 +81,15 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
     @Override
     protected void paintComponent(final Graphics g) {
         super.paintComponent(g);
+        if (treeMode) {
+            drawTree(g, 0, getWidth() / 2, getHeight() / 6, getWidth() / 4);
+        } else {
+            drawBars(g);
+        }
+        drawStats(g);
+    }
+
+    private void drawBars(final Graphics g) {
         final var barWidth = getWidth() / array.length;
         for (var i = 0; i < array.length; i++) {
             if (i <= validationIndex) g.setColor(Color.GREEN); // Sorted & Verified
@@ -82,7 +99,39 @@ final class JSortVisualizer extends JPanel implements SortVisualizer, StatsUpdat
 
             g.fillRect(i * barWidth, getHeight() - array[i], barWidth - 1, array[i]);
         }
-        drawStats(g);
+    }
+
+    private void drawTree(Graphics g, int i, int x, int y, int xOffset) {
+        if (i >= array.length) return;
+
+        int nodeSize = 20;
+        int leftChild = 2 * i + 1;
+        int rightChild = 2 * i + 2;
+
+        // Draw lines to children first (so they are behind nodes)
+        g.setColor(Color.DARK_GRAY);
+        if (leftChild < array.length)
+            g.drawLine(x, y, x - xOffset, y + 60);
+        if (rightChild < array.length)
+            g.drawLine(x, y, x + xOffset, y + 60);
+
+        // Coloring Logic
+        if (i <= validationIndex) g.setColor(Color.GREEN);
+        else if (i == currentPivot) g.setColor(Color.RED);
+        else if (i == currentCompare) g.setColor(Color.YELLOW);
+        else {
+            float h = (float) (array[i] - 10) / 450f;
+            g.setColor(Color.getHSBColor(h, 0.8f, 0.9f));
+        }
+
+        // Draw the Node
+        g.fillOval(x - nodeSize / 2, y - nodeSize / 2, nodeSize, nodeSize);
+
+        // Draw recursive children
+        if (leftChild < array.length)
+            drawTree(g, leftChild, x - xOffset, y + 60, xOffset / 2);
+        if (rightChild < array.length)
+            drawTree(g, rightChild, x + xOffset, y + 60, xOffset / 2);
     }
 
     void doValidationSweep() {

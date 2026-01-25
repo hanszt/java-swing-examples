@@ -50,23 +50,26 @@ public final class Main {
         colorModeDropdown.addActionListener(_ -> visualizer.setColorMode((ColorMode) colorModeDropdown.getSelectedItem()));
 
         final var buttonPanel = new JPanel(new GridLayout(3, 2));
-        final var soundToggle = new JCheckBox("Sound", true);
-        soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
         buttonPanel.add(startButton);
         buttonPanel.add(reshuffleButton);
-        buttonPanel.add(soundToggle);
 
         controlPanel.add(dropdownPanel);
         controlPanel.add(buttonPanel);
         // Inside your main method where other controls are:
         final var speedSlider = new JSlider(SwingConstants.HORIZONTAL, 1, 100, 10);
         speedSlider.setInverted(true); // Left = Fast (1ms), Right = Slow (100ms)
-
         speedSlider.addChangeListener(_ -> visualizer.setSleepTime(speedSlider.getValue()));
+        final var soundToggle = new JCheckBox("Sound", true);
+        soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
+        final var treeModeToggle = new JCheckBox("Tree mode", false);
+        treeModeToggle.addActionListener(_ -> visualizer.setTreeMode(treeModeToggle.isSelected()));
 
-        controlPanel.add(new JLabel("Speed:"));
-        controlPanel.add(speedSlider);
-
+        final var rightControlPanel = new JPanel(new GridLayout(4, 1));
+        rightControlPanel.add(new JLabel("Speed:"));
+        rightControlPanel.add(speedSlider);
+        rightControlPanel.add(soundToggle);
+        rightControlPanel.add(treeModeToggle);
+        controlPanel.add(rightControlPanel);
         // Layout
         frame.setLayout(new BorderLayout());
         frame.add(controlPanel, BorderLayout.NORTH);
