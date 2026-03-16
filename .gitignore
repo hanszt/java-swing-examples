@@ -20,6 +20,10 @@
 *.tar
 *.zip
 
+### Gradle ###
+.gradle
+build
+
 ### IntelliJ IDEA ###
 **/.idea/*
 !/.idea/icon.png
