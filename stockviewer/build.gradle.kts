@@ -6,12 +6,18 @@ plugins {
 group   = "com.stockviewer"
 version = "1.0.0"
 
+val jacksonVersion = "2.21.1"
+val logbackVersion = "1.5.32"
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
     implementation(kotlin("stdlib"))
+    implementation("com.fasterxml.jackson.core:jackson-core:${jacksonVersion}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
+    implementation("ch.qos.logback:logback-classic:${logbackVersion}")
 }
 
 application {
