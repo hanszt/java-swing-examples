@@ -7,10 +7,12 @@ import java.awt.*
 import java.awt.geom.GeneralPath
 import java.awt.geom.Line2D
 import java.awt.geom.RoundRectangle2D
+import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.*
 import javax.swing.*
 import javax.swing.border.AbstractBorder
 import javax.swing.border.Border
@@ -49,11 +51,16 @@ interface StockFetcher {
 
 object AlphaVantageStockDataParser {
 
+    private val logger = LoggerFactory.getLogger(AlphaVantageStockDataParser::class.java)
     private val objectMapper = jacksonObjectMapper()
 
     fun parseAlphaVantage(json: String): List<Candle> {
         val node = objectMapper.readTree(json)
-        val timeSeries = node.get("Time Series (Daily)") ?: return emptyList()
+        val timeSeries = node.get("Time Series (Daily)")
+        if (timeSeries == null) {
+            logger.warn("No time series data found in response: $json")
+            return emptyList()
+        }
 
         return timeSeries.properties().asSequence().map { (date, data) ->
             Candle(
@@ -69,12 +76,13 @@ object AlphaVantageStockDataParser {
 }
 
 // ── Alpha Vantage API fetcher ─────────────────────────────────────────────────
-object AlphaVantage : StockFetcher {
+/**
+ * https://www.alphavantage.co/documentation/
+ */
+class AlphaVantage(private val apiKey: String) : StockFetcher {
 
     private val logger = LoggerFactory.getLogger(AlphaVantage::class.java)
 
-    // Free key — limited to 25 req/day. Replace with your own from alphavantage.co
-    private const val API_KEY = "demo"
     private val client = HttpClient.newHttpClient()
 
     override fun fetchDaily(symbol: String): List<Candle> {
@@ -84,12 +92,13 @@ object AlphaVantage : StockFetcher {
                 "?function=TIME_SERIES_DAILY_ADJUSTED" +
                 "&symbol=${symbol.uppercase()}" +
                 "&outputsize=full" +
-                "&apikey=$API_KEY"
+                "&apikey=$apiKey"
         return try {
             val req = HttpRequest.newBuilder(URI.create(url)).GET().build()
             val body = client.send(req, HttpResponse.BodyHandlers.ofString()).body()
             parseAlphaVantage(body)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            logger.warn("Failed to fetch daily data for symbol: $symbol", e)
             emptyList()
         }
     }
@@ -121,7 +130,7 @@ class ChartPanel(private var candles: List<Candle>) : JPanel() {
 
     enum class ChartType { CANDLESTICK, LINE, AREA }
 
-    var chartType: ChartType = ChartType.CANDLESTICK
+    private var chartType: ChartType = ChartType.CANDLESTICK
     private val pad = Insets(40, 70, 60, 30)
 
     init {
@@ -237,6 +246,11 @@ class ChartPanel(private var candles: List<Candle>) : JPanel() {
         g2.fill(path)
         drawLine(g2, xOf, yOf)
     }
+
+    fun setType(type: ChartType) {
+        chartType = type
+        repaint()
+    }
 }
 
 // ── Stats bar ─────────────────────────────────────────────────────────────────
@@ -297,8 +311,13 @@ val PERIODS = listOf(
 )
 
 // ── Main window ───────────────────────────────────────────────────────────────
-class MainWindow(private val profile: String) : JFrame("Stock Market Viewer") {
-    private var allCandles = listOf<Candle>()
+class MainWindow(private val dataFetchMode: DataFetchMode, private val apiKey: String) : JFrame("Stock Market Viewer") {
+
+    enum class DataFetchMode {
+        MOCK_DATA, API_DATA
+    }
+
+    private var allCandles = emptyList<Candle>()
     private var currentDays = 365
     private val chart = ChartPanel(emptyList())
     private val stats = StatsPanel()
@@ -352,10 +371,7 @@ class MainWindow(private val profile: String) : JFrame("Stock Market Viewer") {
         )) {
             val btn = makeToggleButton(lbl)
             if (type == ChartPanel.ChartType.CANDLESTICK) btn.isSelected = true
-            btn.addActionListener {
-                chart.chartType = type
-                chart.repaint()
-            }
+            btn.addActionListener { chart.setType(type) }
             chartTypeGrp.add(btn)
             chartTypeBtns.add(btn)
             toolbar.add(btn)
@@ -410,10 +426,9 @@ class MainWindow(private val profile: String) : JFrame("Stock Market Viewer") {
         loadBtn.isEnabled = false
 
         object : SwingWorker<List<Candle>, Unit>() {
-            override fun doInBackground() = when (profile) {
-                "production" -> AlphaVantage.fetchDaily(symbol)
-                "mock" -> AlphaVantageMockDataFetcher.fetchDaily(symbol)
-                else -> error("$profile not valid")
+            override fun doInBackground() = when (dataFetchMode) {
+                DataFetchMode.API_DATA -> AlphaVantage(apiKey).fetchDaily(symbol)
+                DataFetchMode.MOCK_DATA -> AlphaVantageMockDataFetcher.fetchDaily(symbol)
             }
 
             override fun done() {
@@ -469,7 +484,7 @@ class MainWindow(private val profile: String) : JFrame("Stock Market Viewer") {
         cursor = Cursor(Cursor.HAND_CURSOR)
         addChangeListener {
             if (isSelected) {
-                foreground = Theme.BG
+                foreground = Theme.TEXT
                 background = Theme.ACCENT
             } else {
                 foreground = Theme.TEXT_DIM
@@ -522,7 +537,25 @@ class CompoundBorder(private val outer: Border, private val inner: Border) :
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 fun main(args: Array<String>) {
+    val log = LoggerFactory.getLogger("StockViewer")
     UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     UIManager.put("ToggleButton.select", Theme.ACCENT)
-    SwingUtilities.invokeLater { MainWindow(profile = args.getOrNull(0) ?: "mock") }
+
+    val profiles = args.getOrNull(0)?.split(',') ?: emptyList()
+    val mainProps = resourceAsStream("/application.properties")
+    val properties = Properties()
+    properties.load(mainProps)
+    profiles.forEach {
+        log.info("Loading profile: $it")
+        properties.load(resourceAsStream("/application-$it.properties"))
+    }
+    SwingUtilities.invokeLater {
+        MainWindow(
+            dataFetchMode = if ("mock" in profiles) MainWindow.DataFetchMode.MOCK_DATA else MainWindow.DataFetchMode.API_DATA,
+            apiKey = properties.getProperty("api-key") ?: error("No API key provided")
+        )
+    }
 }
+
+private fun resourceAsStream(location: String): InputStream =
+    {}::class.java.getResourceAsStream(location) ?: error("No $location found")
