@@ -27,10 +27,10 @@
         <dyn4j.version>5.0.2</dyn4j.version>
         <annotations.version>24.0.1</annotations.version>
         <hipster-core.version>1.0.1</hipster-core.version>
-        <logback-classic.version>1.5.3</logback-classic.version>
-        <hzt.utils.version>1.0.5.21</hzt.utils.version>
+        <logback-classic.version>1.5.32</logback-classic.version>
+        <hzt.utils.version>1.0.6.25</hzt.utils.version>
         <!--test dependencies-->
-        <junit.jupiter.version>6.0.1</junit.jupiter.version>
+        <junit.jupiter.version>6.0.3</junit.jupiter.version>
         <assertj-core.version>3.27.3</assertj-core.version>
         <!--plugins-->
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
@@ -100,6 +100,11 @@
     </dependencies>
 
     <repositories>
+        <!--Make sure you have a settings.xml under ~/.m2 with a valid token for GitHub packages-->
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/hanszt/*</url>
+        </repository>
         <repository>
             <id>local-project-maven-repo</id>
             <!--https://stackoverflow.com/questions/3084629/finding-the-root-directory-of-a-multi-module-maven-reactor-project-->
