@@ -2,42 +2,36 @@ package com.stockviewer
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.stockviewer.AlphaVantageStockDataParser.parseAlphaVantage
+import com.stockviewer.AlphaVantageStockDataParser.parseListingStatuses
 import org.slf4j.LoggerFactory
 import java.awt.*
 import java.awt.geom.GeneralPath
 import java.awt.geom.Line2D
 import java.awt.geom.RoundRectangle2D
 import java.io.InputStream
+import java.lang.AutoCloseable
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.time.LocalDate
 import java.util.*
 import javax.swing.*
 import javax.swing.border.AbstractBorder
 import javax.swing.border.Border
 import javax.swing.border.EmptyBorder
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
+import javax.swing.plaf.basic.ComboPopup
+import javax.swing.text.AbstractDocument
+import javax.swing.text.AttributeSet
+import javax.swing.text.DocumentFilter
 import kotlin.math.abs
 import kotlin.math.min
 
-// ── Colour palette ──────────────────────────────────────────────────────────
-object Theme {
-    val BG = Color(10, 12, 20)
-    val PANEL = Color(16, 20, 34)
-    val CARD = Color(22, 28, 45)
-    val BORDER = Color(40, 50, 80)
-    val ACCENT = Color(0, 210, 150)
-    val RED = Color(255, 80, 100)
-    val TEXT = Color(230, 235, 255)
-    val TEXT_DIM = Color(120, 135, 175)
-    val GRID = Color(30, 38, 62)
-    val CANDLE_UP = Color(0, 210, 150)
-    val CANDLE_DN = Color(255, 80, 100)
-}
-
 // ── Data model ───────────────────────────────────────────────────────────────
 data class Candle(
-    val date: String,
+    val date: LocalDate,
     val open: Double,
     val high: Double,
     val low: Double,
@@ -45,8 +39,19 @@ data class Candle(
     val volume: Long
 )
 
+data class ListingStatus(
+    val symbol: String,
+    val name: String,
+    val exchange: String,
+    val assetType: String,
+    val ipoDate: String?,
+    val delistingDate: String?,
+    val status: String
+)
+
 interface StockFetcher {
     fun fetchDaily(symbol: String): List<Candle>
+    fun fetchAllListingStatuses(): List<ListingStatus>
 }
 
 object AlphaVantageStockDataParser {
@@ -62,16 +67,38 @@ object AlphaVantageStockDataParser {
             return emptyList()
         }
 
-        return timeSeries.properties().asSequence().map { (date, data) ->
+        return timeSeries.properties().reversed().map { (date, data) ->
             Candle(
-                date = date,
+                date = LocalDate.parse(date),
                 open = data.get("1. open").asDouble(),
                 high = data.get("2. high").asDouble(),
                 low = data.get("3. low").asDouble(),
                 close = data.get("4. close").asDouble(),
                 volume = data.get("6. volume").asLong()
             )
-        }.toList()
+        }
+    }
+
+    fun parseListingStatuses(csvData: String): List<ListingStatus> {
+        return csvData.lineSequence()
+            .filter { it.isNotBlank() }
+            .map { line ->
+                val parts = line.split(",").map { it.trim() }
+
+                // Helper to treat the literal string "null" as a null value
+                fun String.toNullable(): String? = if (this.lowercase() == "null") null else this
+
+                ListingStatus(
+                    symbol = parts[0],
+                    name = parts[1],
+                    exchange = parts[2],
+                    assetType = parts[3],
+                    ipoDate = parts[4].toNullable(),
+                    delistingDate = parts[5].toNullable(),
+                    status = parts[6]
+                )
+            }
+            .toList()
     }
 }
 
@@ -79,14 +106,14 @@ object AlphaVantageStockDataParser {
 /**
  * https://www.alphavantage.co/documentation/
  */
-class AlphaVantage(private val apiKey: String) : StockFetcher {
+class AlphaVantageFetcher(private val apiKey: String) : StockFetcher, AutoCloseable {
 
-    private val logger = LoggerFactory.getLogger(AlphaVantage::class.java)
+    private val logger = LoggerFactory.getLogger(AlphaVantageFetcher::class.java)
 
+    private val domain = "https://www.alphavantage.co"
     private val client = HttpClient.newHttpClient()
 
     override fun fetchDaily(symbol: String): List<Candle> {
-        val domain = "https://www.alphavantage.co"
         logger.info("Fetching daily data for symbol: $symbol from $domain")
         val url = "$domain/query" +
                 "?function=TIME_SERIES_DAILY_ADJUSTED" +
@@ -102,12 +129,40 @@ class AlphaVantage(private val apiKey: String) : StockFetcher {
             emptyList()
         }
     }
+
+    override fun fetchAllListingStatuses(): List<ListingStatus> {
+        logger.info("Fetching all listing statuses from $domain...")
+        val url = "$domain/query?function=LISTING_STATUS&apikey=$apiKey"
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create(url))
+            .GET()
+            .build()
+        return try {
+            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+
+            if (response.statusCode() == 200) {
+                val csvData = response.body()
+                logger.info("total characters received: ${csvData.length}")
+                return parseListingStatuses(csvData)
+            } else {
+                logger.error("Error: Received status code ${response.statusCode()}, body: ${response.body()}")
+                return emptyList()
+            }
+        } catch (e: Exception) {
+            logger.error("Error fetching listing status:", e)
+            emptyList()
+        }
+    }
+
+    override fun close() {
+        client.close()
+    }
 }
 
 // ── Mock data fetcher ─────────────────────────────────────────────────
 object AlphaVantageMockDataFetcher : StockFetcher {
 
-    private val logger = LoggerFactory.getLogger(AlphaVantage::class.java)
+    private val logger = LoggerFactory.getLogger(AlphaVantageMockDataFetcher::class.java)
 
     override fun fetchDaily(symbol: String): List<Candle> {
         return try {
@@ -123,6 +178,36 @@ object AlphaVantageMockDataFetcher : StockFetcher {
             emptyList()
         }
     }
+
+    override fun fetchAllListingStatuses(): List<ListingStatus> {
+        logger.info("Fetching all listing statuses from mock data")
+        val mockCsvData = """
+            IBM,International Business Machines Corp,NYSE,Stock,1962-01-02,null,Active
+            IBMK,iShares iBonds Dec 2022 Term Muni Bond ETF,NYSE ARCA,ETF,2015-09-04,null,Active
+            KLAC,KLA Corp,NASDAQ,Stock,1990-03-26,null,Active
+            KLAG,Leverage Shares 2x Long KLAC Daily ETF,NASDAQ,Stock,2025-12-18,null,Active
+            KLAR,Klarna Group plc,NYSE,Stock,2025-09-10,null,Active
+            LFAW,LifeX 2060 Longevity Income ETF,BATS,ETF,2024-09-16,null,Active
+            LFBD,Stone Ridge 2064 Longevity Income ETF,BATS,ETF,2025-01-06,null,Active
+            LFBE,Stone Ridge 2065 Longevity Income ETF,BATS,ETF,2025-01-06,null,Active
+        """.trimIndent()
+        return parseListingStatuses(mockCsvData)
+    }
+}
+
+// ── Colour palette ──────────────────────────────────────────────────────────
+object Theme {
+    val BG = Color(10, 12, 20)
+    val PANEL = Color(16, 20, 34)
+    val CARD = Color(22, 28, 45)
+    val BORDER = Color(40, 50, 80)
+    val ACCENT = Color(0, 210, 150)
+    val RED = Color(255, 80, 100)
+    val TEXT = Color(230, 235, 255)
+    val TEXT_DIM = Color(120, 135, 175)
+    val GRID = Color(30, 38, 62)
+    val CANDLE_UP = Color(0, 210, 150)
+    val CANDLE_DN = Color(255, 80, 100)
 }
 
 // ── Chart panel ───────────────────────────────────────────────────────────────
@@ -187,7 +272,7 @@ class ChartPanel(private var candles: List<Candle>) : JPanel() {
         g2.font = Font("Monospaced", Font.PLAIN, 10)
         for (i in candles.indices step step) {
             val x = xOf(i).toInt()
-            val lbl = candles[i].date.substring(5) // MM-DD
+            val lbl = candles[i].date.toString()
             val fm = g2.fontMetrics
             g2.drawString(lbl, x - fm.stringWidth(lbl) / 2, height - 10)
         }
@@ -311,17 +396,116 @@ val PERIODS = listOf(
 )
 
 // ── Main window ───────────────────────────────────────────────────────────────
-class MainWindow(private val dataFetchMode: DataFetchMode, private val apiKey: String) : JFrame("Stock Market Viewer") {
+class MainWindow(dataFetchMode: DataFetchMode, apiKey: String) : JFrame("Stock Market Viewer") {
 
     enum class DataFetchMode {
         MOCK_DATA, API_DATA
     }
 
+    private val logger = LoggerFactory.getLogger(MainWindow::class.java)
+    private val stockFetcher = when (dataFetchMode) {
+        DataFetchMode.MOCK_DATA -> AlphaVantageMockDataFetcher
+        DataFetchMode.API_DATA -> AlphaVantageFetcher(apiKey)
+    }
     private var allCandles = emptyList<Candle>()
     private var currentDays = 365
     private val chart = ChartPanel(emptyList())
     private val stats = StatsPanel()
-    private val symbolField = JTextField("IBM", 8)
+    private val allListingStatuses = stockFetcher.fetchAllListingStatuses().map { it.symbol }
+    private val symbolField = JComboBox(allListingStatuses.toTypedArray()).apply {
+        isEditable = true
+        selectedItem = "IBM" // Set initial value
+
+        // Access the internal editor (which is a JTextField)
+        val editor = editor.editorComponent as JTextField
+        // 1. Darken the Dropdown List and ScrollPane
+        val popup = getUI().getAccessibleChild(this, 0) as? ComboPopup
+        val list = popup?.list
+        list?.apply {
+            background = Theme.BG
+            foreground = Theme.TEXT
+            selectionBackground = Theme.TEXT_DIM // Lighter gray for hover
+        }
+
+        // 2. Darken the Arrow Button
+        // We iterate through components to find the ArrowButton
+        components.forEach { comp ->
+            logger.info("Found component: ${comp.javaClass.name}")
+            comp.background = Theme.CARD // Dark button background
+            comp.foreground = Theme.BORDER  // The actual arrow color
+        }
+
+        styleTextField(editor)
+
+        // 1. Force Uppercase using a DocumentFilter
+        (editor.document as AbstractDocument).documentFilter = object : DocumentFilter() {
+            override fun insertString(fb: FilterBypass, offset: Int, string: String, attr: AttributeSet?) {
+                fb.insertString(offset, string.uppercase(), attr)
+            }
+
+            override fun replace(fb: FilterBypass, offset: Int, length: Int, text: String, attr: AttributeSet?) {
+                fb.replace(offset, length, text.uppercase(), attr)
+            }
+        }
+        addActionListener { e ->
+            // Update the combobox text field style on item selection
+            // "comboBoxChanged" is the action command when an item is selected from the list
+            if (e.actionCommand == "comboBoxChanged") {
+                hidePopup()
+                val selected = selectedItem as? String
+                if (selected != null) {
+
+                    // Update the text field to match the selection
+                    editor.text = selected
+
+                    // Force a text validation
+                    editor.foreground = if (allListingStatuses.contains(selected)) Theme.TEXT else Theme.RED
+
+                    // Optional: move caret to the end of the text
+                    editor.caretPosition = selected.length
+                }
+            }
+        }
+
+        editor.document.addDocumentListener(object : DocumentListener {
+
+            /**
+             * Prevent an infinite loop when updating the text field
+             */
+            var isHelperWorking = false
+
+            override fun insertUpdate(e: DocumentEvent) = filter()
+            override fun removeUpdate(e: DocumentEvent) = filter()
+            override fun changedUpdate(e: DocumentEvent) = filter()
+
+            private fun filter() {
+                if (isHelperWorking) return
+                val text = editor.text
+                if (text.isEmpty()) return
+
+                // 1. Handle the validation
+                editor.foreground = if (allListingStatuses.contains(text)) Theme.TEXT else Theme.RED
+
+                // 2. Update the dropdown list dynamically
+                SwingUtilities.invokeLater {
+                    val matches = allListingStatuses.filter { it.startsWith(text, ignoreCase = true) }
+                    val currentItems = (0 until model.size).map { model.getElementAt(it) }
+
+                    if (matches != currentItems) {
+                        isHelperWorking = true
+                        model = DefaultComboBoxModel(matches.toTypedArray())
+                        editor.text = text // Prevents model swap from clearing text
+                        if (matches.isNotEmpty() && text.isNotEmpty()) {
+                            showPopup()
+                        } else {
+                            hidePopup()
+                        }
+                        isHelperWorking = false
+                    }
+                }
+            }
+        })
+    }
     private val statusLabel = JLabel("Enter a symbol and press Load")
     private val loadBtn = makeButton("Load", Theme.ACCENT)
     private val periodBtns = mutableListOf<JToggleButton>()
@@ -354,7 +538,6 @@ class MainWindow(private val dataFetchMode: DataFetchMode, private val apiKey: S
 
         toolbar.add(Box.createHorizontalStrut(20))
 
-        styleTextField(symbolField)
         symbolField.addActionListener { loadData() }
         toolbar.add(JLabel("Symbol:").also { it.foreground = Theme.TEXT_DIM; it.font = Font("Monospaced", Font.PLAIN, 12) })
         toolbar.add(symbolField)
@@ -419,17 +602,14 @@ class MainWindow(private val dataFetchMode: DataFetchMode, private val apiKey: S
     }
 
     private fun loadData() {
-        val symbol = symbolField.text.trim().uppercase()
+        val symbol = (symbolField.selectedItem as String).trim().uppercase()
         if (symbol.isEmpty()) return
         statusLabel.text = "Loading $symbol…"
         statusLabel.foreground = Theme.TEXT_DIM
         loadBtn.isEnabled = false
 
         object : SwingWorker<List<Candle>, Unit>() {
-            override fun doInBackground() = when (dataFetchMode) {
-                DataFetchMode.API_DATA -> AlphaVantage(apiKey).fetchDaily(symbol)
-                DataFetchMode.MOCK_DATA -> AlphaVantageMockDataFetcher.fetchDaily(symbol)
-            }
+            override fun doInBackground() = stockFetcher.fetchDaily(symbol)
 
             override fun done() {
                 loadBtn.isEnabled = true
@@ -536,26 +716,41 @@ class CompoundBorder(private val outer: Border, private val inner: Border) :
 }
 
 // ── Entry point ───────────────────────────────────────────────────────────────
-fun main(args: Array<String>) {
-    val log = LoggerFactory.getLogger("StockViewer")
-    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
-    UIManager.put("ToggleButton.select", Theme.ACCENT)
+object StockViewer {
 
-    val profiles = args.getOrNull(0)?.split(',') ?: emptyList()
-    val mainProps = resourceAsStream("/application.properties")
-    val properties = Properties()
-    properties.load(mainProps)
-    profiles.forEach {
-        log.info("Loading profile: $it")
-        properties.load(resourceAsStream("/application-$it.properties"))
+    private val log = LoggerFactory.getLogger("StockViewer")
+
+    @JvmStatic
+    fun main(args: Array<String>) {
+        log.info("Starting StockViewer with the following arguments: ${args.joinToString(", ")}")
+
+        val profiles = args.getOrNull(0)?.split(',') ?: emptyList()
+        val properties = loadProperties(profiles)
+
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+        UIManager.put("ToggleButton.select", Theme.ACCENT)
+
+        SwingUtilities.invokeLater {
+            MainWindow(
+                dataFetchMode = if ("mock" in profiles) MainWindow.DataFetchMode.MOCK_DATA else MainWindow.DataFetchMode.API_DATA,
+                apiKey = properties.getProperty("api-key") ?: error("No API key provided")
+            )
+        }
     }
-    SwingUtilities.invokeLater {
-        MainWindow(
-            dataFetchMode = if ("mock" in profiles) MainWindow.DataFetchMode.MOCK_DATA else MainWindow.DataFetchMode.API_DATA,
-            apiKey = properties.getProperty("api-key") ?: error("No API key provided")
-        )
+
+    private fun loadProperties(profiles: List<String>): Properties {
+        val defaultProperties = "/application.properties"
+        val mainProps = resourceAsStreamOrNull(defaultProperties) ?: error("No $defaultProperties found")
+        val properties = Properties()
+        properties.load(mainProps)
+        profiles.forEach {
+            resourceAsStreamOrNull("/application-$it.properties")?.also {
+                log.info("Loading profile: $it")
+                properties.load(it)
+            }
+        }
+        return properties
     }
 }
 
-private fun resourceAsStream(location: String): InputStream =
-    {}::class.java.getResourceAsStream(location) ?: error("No $location found")
+private fun resourceAsStreamOrNull(location: String): InputStream? = {}::class.java.getResourceAsStream(location)
