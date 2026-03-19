@@ -60,3 +60,9 @@ logs
 # Rust #
 ########
 *.lock
+
+# Kotlin #
+.kotlin
+
+# Personal
+application-personal.*
