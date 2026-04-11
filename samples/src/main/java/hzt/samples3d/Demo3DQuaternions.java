@@ -24,10 +24,6 @@ public final class Demo3DQuaternions {
 
     private static final Logger logger = LoggerFactory.getLogger(Demo3DQuaternions.class);
 
-    private double translateX = 0;
-    private double translateY = 0;
-    private double translateZ = 0;
-
     void main() {
         final var modeButton = new RenderingModeButton(newMode -> logger.info("Switching to mode {}", newMode));
         // slider to control horizontal rotation
@@ -56,6 +52,9 @@ public final class Demo3DQuaternions {
         // panel to display render results
         final var renderPanel = new JPanel() {
 
+            private double translateX = 0;
+            private double translateY = 0;
+            private double translateZ = 0;
             private transient List<Triangle> shape = createShape();
 
             /**
@@ -213,36 +212,40 @@ public final class Demo3DQuaternions {
             private void useTriangles(final Consumer<Triangle> consumer) {
                 shape.stream().map(t -> t.resizeBy(zoomSlider.getValue())).forEach(consumer);
             }
+
+            final class TranslateAction extends AbstractAction {
+                private final transient Runnable onAction;
+
+                TranslateAction(final Runnable onAction) {
+                    this.onAction = onAction;
+                }
+
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    onAction.run();
+                    repaint();
+                }
+            }
+
+            void configureTranslationKeymap() {
+                final var actionMap = getActionMap();
+                actionMap.put("up", new TranslateAction(() -> translateY -= 10));
+                actionMap.put("down", new TranslateAction(() -> translateY += 10));
+                actionMap.put("left", new TranslateAction(() -> translateX -= 10));
+                actionMap.put("right", new TranslateAction(() -> translateX += 10));
+                actionMap.put("forward", new TranslateAction(() -> translateZ += 10));
+                actionMap.put("backward", new TranslateAction(() -> translateZ -= 10));
+
+                final var inputMap = getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+                inputMap.put(KeyStroke.getKeyStroke("W"), "up");
+                inputMap.put(KeyStroke.getKeyStroke("S"), "down");
+                inputMap.put(KeyStroke.getKeyStroke("A"), "left");
+                inputMap.put(KeyStroke.getKeyStroke("D"), "right");
+                inputMap.put(KeyStroke.getKeyStroke("Q"), "forward");
+                inputMap.put(KeyStroke.getKeyStroke("E"), "backward");
+            }
         };
-        final var inputMap = renderPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        final var actionMap = renderPanel.getActionMap();
-
-        final class TranslateAction extends AbstractAction {
-            private final transient Runnable onAction;
-
-            TranslateAction(final Runnable onAction) {
-                this.onAction = onAction;
-            }
-
-            @Override
-            public void actionPerformed(final ActionEvent e) {
-                onAction.run();
-                renderPanel.repaint();
-            }
-        }
-        actionMap.put("up", new TranslateAction(() -> translateY -= 10));
-        actionMap.put("down", new TranslateAction(() -> translateY += 10));
-        actionMap.put("left", new TranslateAction(() -> translateX -= 10));
-        actionMap.put("right", new TranslateAction(() -> translateX += 10));
-        actionMap.put("forward", new TranslateAction(() -> translateZ += 10));
-        actionMap.put("backward", new TranslateAction(() -> translateZ -= 10));
-
-        inputMap.put(KeyStroke.getKeyStroke("W"), "up");
-        inputMap.put(KeyStroke.getKeyStroke("S"), "down");
-        inputMap.put(KeyStroke.getKeyStroke("A"), "left");
-        inputMap.put(KeyStroke.getKeyStroke("D"), "right");
-        inputMap.put(KeyStroke.getKeyStroke("Q"), "forward");
-        inputMap.put(KeyStroke.getKeyStroke("E"), "backward");
+        renderPanel.configureTranslationKeymap();
 
         headingSlider.addChangeListener(_ -> renderPanel.repaint());
         pitchSlider.addChangeListener(_ -> renderPanel.repaint());
