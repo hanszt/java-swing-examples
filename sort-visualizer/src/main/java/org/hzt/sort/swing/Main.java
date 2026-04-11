@@ -61,7 +61,7 @@ public final class Main {
         final var speedSlider = new JSlider(SwingConstants.HORIZONTAL, 1, 100, 10);
         speedSlider.setInverted(true); // Left = Fast (1ms), Right = Slow (100ms)
         speedSlider.addChangeListener(_ -> visualizer.setSleepTime(speedSlider.getValue()));
-        final var soundToggle = new JCheckBox("Sound", true);
+        final var soundToggle = new JCheckBox("Sound", visualizer.isSoundEnabled());
         soundToggle.addActionListener(_ -> visualizer.setSoundEnabled(soundToggle.isSelected()));
         final var treeModeToggle = new JCheckBox("Tree mode", false);
         treeModeToggle.addActionListener(_ -> visualizer.setTreeMode(treeModeToggle.isSelected()));

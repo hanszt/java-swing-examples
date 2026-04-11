@@ -19,7 +19,7 @@ final class JSortVisualizer extends JPanel implements SortVisualizer {
     private int currentCompare = -1;
     private volatile int sleepTime = 10; // Default speed
     private int validationIndex = -1;
-    private boolean soundEnabled = true;
+    private boolean soundEnabled = false;
     private ColorMode colorMode = ColorMode.MONO_CHROME;
     private transient String sortAlgorithmName = "-";
     private boolean treeMode = false;
@@ -52,6 +52,10 @@ final class JSortVisualizer extends JPanel implements SortVisualizer {
 
     public void setSoundEnabled(boolean enabled) {
         this.soundEnabled = enabled;
+    }
+
+    public boolean isSoundEnabled() {
+        return soundEnabled;
     }
 
     public void setColorMode(final ColorMode colorMode) {
