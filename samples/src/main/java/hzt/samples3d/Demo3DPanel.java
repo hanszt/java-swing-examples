@@ -56,6 +56,13 @@ class Demo3DPanel extends JPanel {
         return shape;
     }
 
+    public void reset() {
+        translateX = 0;
+        translateY = 0;
+        translateZ = -100;
+        repaint();
+    }
+
     public void updateShape() {
         shape = createShape();
         repaint();

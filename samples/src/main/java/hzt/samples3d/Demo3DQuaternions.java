@@ -15,31 +15,30 @@ public final class Demo3DQuaternions {
     private static final Logger logger = LoggerFactory.getLogger(Demo3DQuaternions.class);
 
     void main() {
+        final var resetButton = new JButton("Reset");
         final var modeButton = new RenderingModeButton(newMode -> logger.info("Switching to mode {}", newMode));
-        // slider to control horizontal rotation
-        final var headingSlider = new JSlider(-180, 180, 0);
-        // slider to control vertical rotation
-        final var pitchSlider = new JSlider(SwingConstants.VERTICAL, -90, 90, 0);
-        final var zoomSlider = new JSlider(1, 1_000, 200);
-        final var shadingSlider = new JSlider(0, 1_000, 200);
 
-        // slider to control inflation
-        final var inflationSlider = new JSlider(1, 8, 5);
-        inflationSlider.setMinorTickSpacing(1);
-        inflationSlider.setPaintTicks(true);
-        inflationSlider.setPaintLabels(true);
+        final var headingSlider = createSlider(-180, 180, 0);
+        final var pitchSlider = new JSlider(SwingConstants.VERTICAL, -90, 90, 0);
+        final var zoomSlider = createSlider(1, 1_000, 200);
+        final var shadingSlider = createSlider(0, 1_000, 200);
+        final var inflationSlider = createSlider(1, 8, 5, 1);
+
+        final var renderPanel = new Demo3DPanel(headingSlider, pitchSlider, zoomSlider, shadingSlider, inflationSlider, modeButton);
 
         final var sliderPanel = new JPanel(new BorderLayout());
         sliderPanel.add(headingSlider, BorderLayout.NORTH);
         sliderPanel.add(zoomSlider, BorderLayout.CENTER);
         sliderPanel.add(shadingSlider, BorderLayout.SOUTH);
-        final var bottomControlPanel = new JPanel(new BorderLayout());
 
+        final var buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(modeButton);
+        buttonPanel.add(resetButton);
+
+        final var bottomControlPanel = new JPanel(new BorderLayout());
         bottomControlPanel.add(sliderPanel, BorderLayout.NORTH);
         bottomControlPanel.add(inflationSlider, BorderLayout.CENTER);
-        bottomControlPanel.add(modeButton, BorderLayout.SOUTH);
-
-        final var renderPanel = new Demo3DPanel(headingSlider, pitchSlider, zoomSlider, shadingSlider, inflationSlider, modeButton);
+        bottomControlPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         headingSlider.addChangeListener(_ -> renderPanel.repaint());
         pitchSlider.addChangeListener(_ -> renderPanel.repaint());
@@ -49,6 +48,14 @@ public final class Demo3DQuaternions {
         modeButton.addActionListener(_ -> {
             shadingSlider.setVisible(modeButton.getMode() == RenderingModeButton.Mode.FILLED_SHADED);
             renderPanel.repaint();
+        });
+        resetButton.addActionListener(_ -> {
+            headingSlider.setValue(0);
+            pitchSlider.setValue(0);
+            zoomSlider.setValue(200);
+            shadingSlider.setValue(200);
+            inflationSlider.setValue(5);
+            renderPanel.reset();
         });
         final var frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -60,5 +67,19 @@ public final class Demo3DQuaternions {
         frame.setTitle("3D Quaternions");
         frame.setSize(600, 600);
         frame.setVisible(true);
+    }
+
+    private JSlider createSlider(int min, int max, int value) {
+        return createSlider(min, max, value, 0);
+    }
+
+    private JSlider createSlider(int min, int max, int value, int minorTickSpacing) {
+        final var slider = new JSlider(min, max, value);
+        if (minorTickSpacing > 0) {
+            slider.setMinorTickSpacing(minorTickSpacing);
+            slider.setPaintTicks(true);
+            slider.setPaintLabels(true);
+        }
+        return slider;
     }
 }
