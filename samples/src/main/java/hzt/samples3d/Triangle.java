@@ -4,7 +4,7 @@ import org.hzt.utils.sequences.Sequence;
 
 import java.awt.*;
 
-record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
+public record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
 
     /**
      * Normalizing the vertices projects them on a circle around 0, 0, 0
@@ -16,7 +16,7 @@ record Triangle(Vertex v1, Vertex v2, Vertex v3, Color color) {
         return new Triangle(v1n, v2n, v3n, color);
     }
 
-    Triangle resizeBy(final double factor) {
+    public Triangle resizeBy(final double factor) {
         final var v1n = v1.scale(factor);
         final var v2n = v2.scale(factor);
         final var v3n = v3.scale(factor);

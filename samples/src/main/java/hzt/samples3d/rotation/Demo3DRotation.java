@@ -1,7 +1,10 @@
-package hzt.samples3d;
+package hzt.samples3d.rotation;
 
+import hzt.samples3d.RenderingModeButton;
 import hzt.samples3d.RenderingModeButton.Mode;
-import org.hzt.utils.sequences.Sequence;
+import hzt.samples3d.Shader;
+import hzt.samples3d.Triangle;
+import hzt.samples3d.Vertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +16,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import static hzt.samples3d.Triangles.getTriangles;
 import static java.lang.Math.*;
 
 /**
@@ -23,10 +27,6 @@ public final class Demo3DRotation {
     private static final Logger logger = LoggerFactory.getLogger(Demo3DRotation.class);
 
     void main() {
-        final var frame = new JFrame();
-        final var pane = frame.getContentPane();
-        pane.setLayout(new BorderLayout());
-
         final var modeButton = new RenderingModeButton(newMode -> logger.info("Switching to mode {}", newMode));
         // slider to control horizontal rotation
         final var headingSlider = new JSlider(-180, 180, 0);
@@ -50,9 +50,6 @@ public final class Demo3DRotation {
         bottomControlPanel.add(sliderPanel, BorderLayout.NORTH);
         bottomControlPanel.add(inflationSlider, BorderLayout.CENTER);
         bottomControlPanel.add(modeButton, BorderLayout.SOUTH);
-
-        pane.add(bottomControlPanel, BorderLayout.SOUTH);
-        pane.add(pitchSlider, BorderLayout.EAST);
 
         // panel to display render results
         final var renderPanel = new JPanel() {
@@ -140,10 +137,10 @@ public final class Demo3DRotation {
                     final var norm = v2.minus(v1).crossProduct(v3.minus(v1)).normalized();
                     final var angleCos = Math.abs(norm.z());
 
-                    final var minX = (int) max(0, ceil(min(v1.x(), min(v2.x(), v3.x()))));
-                    final var maxX = (int) min(width - 1.0, floor(max(v1.x(), max(v2.x(), v3.x()))));
-                    final var minY = (int) max(0, ceil(min(v1.y(), min(v2.y(), v3.y()))));
-                    final var maxY = (int) min(height - 1.0, floor(max(v1.y(), max(v2.y(), v3.y()))));
+                    final var minX = (int) max(0, ceil(Math.min(v1.x(), Math.min(v2.x(), v3.x()))));
+                    final var maxX = (int) min(width - 1.0, floor(Math.max(v1.x(), Math.max(v2.x(), v3.x()))));
+                    final var minY = (int) max(0, ceil(Math.min(v1.y(), Math.min(v2.y(), v3.y()))));
+                    final var maxY = (int) min(height - 1.0, floor(Math.max(v1.y(), Math.max(v2.y(), v3.y()))));
 
                     final var triangleArea = (v1.y() - v3.y()) * (v2.x() - v3.x()) + (v2.y() - v3.y()) * (v3.x() - v1.x());
 
@@ -173,11 +170,7 @@ public final class Demo3DRotation {
             }
 
             private List<Triangle> createShape() {
-                final var shape = Sequence.iterate(tetrahedronTriangles, s -> s.flatMap(Triangle::midPointTriangles))
-                        .take(inflationSlider.getValue())
-                        .last()
-                        .map(Triangle::inflate)
-                        .toList();
+                final var shape = getTriangles(inflationSlider.getValue());
                 logger.info("Nr of triangles: {}", shape.size());
                 return shape;
             }
@@ -191,7 +184,7 @@ public final class Demo3DRotation {
                 shape.stream().map(t -> t.resizeBy(zoomSlider.getValue())).forEach(consumer);
             }
         };
-        pane.add(renderPanel, BorderLayout.CENTER);
+
 
         headingSlider.addChangeListener(_ -> renderPanel.repaint());
         pitchSlider.addChangeListener(_ -> renderPanel.repaint());
@@ -202,6 +195,13 @@ public final class Demo3DRotation {
             shadingSlider.setVisible(modeButton.getMode() == Mode.FILLED_SHADED);
             renderPanel.repaint();
         });
+        final var frame = new JFrame();
+        final var pane = frame.getContentPane();
+        pane.setLayout(new BorderLayout());
+        pane.add(bottomControlPanel, BorderLayout.SOUTH);
+        pane.add(pitchSlider, BorderLayout.EAST);
+        pane.add(renderPanel, BorderLayout.CENTER);
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setTitle("3D Rotation");
         frame.setSize(600, 600);
         frame.setVisible(true);
@@ -222,31 +222,6 @@ public final class Demo3DRotation {
                 Math.sin(heading), 0.0, Math.cos(heading)
         );
     }
-
-    /**
-     * A tetrahedron generating sequence with the center around 0,0,0
-     */
-    private static final Sequence<Triangle> tetrahedronTriangles = Sequence.of(
-            new Triangle(
-                    new Vertex(100, 100, 100),
-                    new Vertex(-100, -100, 100),
-                    new Vertex(-100, 100, -100),
-                    Color.WHITE),
-            new Triangle(
-                    new Vertex(100, 100, 100),
-                    new Vertex(-100, -100, 100),
-                    new Vertex(100, -100, -100),
-                    Color.RED),
-            new Triangle(
-                    new Vertex(-100, 100, -100),
-                    new Vertex(100, -100, -100),
-                    new Vertex(100, 100, 100),
-                    Color.GREEN),
-            new Triangle(
-                    new Vertex(-1, 1, -1),
-                    new Vertex(1, -1, -1),
-                    new Vertex(-1, -1, 1),
-                    Color.BLUE));
 }
 
 /**

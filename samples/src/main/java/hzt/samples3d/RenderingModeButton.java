@@ -4,12 +4,12 @@ import java.awt.*;
 import java.util.function.Consumer;
 
 /// A button that allows switching between different rendering modes
-final class RenderingModeButton extends Button {
+public final class RenderingModeButton extends Button {
 
-    enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
+    public enum Mode {WIRE_FRAME, FILLED_SHADED, FILLED_UNSHADED}
     private Mode mode = Mode.FILLED_SHADED;
 
-    RenderingModeButton(Consumer<Mode> modeConsumer) {
+    public RenderingModeButton(Consumer<Mode> modeConsumer) {
         setLabel(getLabel(mode));
         addActionListener(_ -> {
             final var newMode = switch (mode) {
@@ -23,7 +23,7 @@ final class RenderingModeButton extends Button {
         });
     }
 
-    Mode getMode() {
+    public Mode getMode() {
         return mode;
     }
 
