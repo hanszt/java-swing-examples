@@ -1,4 +1,4 @@
-package com.stockviewer.ui
+package com.stockviewer.ui.swing
 
 import com.stockviewer.client.AlphaVantageFetcher
 import com.stockviewer.client.AlphaVantageMockDataFetcher

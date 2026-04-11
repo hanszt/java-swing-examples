@@ -1,4 +1,4 @@
-package com.stockviewer.ui
+package com.stockviewer.ui.swing
 
 import java.awt.Color
 
