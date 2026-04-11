@@ -10,7 +10,7 @@ A small project to visualize sorting algorithms.
 
 ```sh
 cargo build
-./target/debug/sort-visualizer-rust
+./target/debug/sort-visualization-rust
 ```
 
 ---
