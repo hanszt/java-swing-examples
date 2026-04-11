@@ -2,13 +2,11 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.compose")
-    kotlin("jvm")
-    id("org.jetbrains.kotlin.plugin.compose")
+    alias(libs.plugins.jetbrains.compose)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.plugin.compose)
     application
 }
-
-val logbackVersion = "1.5.32"
 
 repositories {
     mavenCentral()
@@ -19,7 +17,7 @@ repositories {
 dependencies {
     implementation(project(":stockviewer-shared"))
     implementation(compose.desktop.currentOs)
-    implementation("ch.qos.logback:logback-classic:${logbackVersion}")
+    implementation(libs.logback.classic)
 }
 
 application {

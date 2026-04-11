@@ -1,0 +1,17 @@
+[versions]
+kotlin = "2.3.20"
+compose = "1.10.3"
+jackson = "2.21.1"
+logback = "1.5.32"
+
+[libraries]
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-core", version.ref = "jackson" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose" }
+kotlin-plugin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+

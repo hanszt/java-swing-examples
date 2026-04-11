@@ -2,21 +2,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm")
+    alias(libs.plugins.kotlin.jvm)
 }
-
-val jacksonVersion = "2.21.1"
-val logbackVersion = "1.5.32"
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
-    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.logback.classic)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
