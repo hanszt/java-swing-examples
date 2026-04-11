@@ -11,7 +11,7 @@ import javax.swing.UIManager
 
 
 // ── Entry point ───────────────────────────────────────────────────────────────
-object StockViewer {
+object StockViewerSwing {
 
     private val log = LoggerFactory.getLogger("StockViewer")
 
