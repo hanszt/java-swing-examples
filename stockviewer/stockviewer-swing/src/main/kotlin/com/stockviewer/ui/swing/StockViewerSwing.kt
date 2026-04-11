@@ -7,10 +7,6 @@ import java.util.*
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
 
-// ── Main window ───────────────────────────────────────────────────────────────
-
-
-// ── Entry point ───────────────────────────────────────────────────────────────
 object StockViewerSwing {
 
     private val log = LoggerFactory.getLogger("StockViewer")

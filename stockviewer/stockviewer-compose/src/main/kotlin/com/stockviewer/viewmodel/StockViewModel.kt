@@ -5,6 +5,7 @@ import com.stockviewer.client.AlphaVantageMockDataFetcher
 import com.stockviewer.client.DataFetchMode
 import com.stockviewer.client.StockFetcher
 import com.stockviewer.model.Candle
+import com.stockviewer.ui.compose.ChartPanel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -38,9 +39,9 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
     val selectedPeriod: StateFlow<Int> = _selectedPeriod
 
     val chartTypes = listOf(
-        com.stockviewer.ui.compose.ChartPanel.ChartType.CANDLESTICK,
-        com.stockviewer.ui.compose.ChartPanel.ChartType.LINE,
-        com.stockviewer.ui.compose.ChartPanel.ChartType.AREA
+        ChartPanel.ChartType.CANDLESTICK,
+        ChartPanel.ChartType.LINE,
+        ChartPanel.ChartType.AREA
     )
 
     private val _selectedChartType = MutableStateFlow(com.stockviewer.ui.compose.ChartPanel.ChartType.CANDLESTICK)
@@ -68,7 +69,7 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
         applyPeriod()
     }
 
-    fun selectChartType(chartType: com.stockviewer.ui.compose.ChartPanel.ChartType) {
+    fun selectChartType(chartType: ChartPanel.ChartType) {
         _selectedChartType.value = chartType
     }
 

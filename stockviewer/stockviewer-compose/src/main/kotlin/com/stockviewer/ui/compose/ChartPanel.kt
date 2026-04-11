@@ -4,10 +4,10 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.stockviewer.model.Candle
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import com.stockviewer.ui.swing.Theme
+import com.stockviewer.model.Candle
+import com.stockviewer.ui.compose.Theme.ACCENT
 
 @Composable
 fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
@@ -30,7 +30,7 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
                     val y = size.height - ((candle.close - minPrice) / priceRange * size.height).toFloat()
                     path.lineTo(x, y)
                 }
-                drawPath(path, Color(Theme.ACCENT.rgb), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+                drawPath(path, Color(ACCENT.rgb), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
             }
             ChartPanel.ChartType.CANDLESTICK -> {
                 candles.forEachIndexed { index, candle ->

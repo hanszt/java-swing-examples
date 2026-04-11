@@ -5,6 +5,10 @@ import androidx.compose.material.darkColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+object Theme {
+    val ACCENT = java.awt.Color(0, 210, 150)
+}
+
 private val DarkColorPalette = darkColors(
     primary = Color(0, 210, 150),
     background = Color(10, 12, 20),
