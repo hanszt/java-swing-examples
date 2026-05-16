@@ -39,13 +39,13 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
     val selectedPeriod: StateFlow<Int> = _selectedPeriod
 
     val chartTypes = listOf(
-        ChartPanel.ChartType.CANDLESTICK,
+        ChartPanel.ChartType.CANDLES,
         ChartPanel.ChartType.LINE,
         ChartPanel.ChartType.AREA
     )
 
-    private val _selectedChartType = MutableStateFlow(com.stockviewer.ui.compose.ChartPanel.ChartType.CANDLESTICK)
-    val selectedChartType: StateFlow<com.stockviewer.ui.compose.ChartPanel.ChartType> = _selectedChartType
+    private val _selectedChartType = MutableStateFlow(ChartPanel.ChartType.CANDLES)
+    val selectedChartType: StateFlow<ChartPanel.ChartType> = _selectedChartType
 
     suspend fun loadStockData(symbol: String) {
         if (symbol.isEmpty()) return

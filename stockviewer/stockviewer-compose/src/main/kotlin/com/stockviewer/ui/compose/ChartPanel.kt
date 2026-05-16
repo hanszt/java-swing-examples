@@ -32,7 +32,7 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
                 }
                 drawPath(path, Color(ACCENT.rgb), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
             }
-            ChartPanel.ChartType.CANDLESTICK -> {
+            ChartPanel.ChartType.CANDLES -> {
                 candles.forEachIndexed { index, candle ->
                     val x = index * stepX
                     val highY = size.height - ((candle.high - minPrice) / priceRange * size.height).toFloat()
@@ -63,7 +63,7 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
 
 object ChartPanel {
     enum class ChartType {
-        CANDLESTICK,
+        CANDLES,
         LINE,
         AREA
     }
