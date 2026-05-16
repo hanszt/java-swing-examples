@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.jackson.core)
     implementation(libs.jackson.module.kotlin)
     implementation(libs.logback.classic)
+    implementation(libs.kotlinx.coroutines)
 }
 
 tasks.withType<KotlinCompile>().configureEach {

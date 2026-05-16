@@ -10,7 +10,7 @@ object AlphaVantageMockDataFetcher : StockFetcher {
 
     private val logger = LoggerFactory.getLogger(AlphaVantageMockDataFetcher::class.java)
 
-    override fun fetchDaily(symbol: String): List<Candle> {
+    override suspend fun fetchDaily(symbol: String): List<Candle> {
         return try {
             val name = "/com/stockviewer/$symbol.json"
             AlphaVantageMockDataFetcher::class.java.getResourceAsStream(name)
@@ -25,7 +25,7 @@ object AlphaVantageMockDataFetcher : StockFetcher {
         }
     }
 
-    override fun fetchAllListingStatuses(): List<ListingStatus> {
+    override suspend fun fetchAllListingStatuses(): List<ListingStatus> {
         logger.info("Fetching all listing statuses from mock data")
         val mockCsvData = """
             IBM,International Business Machines Corp,NYSE,Stock,1962-01-02,null,Active

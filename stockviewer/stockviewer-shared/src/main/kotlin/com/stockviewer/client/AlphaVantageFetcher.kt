@@ -4,6 +4,7 @@ import com.stockviewer.client.AlphaVantageStockDataParser.parseAlphaVantage
 import com.stockviewer.client.AlphaVantageStockDataParser.parseListingStatuses
 import com.stockviewer.model.Candle
 import com.stockviewer.model.ListingStatus
+import kotlinx.coroutines.future.await
 import org.slf4j.LoggerFactory
 import java.net.URI
 import java.net.http.HttpClient
@@ -20,7 +21,7 @@ class AlphaVantageFetcher(private val apiKey: String) : StockFetcher, AutoClosea
     private val domain = "https://www.alphavantage.co"
     private val client = HttpClient.newHttpClient()
 
-    override fun fetchDaily(symbol: String): List<Candle> {
+    override suspend fun fetchDaily(symbol: String): List<Candle> {
         logger.info("Fetching daily data for symbol: $symbol from $domain")
         val url = "$domain/query" +
                 "?function=TIME_SERIES_DAILY_ADJUSTED" +
@@ -29,7 +30,7 @@ class AlphaVantageFetcher(private val apiKey: String) : StockFetcher, AutoClosea
                 "&apikey=$apiKey"
         return try {
             val req = HttpRequest.newBuilder(URI.create(url)).GET().build()
-            val body = client.send(req, HttpResponse.BodyHandlers.ofString()).body()
+            val body = client.sendAsync(req, HttpResponse.BodyHandlers.ofString()).await().body()
             parseAlphaVantage(body)
         } catch (e: Exception) {
             logger.warn("Failed to fetch daily data for symbol: $symbol", e)
@@ -37,7 +38,7 @@ class AlphaVantageFetcher(private val apiKey: String) : StockFetcher, AutoClosea
         }
     }
 
-    override fun fetchAllListingStatuses(): List<ListingStatus> {
+    override suspend fun fetchAllListingStatuses(): List<ListingStatus> {
         logger.info("Fetching all listing statuses from $domain...")
         val url = "$domain/query?function=LISTING_STATUS&apikey=$apiKey"
         val request = HttpRequest.newBuilder()
@@ -45,7 +46,7 @@ class AlphaVantageFetcher(private val apiKey: String) : StockFetcher, AutoClosea
             .GET()
             .build()
         return try {
-            val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+            val response = client.sendAsync(request, HttpResponse.BodyHandlers.ofString()).await()
 
             if (response.statusCode() == 200) {
                 val csvData = response.body()

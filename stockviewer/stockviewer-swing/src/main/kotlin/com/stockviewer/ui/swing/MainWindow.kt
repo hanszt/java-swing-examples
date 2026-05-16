@@ -4,6 +4,7 @@ import com.stockviewer.client.AlphaVantageFetcher
 import com.stockviewer.client.AlphaVantageMockDataFetcher
 import com.stockviewer.client.DataFetchMode
 import com.stockviewer.model.Candle
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import java.awt.*
 import javax.swing.*
@@ -34,7 +35,7 @@ class MainWindow(dataFetchMode: DataFetchMode, apiKey: String) : JFrame("Stock M
     private var currentDays = 365
     private val chart = ChartPanel(emptyList())
     private val stats = StatsPanel()
-    private val allListingStatuses = stockFetcher.fetchAllListingStatuses().map { it.symbol }
+    private val allListingStatuses = runBlocking { stockFetcher.fetchAllListingStatuses().map { it.symbol } }
     private val symbolField = JComboBox(allListingStatuses.toTypedArray()).apply {
         isEditable = true
         selectedItem = "IBM" // Set initial value
@@ -232,7 +233,7 @@ class MainWindow(dataFetchMode: DataFetchMode, apiKey: String) : JFrame("Stock M
         loadBtn.isEnabled = false
 
         object : SwingWorker<List<Candle>, Unit>() {
-            override fun doInBackground() = stockFetcher.fetchDaily(symbol)
+            override fun doInBackground() = runBlocking { stockFetcher.fetchDaily(symbol) }
 
             override fun done() {
                 loadBtn.isEnabled = true

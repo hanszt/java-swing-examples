@@ -13,6 +13,7 @@ repositories {
 dependencies {
     implementation(project(":stockviewer-shared"))
     implementation(libs.logback.classic)
+    implementation(libs.kotlinx.coroutines)
 }
 
 application {

@@ -33,7 +33,7 @@ Data is pulled live from the **Alpha Vantage** free API.
 cd stockviewer
 
 # 2 — run directly (Gradle downloads Kotlin automatically)
-gradle run          # Linux / macOS
+./gradlew run          # Linux / macOS
 
 # 3 — OR build a fat-jar and double-click / run anywhere
 ./gradlew jar
