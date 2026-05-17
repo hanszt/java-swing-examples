@@ -6,10 +6,16 @@ import com.stockviewer.client.DataFetchMode
 import com.stockviewer.client.StockFetcher
 import com.stockviewer.model.Candle
 import com.stockviewer.ui.compose.ChartPanel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
+
+    private val viewModelScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     private val stockFetcher: StockFetcher = when (dataFetchMode) {
         DataFetchMode.MOCK_DATA -> AlphaVantageMockDataFetcher
@@ -23,6 +29,15 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
 
     private val internalStatus = MutableStateFlow("Enter a symbol and press Load")
     val status: StateFlow<String> = internalStatus
+
+    private val internalSymbols = MutableStateFlow<List<String>>(emptyList())
+    val symbols: StateFlow<List<String>> = internalSymbols
+
+    init {
+        viewModelScope.launch {
+            internalSymbols.value = stockFetcher.fetchAllListingStatuses().map { it.symbol }
+        }
+    }
 
     val periods = listOf(
         "1W" to 7,

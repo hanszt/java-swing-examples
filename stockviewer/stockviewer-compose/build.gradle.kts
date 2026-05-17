@@ -18,6 +18,7 @@ dependencies {
     implementation(project(":stockviewer-shared"))
     implementation(compose.desktop.currentOs)
     implementation(libs.logback.classic)
+    implementation(libs.kotlinx.coroutines.swing)
 }
 
 application {
