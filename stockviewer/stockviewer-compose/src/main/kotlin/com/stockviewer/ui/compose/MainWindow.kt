@@ -48,7 +48,12 @@ fun StockMarketApp(viewModel: StockViewModel) {
                                 value = symbol,
                                 onValueChange = { symbol = it },
                                 suggestions = symbols,
-                                label = { Text("Symbol") }
+                                label = { Text("Symbol") },
+                                colors = TextFieldDefaults.textFieldColors(
+                                    textColor = MaterialTheme.colors.onSurface,
+                                    backgroundColor = MaterialTheme.colors.surface,
+                                    cursorColor = MaterialTheme.colors.primary
+                                )
                             )
                             StyledButton(
                                 text = "Load",

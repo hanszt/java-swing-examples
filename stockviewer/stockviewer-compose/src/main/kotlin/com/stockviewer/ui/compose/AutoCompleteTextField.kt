@@ -11,7 +11,8 @@ fun AutoCompleteTextField(
     onValueChange: (String) -> Unit,
     suggestions: List<String>,
     modifier: Modifier = Modifier,
-    label: @Composable (() -> Unit)? = null
+    label: @Composable (() -> Unit)? = null,
+    colors: TextFieldColors = TextFieldDefaults.textFieldColors()
 ) {
     var expanded by remember { mutableStateOf(false) }
     val filteredSuggestions = suggestions.filter { it.startsWith(value, ignoreCase = true) }
@@ -20,10 +21,11 @@ fun AutoCompleteTextField(
         TextField(
             value = value,
             onValueChange = {
-                onValueChange(it)
+                onValueChange(it.uppercase())
                 expanded = true
             },
-            label = label
+            label = label,
+            colors = colors
         )
         DropdownMenu(
             expanded = expanded && filteredSuggestions.isNotEmpty(),
