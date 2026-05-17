@@ -1,6 +1,9 @@
 package com.stockviewer.ui.compose
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -60,21 +63,25 @@ fun StockMarketApp(viewModel: StockViewModel) {
                         }
                     }
                 )
+            },
+            bottomBar = {
+                StatsPanel(candles = stockData)
             }
-        ) {
-            Column(modifier = Modifier.padding(it).padding(16.dp)) {
+        ) { paddingValues ->
+            Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
                 PeriodSelector(
                     periods = periods,
                     selectedPeriod = selectedPeriod,
                     onPeriodSelected = { viewModel.selectPeriod(it) }
                 )
-                Text(status, modifier = Modifier.padding(vertical = 8.dp))
+                if (stockData.isEmpty()) {
+                    Text(status, modifier = Modifier.padding(vertical = 8.dp))
+                }
                 if (stockData.isNotEmpty()) {
                     ChartPanel(
                         candles = stockData,
                         chartType = viewModel.selectedChartType.collectAsState().value
                     )
-                    StatsPanel(candles = stockData)
                 }
             }
         }

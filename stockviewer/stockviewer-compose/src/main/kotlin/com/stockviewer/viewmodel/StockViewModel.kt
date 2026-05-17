@@ -18,11 +18,11 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
 
     private var allCandles = emptyList<Candle>()
 
-    private val _stockData = MutableStateFlow<List<Candle>>(emptyList())
-    val stockData: StateFlow<List<Candle>> = _stockData
+    private val internalStockData = MutableStateFlow<List<Candle>>(emptyList())
+    val stockData: StateFlow<List<Candle>> = internalStockData
 
-    private val _status = MutableStateFlow("Enter a symbol and press Load")
-    val status: StateFlow<String> = _status
+    private val internalStatus = MutableStateFlow("Enter a symbol and press Load")
+    val status: StateFlow<String> = internalStatus
 
     val periods = listOf(
         "1W" to 7,
@@ -49,18 +49,18 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
 
     suspend fun loadStockData(symbol: String) {
         if (symbol.isEmpty()) return
-        _status.value = "Loading $symbol…"
+        internalStatus.value = "Loading $symbol…"
         try {
             val data = stockFetcher.fetchDaily(symbol)
             if (data.isEmpty()) {
-                _status.value = "⚠ No data returned — check symbol or API key"
+                internalStatus.value = "⚠ No data returned — check symbol or API key"
             } else {
                 allCandles = data
                 applyPeriod()
-                _status.value = "✓ $symbol  (${data.size} trading days loaded)"
+                internalStatus.value = "✓ $symbol  (${data.size} trading days loaded)"
             }
         } catch (e: Exception) {
-            _status.value = "Error: ${e.message}"
+            internalStatus.value = "Error: ${e.message}"
         }
     }
 
@@ -76,6 +76,6 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
     private fun applyPeriod() {
         val slice = if (selectedPeriod.value >= allCandles.size) allCandles
         else allCandles.takeLast(selectedPeriod.value)
-        _stockData.value = slice
+        internalStockData.value = slice
     }
 }
