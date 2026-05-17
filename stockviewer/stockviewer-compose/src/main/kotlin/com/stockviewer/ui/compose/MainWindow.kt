@@ -1,6 +1,8 @@
 package com.stockviewer.ui.compose
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ fun StockMarketApp(viewModel: StockViewModel) {
                     title = { Text("📈 StockViewer") },
                     actions = {
                         Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
@@ -45,13 +48,14 @@ fun StockMarketApp(viewModel: StockViewModel) {
                                 onValueChange = { symbol = it },
                                 label = { Text("Symbol") }
                             )
-                            Button(onClick = {
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    viewModel.loadStockData(symbol)
+                            StyledButton(
+                                text = "Load",
+                                onClick = {
+                                    CoroutineScope(Dispatchers.Default).launch {
+                                        viewModel.loadStockData(symbol)
+                                    }
                                 }
-                            }) {
-                                Text("Load")
-                            }
+                            )
                             ChartTypeSelector(
                                 chartTypes = viewModel.chartTypes,
                                 selectedChartType = viewModel.selectedChartType.collectAsState().value,
@@ -67,18 +71,22 @@ fun StockMarketApp(viewModel: StockViewModel) {
                 StatsPanel(candles = stockData)
             }
         ) { paddingValues ->
-            Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
-                PeriodSelector(
-                    periods = periods,
-                    selectedPeriod = selectedPeriod,
-                    onPeriodSelected = { viewModel.selectPeriod(it) }
-                )
-                if (stockData.isNotEmpty()) {
-                    ChartPanel(
-                        candles = stockData,
-                        chartType = viewModel.selectedChartType.collectAsState().value
+            Column(modifier = Modifier.padding(paddingValues)) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colors.surface,
+                    elevation = 4.dp
+                ) {
+                    PeriodSelector(
+                        periods = periods,
+                        selectedPeriod = selectedPeriod,
+                        onPeriodSelected = { viewModel.selectPeriod(it) }
                     )
                 }
+                ChartPanel(
+                    candles = stockData,
+                    chartType = viewModel.selectedChartType.collectAsState().value
+                )
             }
         }
     }

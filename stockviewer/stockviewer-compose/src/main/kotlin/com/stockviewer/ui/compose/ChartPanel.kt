@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.*
+import androidx.compose.ui.unit.sp
 import com.stockviewer.model.Candle
 import kotlin.math.abs
 
@@ -23,6 +24,18 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         if (candles.isEmpty()) {
+            val text = "No data — enter a symbol and press Load"
+            val textLayoutResult = textMeasurer.measure(
+                text = AnnotatedString(text),
+                style = TextStyle(color = Theme.TEXT_DIM, fontSize = 14.sp)
+            )
+            drawText(
+                textLayoutResult,
+                topLeft = Offset(
+                    x = (size.width - textLayoutResult.size.width) / 2,
+                    y = (size.height - textLayoutResult.size.height) / 2
+                )
+            )
             return@Canvas
         }
 
