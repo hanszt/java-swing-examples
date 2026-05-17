@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.sp
 
 object Theme {
-    val ACCENT = java.awt.Color(0, 210, 150)
+    val ACCENT = Color(0, 210, 150)
     val BG = Color(22, 25, 30)
     val GRID = Color(50, 55, 70)
     val BORDER = Color(80, 85, 100)

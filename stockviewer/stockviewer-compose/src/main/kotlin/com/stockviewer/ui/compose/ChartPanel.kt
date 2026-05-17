@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -94,7 +93,7 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
                 if (i == 0) linePath.moveTo(xOf(i), yOf(c.close))
                 else linePath.lineTo(xOf(i), yOf(c.close))
             }
-            drawPath(linePath, Color(Theme.ACCENT.rgb), style = Stroke(2f))
+            drawPath(linePath, color = Theme.ACCENT, style = Stroke(2f))
         }
 
         when (chartType) {
@@ -125,7 +124,7 @@ fun ChartPanel(candles: List<Candle>, chartType: ChartPanel.ChartType) {
                 candles.forEachIndexed { i, c -> path.lineTo(xOf(i), yOf(c.close)) }
                 path.lineTo(xOf(candles.size - 1), bottom)
                 path.close()
-                drawPath(path, Color(Theme.ACCENT.rgb), alpha = 0.5f)
+                drawPath(path, color = Theme.ACCENT, alpha = 0.5f)
                 // Draw Line over Area
                 drawLine(candles)
             }
