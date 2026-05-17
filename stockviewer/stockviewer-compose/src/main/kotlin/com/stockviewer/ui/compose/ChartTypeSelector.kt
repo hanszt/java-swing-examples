@@ -18,12 +18,17 @@ fun ChartTypeSelector(
 ) {
     Row(modifier = Modifier.padding(vertical = 8.dp)) {
         chartTypes.forEach { chartType ->
-            StyledButton(
-                text = chartType.name.lowercase().replaceFirstChar { it.uppercase() },
+            OutlinedButton(
                 onClick = { onChartTypeSelected(chartType) },
                 modifier = Modifier.padding(horizontal = 4.dp),
-                selected = selectedChartType == chartType
-            )
+                border = BorderStroke(1.dp, if (selectedChartType == chartType) MaterialTheme.colors.primary else Color.Gray),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    backgroundColor = if (selectedChartType == chartType) MaterialTheme.colors.primary else Color.Transparent,
+                    contentColor = if (selectedChartType == chartType) MaterialTheme.colors.onPrimary else MaterialTheme.colors.onSurface
+                )
+            ) {
+                Text(chartType.name.lowercase().replaceFirstChar { it.uppercase() })
+            }
         }
     }
 }
