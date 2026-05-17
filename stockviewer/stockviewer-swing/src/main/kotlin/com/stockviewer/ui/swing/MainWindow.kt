@@ -240,7 +240,7 @@ class MainWindow(dataFetchMode: DataFetchMode, apiKey: String) : JFrame("Stock M
                 try {
                     val data = get()
                     if (data.isEmpty()) {
-                        statusLabel.text = "⚠ No data returned — check symbol or API key"
+                        statusLabel.text = "⚠ No data returned for $symbol — check symbol or API key"
                         statusLabel.foreground = Theme.RED
                         return
                     }
