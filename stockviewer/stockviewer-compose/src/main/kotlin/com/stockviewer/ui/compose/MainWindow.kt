@@ -1,9 +1,6 @@
 package com.stockviewer.ui.compose
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -60,6 +57,8 @@ fun StockMarketApp(viewModel: StockViewModel) {
                                 selectedChartType = viewModel.selectedChartType.collectAsState().value,
                                 onChartTypeSelected = { viewModel.selectChartType(it) }
                             )
+                            Spacer(Modifier.width(24.dp))
+                            Text(status)
                         }
                     }
                 )
@@ -74,9 +73,6 @@ fun StockMarketApp(viewModel: StockViewModel) {
                     selectedPeriod = selectedPeriod,
                     onPeriodSelected = { viewModel.selectPeriod(it) }
                 )
-                if (stockData.isEmpty()) {
-                    Text(status, modifier = Modifier.padding(vertical = 8.dp))
-                }
                 if (stockData.isNotEmpty()) {
                     ChartPanel(
                         candles = stockData,
