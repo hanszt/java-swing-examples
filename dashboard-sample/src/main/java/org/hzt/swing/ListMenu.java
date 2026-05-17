@@ -15,7 +15,7 @@ public final class ListMenu extends JList<ModelMenu> {
     private final DefaultListModel<ModelMenu> model;
     private int selectedIndex = -1;
     private int overIndex = -1;
-    private EventMenuSelected event;
+    private transient EventMenuSelected event;
 
     public void addEventMenuSelected(final EventMenuSelected event) {
         this.event = event;
@@ -74,12 +74,7 @@ public final class ListMenu extends JList<ModelMenu> {
         return new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(final JList<?> jlist, final Object o, final int index, final boolean selected, final boolean focus) {
-                final ModelMenu data;
-                if (o instanceof ModelMenu) {
-                    data = (ModelMenu) o;
-                } else {
-                    data = new ModelMenu("", o + "", MenuType.EMPTY);
-                }
+                final ModelMenu data = o instanceof ModelMenu mm ? mm : new ModelMenu("", o + "", MenuType.EMPTY);
                 final var item = new MenuItem(data);
                 item.setSelected(selectedIndex == index);
                 item.setOver(overIndex == index);
