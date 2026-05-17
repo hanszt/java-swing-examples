@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import com.stockviewer.client.DataFetchMode
+import com.stockviewer.client.FetchStatus
 import com.stockviewer.viewmodel.StockViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +70,10 @@ fun StockMarketApp(viewModel: StockViewModel) {
                                 onChartTypeSelected = { viewModel.selectChartType(it) }
                             )
                             Spacer(Modifier.width(24.dp))
-                            Text(status)
+                            when (val s = status) {
+                                is FetchStatus.Success<*> -> Text(s.data.toString(), color = MaterialTheme.colors.onSurface)
+                                is FetchStatus.Error -> Text(s.message, color = MaterialTheme.colors.error)
+                            }
                         }
                     }
                 )

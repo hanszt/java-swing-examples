@@ -3,6 +3,7 @@ package com.stockviewer.viewmodel
 import com.stockviewer.client.AlphaVantageFetcher
 import com.stockviewer.client.AlphaVantageMockDataFetcher
 import com.stockviewer.client.DataFetchMode
+import com.stockviewer.client.FetchStatus
 import com.stockviewer.client.StockFetcher
 import com.stockviewer.model.Candle
 import com.stockviewer.ui.compose.ChartPanel
@@ -27,8 +28,8 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
     private val internalStockData = MutableStateFlow<List<Candle>>(emptyList())
     val stockData: StateFlow<List<Candle>> = internalStockData
 
-    private val internalStatus = MutableStateFlow("Enter a symbol and press Load")
-    val status: StateFlow<String> = internalStatus
+    private val internalStatus = MutableStateFlow<FetchStatus>(FetchStatus.Success("Enter a symbol and press Load"))
+    val status: StateFlow<FetchStatus> = internalStatus
 
     private val internalSymbols = MutableStateFlow<List<String>>(emptyList())
     val symbols: StateFlow<List<String>> = internalSymbols
@@ -50,8 +51,8 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
         "ALL" to Int.MAX_VALUE
     )
 
-    private val _selectedPeriod = MutableStateFlow(365)
-    val selectedPeriod: StateFlow<Int> = _selectedPeriod
+    private val internalSelectedPeriod = MutableStateFlow(365)
+    val selectedPeriod: StateFlow<Int> = internalSelectedPeriod
 
     val chartTypes = listOf(
         ChartPanel.ChartType.CANDLES,
@@ -59,33 +60,33 @@ class StockViewModel(dataFetchMode: DataFetchMode, apiKey: String) {
         ChartPanel.ChartType.AREA
     )
 
-    private val _selectedChartType = MutableStateFlow(ChartPanel.ChartType.CANDLES)
-    val selectedChartType: StateFlow<ChartPanel.ChartType> = _selectedChartType
+    private val internalSelectedChartType = MutableStateFlow(ChartPanel.ChartType.CANDLES)
+    val selectedChartType: StateFlow<ChartPanel.ChartType> = internalSelectedChartType
 
     suspend fun loadStockData(symbol: String) {
         if (symbol.isEmpty()) return
-        internalStatus.value = "Loading $symbol…"
+        internalStatus.value = FetchStatus.Success("Loading $symbol…")
         try {
             val data = stockFetcher.fetchDaily(symbol)
             if (data.isEmpty()) {
-                internalStatus.value = "⚠ No data returned — check symbol or API key"
+                internalStatus.value = FetchStatus.Error("⚠ No data returned for $symbol — check symbol or API key")
             } else {
                 allCandles = data
                 applyPeriod()
-                internalStatus.value = "✓ $symbol  (${data.size} trading days loaded)"
+                internalStatus.value = FetchStatus.Success("✓ $symbol  (${data.size} trading days loaded)")
             }
         } catch (e: Exception) {
-            internalStatus.value = "Error: ${e.message}"
+            internalStatus.value = FetchStatus.Error("Error: ${e.message}")
         }
     }
 
     fun selectPeriod(days: Int) {
-        _selectedPeriod.value = days
+        internalSelectedPeriod.value = days
         applyPeriod()
     }
 
     fun selectChartType(chartType: ChartPanel.ChartType) {
-        _selectedChartType.value = chartType
+        internalSelectedChartType.value = chartType
     }
 
     private fun applyPeriod() {
