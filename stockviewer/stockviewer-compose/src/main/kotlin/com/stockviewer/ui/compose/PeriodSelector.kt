@@ -9,6 +9,7 @@ import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
@@ -18,7 +19,8 @@ fun PeriodSelector(
     selectedPeriod: Int,
     onPeriodSelected: (Int) -> Unit
 ) {
-    Row(modifier = Modifier.padding(vertical = 8.dp)) {
+    Row(modifier = Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("Period:", modifier = Modifier.padding(horizontal = 8.dp))
         periods.forEach { (label, days) ->
             StyledButton(
                 text = label,

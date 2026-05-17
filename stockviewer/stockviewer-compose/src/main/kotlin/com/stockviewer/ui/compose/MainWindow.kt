@@ -44,19 +44,19 @@ fun StockMarketApp(viewModel: StockViewModel) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
+                            Text("Symbol:")
                             val symbols by viewModel.symbols.collectAsState()
                             AutoCompleteTextField(
                                 value = symbol,
                                 onValueChange = { symbol = it },
                                 suggestions = symbols,
-                                label = { Text("Symbol") },
                                 colors = TextFieldDefaults.textFieldColors(
                                     textColor = MaterialTheme.colors.onSurface,
                                     backgroundColor = MaterialTheme.colors.surface,
                                     cursorColor = MaterialTheme.colors.primary
                                 )
                             )
-                            StyledButton(
+                            LoadButton(
                                 text = "Load",
                                 onClick = {
                                     CoroutineScope(Dispatchers.Default).launch {
