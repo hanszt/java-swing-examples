@@ -25,6 +25,12 @@ tasks.withType<JavaExec>().named("run") {
     description = "Runs the Swing application"
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jvm.get()))
+    }
+}
+
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvm.get()))

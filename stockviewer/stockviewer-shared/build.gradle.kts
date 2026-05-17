@@ -22,6 +22,12 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jvm.get()))
+    }
+}
+
 tasks.withType<KotlinCompile>().configureEach {
     compilerOptions {
         jvmTarget.set(JvmTarget.fromTarget(libs.versions.jvm.get()))
